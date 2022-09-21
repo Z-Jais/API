@@ -11,16 +11,16 @@ data class Episode(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
-    @ManyToOne(cascade = [CascadeType.REMOVE], fetch = FetchType.EAGER)
+    @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @JoinColumn(name = "platform_uuid", nullable = false)
     val platform: Platform? = null,
-    @ManyToOne(cascade = [CascadeType.REMOVE], fetch = FetchType.EAGER)
+    @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @JoinColumn(name = "anime_uuid", nullable = false)
     val anime: Anime? = null,
-    @ManyToOne(cascade = [CascadeType.REMOVE], fetch = FetchType.EAGER)
+    @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @JoinColumn(name = "episode_type_uuid", nullable = false)
     val episodeType: EpisodeType? = null,
-    @ManyToOne(cascade = [CascadeType.REMOVE], fetch = FetchType.EAGER)
+    @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @JoinColumn(name = "lang_type_uuid", nullable = false)
     val langType: LangType? = null,
     @Column(nullable = false, unique = true)

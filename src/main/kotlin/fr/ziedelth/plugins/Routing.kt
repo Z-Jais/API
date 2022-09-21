@@ -1,5 +1,6 @@
 package fr.ziedelth.plugins
 
+import fr.ziedelth.controllers.AnimeController.getAnimes
 import fr.ziedelth.controllers.CountryController.getCountries
 import fr.ziedelth.controllers.PlatformController.getPlatforms
 import io.ktor.serialization.gson.*
@@ -16,5 +17,6 @@ fun Application.configureRouting() {
     routing {
         getCountries()
         getPlatforms()
+        getAnimes()
     }
 }

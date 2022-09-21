@@ -6,40 +6,80 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
-import org.hibernate.Session
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
+import java.util.UUID
 
 open class IController<T : Serializable>(val prefix: String) {
     val entityClass: Class<T> = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     val entityName: String = entityClass.simpleName
 
-    fun Route.get() {
+    fun getAll(): MutableList<T> {
+        val session = Database.getSession()
+
+        try {
+            val query = session.createQuery("FROM $entityName", entityClass)
+            return query.list()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Error while getting $prefix : ${e.message}")
+            throw e
+        } finally {
+            session.close()
+        }
+    }
+
+    fun getBy(field: String, value: Any): T? {
+        val session = Database.getSession()
+
+        try {
+            val query = session.createQuery("FROM $entityName WHERE $field = :$field", entityClass)
+            query.setParameter(field, value)
+            return query.list().firstOrNull()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Error while getting $prefix : ${e.message}")
+            throw e
+        } finally {
+            session.close()
+        }
+    }
+
+    fun getByUuid(uuid: UUID): T? = getBy("uuid", uuid)
+
+    fun Route.getAll() {
         get {
             println("GET $prefix")
-            val session = Database.getSession()
 
             try {
-                val query = session.createQuery("FROM $entityName", entityClass)
-                val result = query.list()
-                call.respond(result)
+                call.respond(this@IController.getAll())
             } catch (e: Exception) {
-                e.printStackTrace()
-                println("Error while getting $prefix : ${e.message}")
-                call.respond(e)
-            } finally {
-                session.close()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
             }
         }
     }
 
-    fun isExists(session: Session, field: String, value: String): Boolean {
+    fun isExists(field: String, value: String): Boolean {
+        val session = Database.getSession()
         val query = session.createQuery("FROM $entityName WHERE $field = :$field", entityClass)
         query.setParameter(field, value)
-        return query.list().isNotEmpty()
+        val list = query.list()
+        session.close()
+        return list.isNotEmpty()
     }
 
-    suspend inline fun <reified T : Serializable> PipelineContext<Unit, ApplicationCall>.save(session: Session, dtoIn: T) {
+    fun contains(fieldList: String, searchValue: String): Boolean {
+        val session = Database.getSession()
+        val query = session.createQuery("FROM $entityName JOIN $fieldList l WHERE l = :search", entityClass)
+        query.setParameter("search", searchValue)
+        val list = query.list()
+        session.close()
+        return list.isNotEmpty()
+    }
+
+    suspend inline fun <reified T : Serializable> PipelineContext<Unit, ApplicationCall>.save(dtoIn: T) {
+        val session = Database.getSession()
+
         try {
             session.beginTransaction()
             val entity = session.merge(dtoIn)
@@ -48,7 +88,7 @@ open class IController<T : Serializable>(val prefix: String) {
             call.respond(entity)
         } catch (e: Exception) {
             e.printStackTrace()
-            println("Error while posting $prefix : ${e.message}")
+            println("Error while saving $prefix : ${e.message}")
             call.respond(HttpStatusCode.InternalServerError, e)
         } finally {
             session.close()

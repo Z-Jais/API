@@ -1,18 +1,32 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.Platform
-import fr.ziedelth.utils.Database
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.util.*
 
 object PlatformController : IController<Platform>("/platforms") {
     fun Routing.getPlatforms() {
         route(prefix) {
-            get()
+            getAll()
+            getByUuid()
             create()
+        }
+    }
+
+    private fun Route.getByUuid() {
+        get("/{uuid}") {
+            val uuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing parameter: uuid")
+            println("GET $prefix/$uuid")
+
+            try {
+                call.respond(this@PlatformController.getByUuid(UUID.fromString(uuid)) ?: return@get call.respond(HttpStatusCode.NotFound))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            }
         }
     }
 
@@ -20,22 +34,19 @@ object PlatformController : IController<Platform>("/platforms") {
         post {
             println("POST $prefix")
 
-            val session = Database.getSession()
             val platform = call.receive<Platform>()
 
             if (platform.name.isNullOrBlank() || platform.url.isNullOrBlank() || platform.image.isNullOrBlank()) {
-                session.close()
                 call.respond(HttpStatusCode.BadRequest, "Missing parameters")
                 return@post
             }
 
-            if (isExists(session, "name", platform.name)) {
-                session.close()
+            if (isExists("name", platform.name)) {
                 call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                 return@post
             }
 
-            save(session, platform)
+            save(platform)
         }
     }
 }

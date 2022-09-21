@@ -8,14 +8,16 @@ import org.hibernate.annotations.LazyCollectionOption
 import java.io.Serializable
 import java.util.*
 
+fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
+
 @Entity
 data class Anime(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
-    @ManyToOne(cascade = [CascadeType.REMOVE], fetch = FetchType.EAGER)
+    @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @JoinColumn(name = "country_uuid", nullable = false)
-    val country: Country? = null,
+    var country: Country? = null,
     @Column(nullable = false, unique = true)
     val name: String? = null,
     @Column(nullable = false)
@@ -28,7 +30,7 @@ data class Anime(
     @LazyCollection(LazyCollectionOption.FALSE)
     @CollectionTable(name = "anime_hash", joinColumns = [JoinColumn(name = "anime_uuid")])
     val hashes: MutableList<String> = mutableListOf(),
-    @OneToMany(cascade = [CascadeType.REMOVE], fetch = FetchType.EAGER)
+    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @LazyCollection(LazyCollectionOption.FALSE)
     @JoinTable(
         name = "anime_genre",
@@ -37,12 +39,9 @@ data class Anime(
     )
     val genres: MutableList<Genre> = mutableListOf()
 ) : Serializable {
-    init {
-        if (hashes.isEmpty()) {
-            name?.lowercase()?.filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }?.trim()
-                ?.replace("\\s+".toRegex(), "-")?.replace("--", "-")?.let { hashes.add(it) }
-        }
-    }
+    fun hash(): String? = name?.lowercase()?.filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }?.trim()?.replace("\\s+".toRegex(), "-")?.replace("--", "-")
+
+    fun isNotValid(): Boolean = country.isNullOrNotValid() || name.isNullOrBlank() || (releaseDate.isBlank() || !releaseDate.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\$".toRegex())) || image.isNullOrBlank()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

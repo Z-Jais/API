@@ -8,6 +8,8 @@ import org.hibernate.Hibernate
 import java.io.Serializable
 import java.util.*
 
+fun Country?.isNullOrNotValid() = this == null || this.isNotValid()
+
 @Entity
 data class Country(
     @Id
@@ -18,6 +20,8 @@ data class Country(
     @Column(nullable = false, unique = true)
     val name: String? = null
 ) : Serializable {
+    fun isNotValid(): Boolean = tag.isNullOrBlank() || name.isNullOrBlank()
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
