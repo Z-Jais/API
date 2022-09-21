@@ -1,6 +1,7 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.Platform
+import fr.ziedelth.utils.PerformanceMeter
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -19,6 +20,7 @@ object PlatformController : IController<Platform>("/platforms") {
 
     private fun Route.getByUuid() {
         get("/{uuid}") {
+            PerformanceMeter.request++
             val uuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing parameter: uuid")
             println("GET $prefix/$uuid")
 
@@ -32,6 +34,7 @@ object PlatformController : IController<Platform>("/platforms") {
 
     private fun Route.create() {
         post {
+            PerformanceMeter.request++
             println("POST $prefix")
 
             val platform = call.receive<Platform>()

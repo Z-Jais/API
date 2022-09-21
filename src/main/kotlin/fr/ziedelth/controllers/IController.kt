@@ -1,6 +1,7 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.PerformanceMeter
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -49,6 +50,7 @@ open class IController<T : Serializable>(val prefix: String) {
 
     fun Route.getAll() {
         get {
+            PerformanceMeter.request++
             println("GET $prefix")
 
             try {
