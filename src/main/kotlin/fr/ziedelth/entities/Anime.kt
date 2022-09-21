@@ -35,7 +35,7 @@ data class Anime(
         joinColumns = [JoinColumn(name = "anime_uuid")],
         inverseJoinColumns = [JoinColumn(name = "genre_uuid")]
     )
-    val genres: MutableList<Genre> = mutableListOf(),
+    val genres: MutableList<Genre> = mutableListOf()
 ) : Serializable {
     init {
         if (hashes.isEmpty()) {

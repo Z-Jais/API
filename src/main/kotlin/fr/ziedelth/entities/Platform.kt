@@ -18,7 +18,7 @@ data class Platform(
     @Column(nullable = false)
     val url: String? = null,
     @Column(nullable = false)
-    val image: String? = null,
+    val image: String? = null
 ) : Serializable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

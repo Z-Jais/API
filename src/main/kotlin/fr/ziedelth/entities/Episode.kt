@@ -38,7 +38,7 @@ data class Episode(
     @Column(nullable = false)
     val image: String? = null,
     @Column(nullable = false)
-    val duration: Long = -1,
+    val duration: Long = -1
 ) : Serializable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

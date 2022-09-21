@@ -14,7 +14,7 @@ data class Genre(
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
     @Column(nullable = false, unique = true)
-    val name: String? = null,
+    val name: String? = null
 ) : Serializable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

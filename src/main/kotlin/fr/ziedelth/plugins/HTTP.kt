@@ -20,5 +20,4 @@ fun Application.configureHTTP() {
         allowHeader(HttpHeaders.Authorization)
         anyHost()
     }
-
 }

@@ -8,7 +8,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-
 object CountryController : IController<Country>("/countries") {
     fun Routing.getCountries() {
         route(prefix) {
