@@ -1,14 +1,14 @@
 package fr.ziedelth.controllers
 
-import fr.ziedelth.entities.Platform
+import fr.ziedelth.entities.Genre
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-object PlatformController : IController<Platform>("/platforms") {
-    fun Routing.getPlatforms() {
+object GenreController : IController<Genre>("/genres") {
+    fun Routing.getGenres() {
         route(prefix) {
             getAll()
             create()
@@ -19,19 +19,19 @@ object PlatformController : IController<Platform>("/platforms") {
         post {
             println("POST $prefix")
 
-            val platform = call.receive<Platform>()
+            val genre = call.receive<Genre>()
 
-            if (platform.name.isNullOrBlank() || platform.url.isNullOrBlank() || platform.image.isNullOrBlank()) {
+            if (genre.name.isNullOrBlank()) {
                 call.respond(HttpStatusCode.BadRequest, "Missing parameters")
                 return@post
             }
 
-            if (isExists("name", platform.name)) {
+            if (isExists("name", genre.name)) {
                 call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                 return@post
             }
 
-            save(platform)
+            save(genre)
         }
     }
 }

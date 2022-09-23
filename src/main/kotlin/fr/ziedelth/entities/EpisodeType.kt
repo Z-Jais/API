@@ -8,6 +8,8 @@ import org.hibernate.Hibernate
 import java.io.Serializable
 import java.util.*
 
+fun EpisodeType?.isNullOrNotValid() = this == null || this.isNotValid()
+
 @Entity
 data class EpisodeType(
     @Id
@@ -16,6 +18,8 @@ data class EpisodeType(
     @Column(nullable = false, unique = true)
     val name: String? = null
 ) : Serializable {
+    fun isNotValid(): Boolean = name.isNullOrBlank()
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false

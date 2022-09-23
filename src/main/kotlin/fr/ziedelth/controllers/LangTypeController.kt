@@ -1,14 +1,14 @@
 package fr.ziedelth.controllers
 
-import fr.ziedelth.entities.Platform
+import fr.ziedelth.entities.LangType
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-object PlatformController : IController<Platform>("/platforms") {
-    fun Routing.getPlatforms() {
+object LangTypeController : IController<LangType>("/langtypes") {
+    fun Routing.getLangTypes() {
         route(prefix) {
             getAll()
             create()
@@ -19,19 +19,19 @@ object PlatformController : IController<Platform>("/platforms") {
         post {
             println("POST $prefix")
 
-            val platform = call.receive<Platform>()
+            val langType = call.receive<LangType>()
 
-            if (platform.name.isNullOrBlank() || platform.url.isNullOrBlank() || platform.image.isNullOrBlank()) {
+            if (langType.name.isNullOrBlank()) {
                 call.respond(HttpStatusCode.BadRequest, "Missing parameters")
                 return@post
             }
 
-            if (isExists("name", platform.name)) {
+            if (isExists("name", langType.name)) {
                 call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                 return@post
             }
 
-            save(platform)
+            save(langType)
         }
     }
 }

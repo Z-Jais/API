@@ -1,7 +1,6 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.utils.Database
-import fr.ziedelth.utils.PerformanceMeter
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -9,13 +8,12 @@ import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
-import java.util.UUID
 
 open class IController<T : Serializable>(val prefix: String) {
     val entityClass: Class<T> = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     val entityName: String = entityClass.simpleName
 
-    fun getAll(): MutableList<T> {
+    private fun getAll(): MutableList<T> {
         val session = Database.getSession()
 
         try {
@@ -30,7 +28,7 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    fun getBy(field: String, value: Any): T? {
+    fun getBy(field: String, value: Any?): T? {
         val session = Database.getSession()
 
         try {
@@ -46,11 +44,8 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    fun getByUuid(uuid: UUID): T? = getBy("uuid", uuid)
-
     fun Route.getAll() {
         get {
-            PerformanceMeter.request++
             println("GET $prefix")
 
             try {
@@ -61,7 +56,7 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    fun isExists(field: String, value: String): Boolean {
+    fun isExists(field: String, value: String?): Boolean {
         val session = Database.getSession()
         val query = session.createQuery("FROM $entityName WHERE $field = :$field", entityClass)
         query.setParameter(field, value)
@@ -70,7 +65,7 @@ open class IController<T : Serializable>(val prefix: String) {
         return list.isNotEmpty()
     }
 
-    fun contains(fieldList: String, searchValue: String): Boolean {
+    fun contains(fieldList: String, searchValue: String?): Boolean {
         val session = Database.getSession()
         val query = session.createQuery("FROM $entityName JOIN $fieldList l WHERE l = :search", entityClass)
         query.setParameter("search", searchValue)
@@ -79,21 +74,32 @@ open class IController<T : Serializable>(val prefix: String) {
         return list.isNotEmpty()
     }
 
-    suspend inline fun <reified T : Serializable> PipelineContext<Unit, ApplicationCall>.save(dtoIn: T) {
+    fun <T : Serializable> justSave(dtoIn: T): T {
         val session = Database.getSession()
+        val transaction = session.beginTransaction()
 
         try {
-            session.beginTransaction()
             val entity = session.merge(dtoIn)
             session.persist(entity)
-            session.transaction.commit()
-            call.respond(entity)
+            transaction.commit()
+            return entity
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Error while saving $prefix : ${e.message}")
+            transaction.rollback()
+            throw e
+        } finally {
+            session.close()
+        }
+    }
+
+    suspend inline fun <reified T : Serializable> PipelineContext<Unit, ApplicationCall>.save(dtoIn: T) {
+        try {
+            call.respond(justSave(dtoIn))
         } catch (e: Exception) {
             e.printStackTrace()
             println("Error while saving $prefix : ${e.message}")
             call.respond(HttpStatusCode.InternalServerError, e)
-        } finally {
-            session.close()
         }
     }
 }

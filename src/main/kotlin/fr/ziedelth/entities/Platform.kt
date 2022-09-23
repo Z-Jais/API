@@ -8,6 +8,8 @@ import org.hibernate.Hibernate
 import java.io.Serializable
 import java.util.*
 
+fun Platform?.isNullOrNotValid() = this == null || this.isNotValid()
+
 @Entity
 data class Platform(
     @Id
@@ -20,6 +22,8 @@ data class Platform(
     @Column(nullable = false)
     val image: String? = null
 ) : Serializable {
+    fun isNotValid(): Boolean = name.isNullOrBlank() || url.isNullOrBlank() || image.isNullOrBlank()
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false

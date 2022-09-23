@@ -2,7 +2,12 @@ package fr.ziedelth.plugins
 
 import fr.ziedelth.controllers.AnimeController.getAnimes
 import fr.ziedelth.controllers.CountryController.getCountries
+import fr.ziedelth.controllers.EpisodeController.getEpisodes
+import fr.ziedelth.controllers.EpisodeTypeController.getEpisodeTypes
+import fr.ziedelth.controllers.GenreController.getGenres
+import fr.ziedelth.controllers.LangTypeController.getLangTypes
 import fr.ziedelth.controllers.PlatformController.getPlatforms
+import fr.ziedelth.controllers.SimulcastController.getSimulcasts
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -17,6 +22,11 @@ fun Application.configureRouting() {
     routing {
         getCountries()
         getPlatforms()
+        getSimulcasts()
+        getGenres()
         getAnimes()
+        getEpisodeTypes()
+        getLangTypes()
+        getEpisodes()
     }
 }
