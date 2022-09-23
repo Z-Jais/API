@@ -1,5 +1,6 @@
 package fr.ziedelth.controllers
 
+import fr.ziedelth.controllers.CountryController.getAll
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
@@ -13,6 +14,7 @@ import io.ktor.server.routing.*
 object EpisodeController : IController<Episode>("/episodes") {
     fun Routing.getEpisodes() {
         route(prefix) {
+            getAll()
             getWithPage()
             create()
         }
@@ -68,12 +70,6 @@ object EpisodeController : IController<Episode>("/episodes") {
 
                 if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
                     episode.anime!!.simulcasts.add(simulcast)
-
-//                    if (tmpSimulcast.uuid == simulcast.uuid) {
-//                        justSave(simulcast)
-//                    }
-//
-//                    justSave(episode.anime!!)
                 }
 
                 save(episode)

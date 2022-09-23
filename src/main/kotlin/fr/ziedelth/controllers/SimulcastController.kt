@@ -1,5 +1,6 @@
 package fr.ziedelth.controllers
 
+import fr.ziedelth.controllers.CountryController.getAll
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.utils.Database
 import io.ktor.http.*
@@ -10,6 +11,8 @@ import io.ktor.server.routing.*
 object SimulcastController : IController<Simulcast>("/simulcasts") {
     fun Routing.getSimulcasts() {
         route(prefix) {
+            getAll()
+
             get("/country/{country}") {
                 val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
                 println("GET $prefix/country/$country")

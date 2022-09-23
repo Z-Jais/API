@@ -13,8 +13,52 @@ import java.util.UUID
 object AnimeController : IController<Anime>("/animes") {
     fun Routing.getAnimes() {
         route(prefix) {
+            getAll()
             getWithPage()
+            search()
             create()
+        }
+    }
+
+    private fun Route.search() {
+        route("/country/{country}/search") {
+            get("/hash/{hash}") {
+                val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                val hash = call.parameters["hash"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                println("GET $prefix/country/$country/search/hash/$hash")
+                val session = Database.getSession()
+
+                try {
+                    val query = session.createQuery("FROM Anime a JOIN a.hashes h WHERE a.country.tag = :tag AND h = :hash", Anime::class.java)
+                    query.setParameter("tag", country)
+                    query.setParameter("hash", hash)
+                    call.respond(query.list().firstOrNull() ?: HttpStatusCode.NotFound)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                } finally {
+                    session.close()
+                }
+            }
+
+            get("/name/{name}") {
+                val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                println("GET $prefix/country/$country/search/name/$name")
+                val session = Database.getSession()
+
+                try {
+                    val query = session.createQuery("FROM Anime a WHERE a.country.tag = :tag AND LOWER(name) LIKE CONCAT('%', :name, '%') ", Anime::class.java)
+                    query.setParameter("tag", country)
+                    query.setParameter("name", name.lowercase())
+                    call.respond(query.list() ?: HttpStatusCode.NotFound)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                } finally {
+                    session.close()
+                }
+            }
         }
     }
 
