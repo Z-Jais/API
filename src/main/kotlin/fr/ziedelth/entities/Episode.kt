@@ -15,16 +15,32 @@ data class Episode(
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
     @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
-    @JoinColumn(name = "platform_uuid", nullable = false, foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (platform_uuid) REFERENCES platform(uuid) ON DELETE CASCADE"))
+    @JoinColumn(
+        name = "platform_uuid",
+        nullable = false,
+        foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (platform_uuid) REFERENCES platform(uuid) ON DELETE CASCADE")
+    )
     var platform: Platform? = null,
     @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
-    @JoinColumn(name = "anime_uuid", nullable = false, foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime(uuid) ON DELETE CASCADE"))
+    @JoinColumn(
+        name = "anime_uuid",
+        nullable = false,
+        foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime(uuid) ON DELETE CASCADE")
+    )
     var anime: Anime? = null,
     @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
-    @JoinColumn(name = "episode_type_uuid", nullable = false, foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (episode_type_uuid) REFERENCES episodetype(uuid) ON DELETE CASCADE"))
+    @JoinColumn(
+        name = "episode_type_uuid",
+        nullable = false,
+        foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (episode_type_uuid) REFERENCES episodetype(uuid) ON DELETE CASCADE")
+    )
     var episodeType: EpisodeType? = null,
     @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
-    @JoinColumn(name = "lang_type_uuid", nullable = false, foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (lang_type_uuid) REFERENCES langtype(uuid) ON DELETE CASCADE"))
+    @JoinColumn(
+        name = "lang_type_uuid",
+        nullable = false,
+        foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (lang_type_uuid) REFERENCES langtype(uuid) ON DELETE CASCADE")
+    )
     var langType: LangType? = null,
     @Column(nullable = false, unique = true)
     val hash: String? = null,
@@ -45,8 +61,8 @@ data class Episode(
 ) : Serializable {
     fun isNotValid(): Boolean =
         platform.isNullOrNotValid() || anime.isNullOrNotValid() || episodeType.isNullOrNotValid() || langType.isNullOrNotValid() || hash.isNullOrBlank() || (
-            releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)
-            ) || season == null || number == null || url.isNullOrBlank() || image.isNullOrBlank()
+                releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)
+                ) || season == null || number == null || url.isNullOrBlank() || image.isNullOrBlank()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

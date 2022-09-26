@@ -1,6 +1,5 @@
 package fr.ziedelth.controllers
 
-import fr.ziedelth.controllers.CountryController.getAll
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.utils.Database
 import io.ktor.http.*
@@ -19,7 +18,10 @@ object SimulcastController : IController<Simulcast>("/simulcasts") {
                 val session = Database.getSession()
 
                 try {
-                    val query = session.createQuery("SELECT DISTINCT simulcasts FROM Anime WHERE country.tag = :tag", Simulcast::class.java)
+                    val query = session.createQuery(
+                        "SELECT DISTINCT simulcasts FROM Anime WHERE country.tag = :tag",
+                        Simulcast::class.java
+                    )
                     query.setParameter("tag", country)
                     call.respond(query.list())
                 } catch (e: Exception) {
@@ -36,7 +38,8 @@ object SimulcastController : IController<Simulcast>("/simulcasts") {
         val session = Database.getSession()
 
         try {
-            val query = session.createQuery("FROM Simulcast WHERE season = :season AND year = :year", Simulcast::class.java)
+            val query =
+                session.createQuery("FROM Simulcast WHERE season = :season AND year = :year", Simulcast::class.java)
             query.setParameter("season", simulcast.season)
             query.setParameter("year", simulcast.year)
             return query.list().firstOrNull() ?: simulcast

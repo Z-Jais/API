@@ -8,7 +8,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.util.UUID
+import java.util.*
 
 object AnimeController : IController<Anime>("/animes") {
     fun Routing.getAnimes() {
@@ -29,7 +29,10 @@ object AnimeController : IController<Anime>("/animes") {
                 val session = Database.getSession()
 
                 try {
-                    val query = session.createQuery("FROM Anime a JOIN a.hashes h WHERE a.country.tag = :tag AND h = :hash", Anime::class.java)
+                    val query = session.createQuery(
+                        "FROM Anime a JOIN a.hashes h WHERE a.country.tag = :tag AND h = :hash",
+                        Anime::class.java
+                    )
                     query.setParameter("tag", country)
                     query.setParameter("hash", hash)
                     call.respond(query.list().firstOrNull() ?: HttpStatusCode.NotFound)
@@ -48,7 +51,10 @@ object AnimeController : IController<Anime>("/animes") {
                 val session = Database.getSession()
 
                 try {
-                    val query = session.createQuery("FROM Anime a WHERE a.country.tag = :tag AND LOWER(name) LIKE CONCAT('%', :name, '%') ", Anime::class.java)
+                    val query = session.createQuery(
+                        "FROM Anime a WHERE a.country.tag = :tag AND LOWER(name) LIKE CONCAT('%', :name, '%') ",
+                        Anime::class.java
+                    )
                     query.setParameter("tag", country)
                     query.setParameter("name", name.lowercase())
                     call.respond(query.list() ?: HttpStatusCode.NotFound)
@@ -72,7 +78,10 @@ object AnimeController : IController<Anime>("/animes") {
             val session = Database.getSession()
 
             try {
-                val query = session.createQuery("FROM Anime a JOIN a.simulcasts s WHERE a.country.tag = :tag AND s.uuid = :simulcast ORDER BY a.name", Anime::class.java)
+                val query = session.createQuery(
+                    "FROM Anime a JOIN a.simulcasts s WHERE a.country.tag = :tag AND s.uuid = :simulcast ORDER BY a.name",
+                    Anime::class.java
+                )
                 query.setParameter("tag", country)
                 query.setParameter("simulcast", UUID.fromString(simulcast))
                 query.firstResult = (limit * page) - limit
@@ -93,7 +102,11 @@ object AnimeController : IController<Anime>("/animes") {
 
             try {
                 val anime = call.receive<Anime>()
-                anime.country = CountryController.getBy("uuid", anime.country?.uuid) ?: return@post call.respond(HttpStatusCode.BadRequest, "Country not found")
+
+                anime.country = CountryController.getBy("uuid", anime.country?.uuid) ?: return@post call.respond(
+                    HttpStatusCode.BadRequest,
+                    "Country not found"
+                )
 
                 if (anime.isNullOrNotValid()) {
                     call.respond(HttpStatusCode.BadRequest, "Missing parameters")
@@ -115,11 +128,10 @@ object AnimeController : IController<Anime>("/animes") {
                     anime.hashes.add(hash!!)
                 }
 
-                save(anime)
+                call.respond(HttpStatusCode.Created, justSave(anime))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-                return@post
             }
         }
     }

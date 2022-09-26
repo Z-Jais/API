@@ -1,6 +1,5 @@
 package fr.ziedelth.controllers
 
-import fr.ziedelth.controllers.CountryController.getAll
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
@@ -29,7 +28,10 @@ object EpisodeController : IController<Episode>("/episodes") {
             val session = Database.getSession()
 
             try {
-                val query = session.createQuery("FROM Episode WHERE anime.country.tag = :tag ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name", Episode::class.java)
+                val query = session.createQuery(
+                    "FROM Episode WHERE anime.country.tag = :tag ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
+                    Episode::class.java
+                )
                 query.setParameter("tag", country)
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
@@ -43,40 +45,59 @@ object EpisodeController : IController<Episode>("/episodes") {
         }
     }
 
+    private fun merge(episode: Episode, checkHash: Boolean = true) {
+        if (checkHash && isExists("hash", episode.hash!!))
+            throw Exception("Episode already exists")
+
+        episode.platform =
+            PlatformController.getBy("uuid", episode.platform!!.uuid) ?: throw Exception("Platform not found")
+        episode.anime = AnimeController.getBy("uuid", episode.anime!!.uuid) ?: throw Exception("Anime not found")
+        episode.episodeType =
+            EpisodeTypeController.getBy("uuid", episode.episodeType!!.uuid) ?: throw Exception("EpisodeType not found")
+        episode.langType =
+            LangTypeController.getBy("uuid", episode.langType!!.uuid) ?: throw Exception("LangType not found")
+
+        if (episode.isNullOrNotValid())
+            throw Exception("Episode is not valid")
+
+        val tmpSimulcast =
+            Simulcast.getSimulcast(episode.releaseDate.split("-")[0].toInt(), episode.releaseDate.split("-")[1].toInt())
+        val simulcast = SimulcastController.getBy(tmpSimulcast)
+
+        if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
+            episode.anime!!.simulcasts.add(simulcast)
+        }
+    }
+
     private fun Route.create() {
         post {
             println("POST $prefix")
 
             try {
                 val episode = call.receive<Episode>()
-
-                if (isExists("hash", episode.hash!!)) {
-                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                    return@post
-                }
-
-                episode.platform = PlatformController.getBy("uuid", episode.platform!!.uuid) ?: return@post call.respond(HttpStatusCode.BadRequest, "Platform not found")
-                episode.anime = AnimeController.getBy("uuid", episode.anime!!.uuid) ?: return@post call.respond(HttpStatusCode.BadRequest, "Anime not found")
-                episode.episodeType = EpisodeTypeController.getBy("uuid", episode.episodeType!!.uuid) ?: return@post call.respond(HttpStatusCode.BadRequest, "EpisodeType not found")
-                episode.langType = LangTypeController.getBy("uuid", episode.langType!!.uuid) ?: return@post call.respond(HttpStatusCode.BadRequest, "LangType not found")
-
-                if (episode.isNullOrNotValid()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
-                    return@post
-                }
-
-                val tmpSimulcast = Simulcast.getSimulcast(episode.releaseDate.split("-")[0].toInt(), episode.releaseDate.split("-")[1].toInt())
-                val simulcast = SimulcastController.getBy(tmpSimulcast)
-
-                if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
-                    episode.anime!!.simulcasts.add(simulcast)
-                }
-
-                save(episode)
+                merge(episode)
+                call.respond(HttpStatusCode.Created, justSave(episode))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-                return@post
+            }
+        }
+
+        post("/multiple") {
+            println("POST $prefix/multiple")
+
+            try {
+                val episodes = call.receive<List<Episode>>().filter { !isExists("hash", it.hash!!) }
+
+                episodes.forEach {
+                    merge(it, false)
+                    justSave(it)
+                }
+
+                call.respond(HttpStatusCode.Created, episodes)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
             }
         }
     }

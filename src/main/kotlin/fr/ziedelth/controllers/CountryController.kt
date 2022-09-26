@@ -20,24 +20,29 @@ object CountryController : IController<Country>("/countries") {
         post {
             println("POST $prefix")
 
-            val country = call.receive<Country>()
+            try {
+                val country = call.receive<Country>()
 
-            if (country.isNullOrNotValid()) {
-                call.respond(HttpStatusCode.BadRequest, "Missing parameters")
-                return@post
+                if (country.isNullOrNotValid()) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    return@post
+                }
+
+                if (isExists("tag", country.tag!!)) {
+                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
+                    return@post
+                }
+
+                if (isExists("name", country.name!!)) {
+                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
+                    return@post
+                }
+
+                call.respond(HttpStatusCode.Created, justSave(country))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
             }
-
-            if (isExists("tag", country.tag!!)) {
-                call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                return@post
-            }
-
-            if (isExists("name", country.name!!)) {
-                call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                return@post
-            }
-
-            save(country)
         }
     }
 }

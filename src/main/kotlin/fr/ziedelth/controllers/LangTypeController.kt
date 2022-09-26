@@ -19,19 +19,24 @@ object LangTypeController : IController<LangType>("/langtypes") {
         post {
             println("POST $prefix")
 
-            val langType = call.receive<LangType>()
+            try {
+                val langType = call.receive<LangType>()
 
-            if (langType.name.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "Missing parameters")
-                return@post
+                if (langType.name.isNullOrBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    return@post
+                }
+
+                if (isExists("name", langType.name)) {
+                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
+                    return@post
+                }
+
+                call.respond(HttpStatusCode.Created, justSave(langType))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
             }
-
-            if (isExists("name", langType.name)) {
-                call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                return@post
-            }
-
-            save(langType)
         }
     }
 }

@@ -5,7 +5,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.pipeline.*
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 
@@ -90,16 +89,6 @@ open class IController<T : Serializable>(val prefix: String) {
             throw e
         } finally {
             session.close()
-        }
-    }
-
-    suspend inline fun <reified T : Serializable> PipelineContext<Unit, ApplicationCall>.save(dtoIn: T) {
-        try {
-            call.respond(justSave(dtoIn))
-        } catch (e: Exception) {
-            e.printStackTrace()
-            println("Error while saving $prefix : ${e.message}")
-            call.respond(HttpStatusCode.InternalServerError, e)
         }
     }
 }

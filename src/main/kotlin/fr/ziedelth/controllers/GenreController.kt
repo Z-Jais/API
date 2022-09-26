@@ -19,19 +19,24 @@ object GenreController : IController<Genre>("/genres") {
         post {
             println("POST $prefix")
 
-            val genre = call.receive<Genre>()
+            try {
+                val genre = call.receive<Genre>()
 
-            if (genre.name.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "Missing parameters")
-                return@post
+                if (genre.name.isNullOrBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    return@post
+                }
+
+                if (isExists("name", genre.name)) {
+                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
+                    return@post
+                }
+
+                call.respond(HttpStatusCode.Created, justSave(genre))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
             }
-
-            if (isExists("name", genre.name)) {
-                call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                return@post
-            }
-
-            save(genre)
         }
     }
 }

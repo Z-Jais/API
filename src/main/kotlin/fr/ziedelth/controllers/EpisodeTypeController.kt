@@ -19,19 +19,24 @@ object EpisodeTypeController : IController<EpisodeType>("/episodetypes") {
         post {
             println("POST $prefix")
 
-            val episodeType = call.receive<EpisodeType>()
+            try {
+                val episodeType = call.receive<EpisodeType>()
 
-            if (episodeType.name.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "Missing parameters")
-                return@post
+                if (episodeType.name.isNullOrBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    return@post
+                }
+
+                if (isExists("name", episodeType.name)) {
+                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
+                    return@post
+                }
+
+                call.respond(HttpStatusCode.Created, justSave(episodeType))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
             }
-
-            if (isExists("name", episodeType.name)) {
-                call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                return@post
-            }
-
-            save(episodeType)
         }
     }
 }
