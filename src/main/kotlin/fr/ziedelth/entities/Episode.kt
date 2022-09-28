@@ -61,8 +61,8 @@ data class Episode(
 ) : Serializable {
     fun isNotValid(): Boolean =
         platform.isNullOrNotValid() || anime.isNullOrNotValid() || episodeType.isNullOrNotValid() || langType.isNullOrNotValid() || hash.isNullOrBlank() || (
-                releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)
-                ) || season == null || number == null || url.isNullOrBlank() || image.isNullOrBlank()
+            releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)
+            ) || season == null || number == null || url.isNullOrBlank() || image.isNullOrBlank()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
