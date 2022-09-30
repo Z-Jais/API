@@ -103,23 +103,30 @@ object AnimeController : IController<Anime>("/animes") {
             try {
                 val anime = call.receive<Anime>()
 
-                anime.country = CountryController.getBy("uuid", anime.country?.uuid) ?: return@post call.respond(
-                    HttpStatusCode.BadRequest,
-                    "Country not found"
-                )
+                anime.country = CountryController.getBy("uuid", anime.country?.uuid) ?: return@post run {
+                    println("Country not found")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Country not found"
+                    )
+                }
 
                 if (anime.isNullOrNotValid()) {
+                    println("Missing parameters")
+                    println(anime)
                     call.respond(HttpStatusCode.BadRequest, "Missing parameters")
                     return@post
                 }
 
                 if (isExists("name", anime.name)) {
+                    println("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
                 val hash = anime.hash()
                 if (contains("hashes", hash)) {
+                    println("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }

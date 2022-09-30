@@ -6,6 +6,7 @@ import fr.ziedelth.controllers.EpisodeController.getEpisodes
 import fr.ziedelth.controllers.EpisodeTypeController.getEpisodeTypes
 import fr.ziedelth.controllers.GenreController.getGenres
 import fr.ziedelth.controllers.LangTypeController.getLangTypes
+import fr.ziedelth.controllers.MangaController.getMangas
 import fr.ziedelth.controllers.NewsController.getNews
 import fr.ziedelth.controllers.PlatformController.getPlatforms
 import fr.ziedelth.controllers.SimulcastController.getSimulcasts
@@ -30,5 +31,6 @@ fun Application.configureRouting() {
         getLangTypes()
         getEpisodes()
         getNews()
+        getMangas()
     }
 }

@@ -1,7 +1,6 @@
 package fr.ziedelth.controllers
 
-import fr.ziedelth.entities.Episode
-import fr.ziedelth.entities.Simulcast
+import fr.ziedelth.entities.Manga
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.utils.Database
 import io.ktor.http.*
@@ -10,8 +9,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-object EpisodeController : IController<Episode>("/episodes") {
-    fun Routing.getEpisodes() {
+object MangaController : IController<Manga>("/mangas") {
+    fun Routing.getMangas() {
         route(prefix) {
             getAll()
             getWithPage()
@@ -29,8 +28,8 @@ object EpisodeController : IController<Episode>("/episodes") {
 
             try {
                 val query = session.createQuery(
-                    "FROM Episode WHERE anime.country.tag = :tag ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
-                    Episode::class.java
+                    "FROM Manga WHERE anime.country.tag = :tag ORDER BY releaseDate DESC, anime.name",
+                    Manga::class.java
                 )
                 query.setParameter("tag", country)
                 query.firstResult = (limit * page) - limit
@@ -45,29 +44,17 @@ object EpisodeController : IController<Episode>("/episodes") {
         }
     }
 
-    private fun merge(episode: Episode, checkHash: Boolean = true) {
-        if (checkHash && isExists("hash", episode.hash!!)) {
-            throw Exception("Episode already exists")
+    private fun merge(manga: Manga, checkHash: Boolean = true) {
+        if (checkHash && isExists("hash", manga.hash!!)) {
+            throw Exception("Manga already exists")
         }
 
-        episode.platform =
-            PlatformController.getBy("uuid", episode.platform!!.uuid) ?: throw Exception("Platform not found")
-        episode.anime = AnimeController.getBy("uuid", episode.anime!!.uuid) ?: throw Exception("Anime not found")
-        episode.episodeType =
-            EpisodeTypeController.getBy("uuid", episode.episodeType!!.uuid) ?: throw Exception("EpisodeType not found")
-        episode.langType =
-            LangTypeController.getBy("uuid", episode.langType!!.uuid) ?: throw Exception("LangType not found")
+        manga.platform =
+            PlatformController.getBy("uuid", manga.platform!!.uuid) ?: throw Exception("Platform not found")
+        manga.anime = AnimeController.getBy("uuid", manga.anime!!.uuid) ?: throw Exception("Anime not found")
 
-        if (episode.isNullOrNotValid()) {
-            throw Exception("Episode is not valid")
-        }
-
-        val tmpSimulcast =
-            Simulcast.getSimulcast(episode.releaseDate.split("-")[0].toInt(), episode.releaseDate.split("-")[1].toInt())
-        val simulcast = SimulcastController.getBy(tmpSimulcast)
-
-        if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
-            episode.anime!!.simulcasts.add(simulcast)
+        if (manga.isNullOrNotValid()) {
+            throw Exception("Manga is not valid")
         }
     }
 
@@ -76,9 +63,9 @@ object EpisodeController : IController<Episode>("/episodes") {
             println("POST $prefix")
 
             try {
-                val episode = call.receive<Episode>()
-                merge(episode)
-                call.respond(HttpStatusCode.Created, justSave(episode))
+                val manga = call.receive<Manga>()
+                merge(manga)
+                call.respond(HttpStatusCode.Created, justSave(manga))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -89,14 +76,14 @@ object EpisodeController : IController<Episode>("/episodes") {
             println("POST $prefix/multiple")
 
             try {
-                val episodes = call.receive<List<Episode>>().filter { !isExists("hash", it.hash!!) }
+                val mangas = call.receive<List<Manga>>().filter { !isExists("hash", it.hash!!) }
 
-                episodes.forEach {
+                mangas.forEach {
                     merge(it, false)
                     justSave(it)
                 }
 
-                call.respond(HttpStatusCode.Created, episodes)
+                call.respond(HttpStatusCode.Created, mangas)
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
