@@ -7,6 +7,7 @@
     <version>1.0.0</version>
     <name>api</name>
     <description>api</description>
+
     <properties>
         <ktor_version>2.1.2</ktor_version>
         <kotlin.code.style>official</kotlin.code.style>
@@ -17,6 +18,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <main.class>fr.ziedelth.ApplicationKt</main.class>
     </properties>
+
     <repositories>
         <repository>
             <id>clojars</id>
@@ -24,6 +26,7 @@
             <url>https://repo.clojars.org/</url>
         </repository>
     </repositories>
+
     <dependencies>
         <dependency>
             <groupId>io.ktor</groupId>
@@ -76,6 +79,7 @@
             <version>0.10.2</version>
         </dependency>
     </dependencies>
+
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
