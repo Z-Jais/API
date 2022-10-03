@@ -9,14 +9,10 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.net.URL
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.UUID
-import java.util.zip.GZIPOutputStream
+import java.util.*
 import javax.imageio.ImageIO
 
 object EpisodeController : IController<Episode>("/episodes") {
@@ -64,30 +60,39 @@ object EpisodeController : IController<Episode>("/episodes") {
         return imageInByte
     }
 
+    private fun getImage(
+        uuid: String,
+        imageCache: MutableMap<String, Pair<ByteArray, ContentType>>
+    ): Pair<ByteArray, ContentType> {
+        val session = Database.getSession()
+
+        try {
+            val query = session.createQuery("SELECT image FROM Episode WHERE uuid = :uuid", String::class.java)
+            query.setParameter("uuid", UUID.fromString(uuid))
+            val imageUrl = query.uniqueResult() ?: throw Exception("Image not found")
+
+            val image1 = ImageIO.read(URL(imageUrl))
+            val imageType = imageUrl.substring(imageUrl.lastIndexOf(".") + 1)
+            val imageBytes = toByteArray(image1)
+            val pair = imageBytes to ContentType("image", imageType)
+            imageCache[uuid] = pair
+            return pair
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        } finally {
+            session.close()
+        }
+    }
+
     private fun Route.getAttachment() {
+        val imageCache = mutableMapOf<String, Pair<ByteArray, ContentType>>()
+
         get("/attachment/{uuid}") {
             val uuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/attachment/$uuid")
-            val session = Database.getSession()
-
-            try {
-                val query = session.createQuery("FROM Episode WHERE uuid = :uuid", Episode::class.java)
-                query.setParameter("uuid", UUID.fromString(uuid))
-                val episode = query.uniqueResult() ?: return@get call.respond(HttpStatusCode.NotFound)
-
-                withContext(Dispatchers.IO) {
-                    val imageUrl = episode.image ?: return@withContext
-                    val image = ImageIO.read(URL(imageUrl))
-                    val imageType = imageUrl.substring(imageUrl.lastIndexOf(".") + 1)
-                    val imageBytes = toByteArray(image)
-                    call.respondBytes(imageBytes, ContentType("image", imageType))
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-            } finally {
-                session.close()
-            }
+            val image = imageCache[uuid] ?: run { getImage(uuid, imageCache) }
+            call.respondBytes(image.first, image.second)
         }
     }
 

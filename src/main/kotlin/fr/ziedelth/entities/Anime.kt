@@ -78,10 +78,10 @@ data class Anime(
         ?.replace("\\s+".toRegex(), "-")?.replace("--", "-")
 
     fun isNotValid(): Boolean = country.isNullOrNotValid() || name.isNullOrBlank() || (
-        releaseDate.isBlank() || !releaseDate.matches(
-            DATE_FORMAT_REGEX
-        )
-        ) || image.isNullOrBlank()
+            releaseDate.isBlank() || !releaseDate.matches(
+                DATE_FORMAT_REGEX
+            )
+            ) || image.isNullOrBlank()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

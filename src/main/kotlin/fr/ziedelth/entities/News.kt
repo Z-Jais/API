@@ -41,8 +41,8 @@ data class News(
 ) : Serializable {
     fun isNotValid(): Boolean =
         platform.isNullOrNotValid() || country.isNullOrNotValid() || hash.isNullOrBlank() || (
-            releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)
-            ) || title.isNullOrBlank() || description.isNullOrBlank() || url.isNullOrBlank()
+                releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)
+                ) || title.isNullOrBlank() || description.isNullOrBlank() || url.isNullOrBlank()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
