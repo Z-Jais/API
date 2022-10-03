@@ -9,12 +9,22 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import java.net.URL
+import java.nio.charset.StandardCharsets.UTF_8
+import java.util.UUID
+import java.util.zip.GZIPOutputStream
+import javax.imageio.ImageIO
 
 object EpisodeController : IController<Episode>("/episodes") {
     fun Routing.getEpisodes() {
         route(prefix) {
             getAll()
             getWithPage()
+            getAttachment()
             create()
         }
     }
@@ -36,6 +46,42 @@ object EpisodeController : IController<Episode>("/episodes") {
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
                 call.respond(query.list())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            } finally {
+                session.close()
+            }
+        }
+    }
+
+    private fun toByteArray(image: BufferedImage): ByteArray {
+        val baos = ByteArrayOutputStream()
+        ImageIO.write(image, "png", baos)
+        baos.flush()
+        val imageInByte = baos.toByteArray()
+        baos.close()
+        return imageInByte
+    }
+
+    private fun Route.getAttachment() {
+        get("/attachment/{uuid}") {
+            val uuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            println("GET $prefix/attachment/$uuid")
+            val session = Database.getSession()
+
+            try {
+                val query = session.createQuery("FROM Episode WHERE uuid = :uuid", Episode::class.java)
+                query.setParameter("uuid", UUID.fromString(uuid))
+                val episode = query.uniqueResult() ?: return@get call.respond(HttpStatusCode.NotFound)
+
+                withContext(Dispatchers.IO) {
+                    val imageUrl = episode.image ?: return@withContext
+                    val image = ImageIO.read(URL(imageUrl))
+                    val imageType = imageUrl.substring(imageUrl.lastIndexOf(".") + 1)
+                    val imageBytes = toByteArray(image)
+                    call.respondBytes(imageBytes, ContentType("image", imageType))
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
