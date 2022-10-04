@@ -57,20 +57,22 @@ open class IController<T : Serializable>(val prefix: String) {
 
     fun isExists(field: String, value: String?): Boolean {
         val session = Database.getSession()
-        val query = session.createQuery("FROM $entityName WHERE $field = :$field", entityClass)
+        val query = session.createQuery("SELECT COUNT(*) FROM $entityName WHERE $field = :$field", Long::class.java)
+        query.maxResults = 1
         query.setParameter(field, value)
-        val list = query.list()
+        val list = query.uniqueResult()
         session.close()
-        return list.isNotEmpty()
+        return list > 0
     }
 
     fun contains(fieldList: String, searchValue: String?): Boolean {
         val session = Database.getSession()
-        val query = session.createQuery("FROM $entityName JOIN $fieldList l WHERE l = :search", entityClass)
+        val query = session.createQuery("SELECT COUNT(*) FROM $entityName JOIN $fieldList l WHERE l = :search", Long::class.java)
+        query.maxResults = 1
         query.setParameter("search", searchValue)
-        val list = query.list()
+        val list = query.uniqueResult()
         session.close()
-        return list.isNotEmpty()
+        return list > 0
     }
 
     fun <T : Serializable> justSave(dtoIn: T): T {
