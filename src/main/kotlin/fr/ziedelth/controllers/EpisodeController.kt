@@ -4,16 +4,13 @@ import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.ImageCache
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import java.net.URL
 import java.util.*
-import javax.imageio.ImageIO
 
 object EpisodeController : IController<Episode>("/episodes") {
     fun Routing.getEpisodes() {
@@ -41,7 +38,9 @@ object EpisodeController : IController<Episode>("/episodes") {
                 query.setParameter("tag", country)
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
-                call.respond(query.list())
+                val episodes = query.list()
+                episodes.forEach { ImageCache.cachingNetworkImage(it.uuid, it.image!!) }
+                call.respond(episodes)
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -51,48 +50,18 @@ object EpisodeController : IController<Episode>("/episodes") {
         }
     }
 
-    private fun toByteArray(image: BufferedImage): ByteArray {
-        val baos = ByteArrayOutputStream()
-        ImageIO.write(image, "png", baos)
-        baos.flush()
-        val imageInByte = baos.toByteArray()
-        baos.close()
-        return imageInByte
-    }
-
-    private fun getImage(
-        uuid: String,
-        imageCache: MutableMap<String, Pair<ByteArray, ContentType>>
-    ): Pair<ByteArray, ContentType> {
-        val session = Database.getSession()
-
-        try {
-            val query = session.createQuery("SELECT image FROM Episode WHERE uuid = :uuid", String::class.java)
-            query.setParameter("uuid", UUID.fromString(uuid))
-            val imageUrl = query.uniqueResult() ?: throw Exception("Image not found")
-
-            val image1 = ImageIO.read(URL(imageUrl))
-            val imageType = imageUrl.substring(imageUrl.lastIndexOf(".") + 1)
-            val imageBytes = toByteArray(image1)
-            val pair = imageBytes to ContentType("image", imageType)
-            imageCache[uuid] = pair
-            return pair
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw e
-        } finally {
-            session.close()
-        }
-    }
-
     private fun Route.getAttachment() {
-        val imageCache = mutableMapOf<String, Pair<ByteArray, ContentType>>()
-
         get("/attachment/{uuid}") {
-            val uuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val uuid = UUID.fromString(call.parameters["uuid"]) ?: return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/attachment/$uuid")
-            val image = imageCache[uuid] ?: run { getImage(uuid, imageCache) }
-            call.respondBytes(image.first, image.second)
+
+            if (!ImageCache.contains(uuid)) {
+                call.respond(HttpStatusCode.NoContent)
+                return@get
+            }
+
+            val image = ImageCache.get(uuid) ?: return@get call.respond(HttpStatusCode.NoContent)
+            call.respondBytes(image.bytes, ContentType("image", "webp"))
         }
     }
 
