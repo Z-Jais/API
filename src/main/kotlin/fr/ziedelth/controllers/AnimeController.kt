@@ -32,12 +32,13 @@ object AnimeController : IController<Anime>("/animes") {
 
                 try {
                     val query = session.createQuery(
-                        "FROM Anime a JOIN a.hashes h WHERE a.country.tag = :tag AND h = :hash",
-                        Anime::class.java
+                        "SELECT a.uuid FROM Anime a JOIN a.hashes h WHERE a.country.tag = :tag AND h = :hash",
+                        UUID::class.java
                     )
+                    query.maxResults = 1
                     query.setParameter("tag", country)
                     query.setParameter("hash", hash)
-                    call.respond(query.list().firstOrNull() ?: HttpStatusCode.NotFound)
+                    call.respond("uuid" to (query.uniqueResult() ?: HttpStatusCode.NotFound))
                 } catch (e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
