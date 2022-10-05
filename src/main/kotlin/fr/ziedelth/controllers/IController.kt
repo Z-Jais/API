@@ -67,7 +67,10 @@ open class IController<T : Serializable>(val prefix: String) {
 
     fun contains(fieldList: String, searchValue: String?): Boolean {
         val session = Database.getSession()
-        val query = session.createQuery("SELECT COUNT(*) FROM $entityName JOIN $fieldList l WHERE l = :search", Long::class.java)
+        val query = session.createQuery(
+            "SELECT COUNT(*) FROM $entityName JOIN $fieldList l WHERE l = :search",
+            Long::class.java
+        )
         query.maxResults = 1
         query.setParameter("search", searchValue)
         val list = query.uniqueResult()

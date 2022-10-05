@@ -90,9 +90,7 @@ object AnimeController : IController<Anime>("/animes") {
                 query.setParameter("simulcast", UUID.fromString(simulcast))
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
-                val animes = query.list()
-                animes.forEach { ImageCache.cachingNetworkImage(it.uuid, it.image!!) }
-                call.respond(animes)
+                call.respond(query.list())
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -156,7 +154,9 @@ object AnimeController : IController<Anime>("/animes") {
                     anime.hashes.add(hash!!)
                 }
 
-                call.respond(HttpStatusCode.Created, justSave(anime))
+                val savedAnime = justSave(anime)
+                ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
+                call.respond(HttpStatusCode.Created, savedAnime)
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")

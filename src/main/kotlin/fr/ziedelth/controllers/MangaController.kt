@@ -3,6 +3,7 @@ package fr.ziedelth.controllers
 import fr.ziedelth.entities.Manga
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.ImageCache
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -65,7 +66,10 @@ object MangaController : IController<Manga>("/mangas") {
             try {
                 val manga = call.receive<Manga>()
                 merge(manga)
-                call.respond(HttpStatusCode.Created, justSave(manga))
+
+                val savedManga = justSave(manga)
+                ImageCache.cachingNetworkImage(savedManga.uuid, savedManga.cover!!)
+                call.respond(HttpStatusCode.Created, savedManga)
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -80,7 +84,8 @@ object MangaController : IController<Manga>("/mangas") {
 
                 mangas.forEach {
                     merge(it, false)
-                    justSave(it)
+                    val savedManga = justSave(it)
+                    ImageCache.cachingNetworkImage(savedManga.uuid, savedManga.cover!!)
                 }
 
                 call.respond(HttpStatusCode.Created, mangas)

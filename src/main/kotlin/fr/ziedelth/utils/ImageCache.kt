@@ -65,14 +65,10 @@ object ImageCache {
 
         newFixedThreadPool.submit {
             try {
-                println("Loading image $url")
-
                 val urlImage = ImageIO.read(URL(url))
                 val bytes = urlImage.toByteArray()
                 cache[uuid] = Image(CacheStatus.LOADING, bytes)
-                println("Converting image $url to webp")
                 cache[uuid] = Image(CacheStatus.DONE, encodeToWebP(bytes))
-                println("Image $url loaded")
             } catch (e: Exception) {
                 println("Failed to load image $url : ${e.message}")
             }

@@ -38,9 +38,7 @@ object EpisodeController : IController<Episode>("/episodes") {
                 query.setParameter("tag", country)
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
-                val episodes = query.list()
-                episodes.forEach { ImageCache.cachingNetworkImage(it.uuid, it.image!!) }
-                call.respond(episodes)
+                call.respond(query.list())
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -98,7 +96,10 @@ object EpisodeController : IController<Episode>("/episodes") {
             try {
                 val episode = call.receive<Episode>()
                 merge(episode)
-                call.respond(HttpStatusCode.Created, justSave(episode))
+
+                val savedEpisode = justSave(episode)
+                ImageCache.cachingNetworkImage(savedEpisode.uuid, savedEpisode.image!!)
+                call.respond(HttpStatusCode.Created, savedEpisode)
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -113,7 +114,8 @@ object EpisodeController : IController<Episode>("/episodes") {
 
                 episodes.forEach {
                     merge(it, false)
-                    justSave(it)
+                    val savedEpisode = justSave(it)
+                    ImageCache.cachingNetworkImage(savedEpisode.uuid, savedEpisode.image!!)
                 }
 
                 call.respond(HttpStatusCode.Created, episodes)
