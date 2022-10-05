@@ -1,15 +1,14 @@
 package fr.ziedelth
 
-import fr.ziedelth.entities.Anime
-import fr.ziedelth.entities.Episode
-import fr.ziedelth.entities.Manga
 import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import jakarta.persistence.Tuple
 import nu.pattern.OpenCV
+import java.util.*
 
 fun main() {
     println("Loading OpenCV...")
@@ -23,18 +22,18 @@ fun main() {
 
     try {
         // Get all animes from database
-        val animes = session.createQuery("FROM Anime", Anime::class.java).list()
-        animes.forEach { ImageCache.cachingNetworkImage(it.uuid, it.image!!) }
+        val animes = session.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java).list()
+        animes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
         println("Animes : ${animes.size}")
 
         // Get all episodes from database
-        val episodes = session.createQuery("FROM Episode", Episode::class.java).list()
-        episodes.forEach { ImageCache.cachingNetworkImage(it.uuid, it.image!!) }
+        val episodes = session.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java).list()
+        episodes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
         println("Episodes : ${episodes.size}")
 
         // Get all mangas from database
-        val mangas = session.createQuery("FROM Manga", Manga::class.java).list()
-        mangas.forEach { ImageCache.cachingNetworkImage(it.uuid, it.cover!!) }
+        val mangas = session.createQuery("SELECT uuid, cover FROM Manga", Tuple::class.java).list()
+        mangas.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
         println("Mangas : ${mangas.size}")
     } catch (e: Exception) {
         e.printStackTrace()
