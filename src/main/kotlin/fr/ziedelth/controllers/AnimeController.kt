@@ -38,7 +38,8 @@ object AnimeController : IController<Anime>("/animes") {
                     query.maxResults = 1
                     query.setParameter("tag", country)
                     query.setParameter("hash", hash)
-                    call.respond(mapOf("uuid" to (query.uniqueResult() ?: HttpStatusCode.NotFound)))
+                    val uuid = query.uniqueResult() ?: return@get call.respond(HttpStatusCode.NotFound)
+                    call.respond(mapOf("uuid" to uuid))
                 } catch (e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
