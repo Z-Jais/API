@@ -15,6 +15,7 @@ object MangaController : IController<Manga>("/mangas") {
         route(prefix) {
             getAll()
             getWithPage()
+            getAttachment()
             create()
         }
     }
@@ -44,6 +45,7 @@ object MangaController : IController<Manga>("/mangas") {
             }
         }
     }
+
 
     private fun merge(manga: Manga, checkHash: Boolean = true) {
         if (checkHash && isExists("hash", manga.hash!!)) {

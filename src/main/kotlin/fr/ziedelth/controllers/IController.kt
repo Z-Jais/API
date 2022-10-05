@@ -1,12 +1,14 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.ImageCache
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
+import java.util.*
 
 open class IController<T : Serializable>(val prefix: String) {
     val entityClass: Class<T> = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
@@ -94,6 +96,21 @@ open class IController<T : Serializable>(val prefix: String) {
             throw e
         } finally {
             session.close()
+        }
+    }
+
+    fun Route.getAttachment() {
+        get("/attachment/{uuid}") {
+            val uuid = UUID.fromString(call.parameters["uuid"]) ?: return@get call.respond(HttpStatusCode.BadRequest)
+            println("GET ${prefix}/attachment/$uuid")
+
+            if (!ImageCache.contains(uuid)) {
+                call.respond(HttpStatusCode.NoContent)
+                return@get
+            }
+
+            val image = ImageCache.get(uuid) ?: return@get call.respond(HttpStatusCode.NoContent)
+            call.respondBytes(image.bytes, ContentType("image", "webp"))
         }
     }
 }

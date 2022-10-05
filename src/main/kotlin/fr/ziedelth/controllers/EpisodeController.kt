@@ -10,7 +10,6 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.util.*
 
 object EpisodeController : IController<Episode>("/episodes") {
     fun Routing.getEpisodes() {
@@ -45,21 +44,6 @@ object EpisodeController : IController<Episode>("/episodes") {
             } finally {
                 session.close()
             }
-        }
-    }
-
-    private fun Route.getAttachment() {
-        get("/attachment/{uuid}") {
-            val uuid = UUID.fromString(call.parameters["uuid"]) ?: return@get call.respond(HttpStatusCode.BadRequest)
-            println("GET $prefix/attachment/$uuid")
-
-            if (!ImageCache.contains(uuid)) {
-                call.respond(HttpStatusCode.NoContent)
-                return@get
-            }
-
-            val image = ImageCache.get(uuid) ?: return@get call.respond(HttpStatusCode.NoContent)
-            call.respondBytes(image.bytes, ContentType("image", "webp"))
         }
     }
 
