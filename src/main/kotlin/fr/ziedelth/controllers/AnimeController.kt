@@ -90,7 +90,7 @@ object AnimeController : IController<Anime>("/animes") {
                 query.setParameter("simulcast", UUID.fromString(simulcast))
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
-                call.respond(query.list())
+                call.respond(query.list() ?: HttpStatusCode.NotFound)
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")

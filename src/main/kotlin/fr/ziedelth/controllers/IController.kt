@@ -11,7 +11,8 @@ import java.lang.reflect.ParameterizedType
 import java.util.*
 
 open class IController<T : Serializable>(val prefix: String) {
-    val entityClass: Class<T> = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
+    private val entityClass: Class<T> =
+        (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     val entityName: String = entityClass.simpleName
 
     private fun getAll(): MutableList<T> {
@@ -42,18 +43,6 @@ open class IController<T : Serializable>(val prefix: String) {
             throw e
         } finally {
             session.close()
-        }
-    }
-
-    fun Route.getAll() {
-        get {
-            println("GET $prefix")
-
-            try {
-                call.respond(this@IController.getAll())
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-            }
         }
     }
 
@@ -99,9 +88,29 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
+    fun Route.getAll() {
+        get {
+            println("GET $prefix")
+
+            try {
+                call.respond(this@IController.getAll())
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            }
+        }
+    }
+
     fun Route.getAttachment() {
         get("/attachment/{uuid}") {
-            val uuid = UUID.fromString(call.parameters["uuid"]) ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val string = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val uuidRegex =
+                "^[0-9(a-f|A-F)]{8}-[0-9(a-f|A-F)]{4}-4[0-9(a-f|A-F)]{3}-[89ab][0-9(a-f|A-F)]{3}-[0-9(a-f|A-F)]{12}\$".toRegex()
+
+            if (!uuidRegex.matches(string)) {
+                return@get call.respond(HttpStatusCode.BadRequest)
+            }
+
+            val uuid = UUID.fromString(string)
             println("GET ${prefix}/attachment/$uuid")
 
             if (!ImageCache.contains(uuid)) {
