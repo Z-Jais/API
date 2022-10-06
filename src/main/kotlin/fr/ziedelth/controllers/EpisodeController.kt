@@ -47,11 +47,7 @@ object EpisodeController : IController<Episode>("/episodes") {
         }
     }
 
-    private fun merge(episode: Episode, checkHash: Boolean = true) {
-        if (checkHash && isExists("hash", episode.hash!!)) {
-            throw Exception("Episode already exists")
-        }
-
+    private fun merge(episode: Episode) {
         episode.platform =
             PlatformController.getBy("uuid", episode.platform!!.uuid) ?: throw Exception("Platform not found")
         episode.anime = AnimeController.getBy("uuid", episode.anime!!.uuid) ?: throw Exception("Anime not found")
@@ -74,22 +70,6 @@ object EpisodeController : IController<Episode>("/episodes") {
     }
 
     private fun Route.create() {
-        post {
-            println("POST $prefix")
-
-            try {
-                val episode = call.receive<Episode>()
-                merge(episode)
-
-                val savedEpisode = justSave(episode)
-                ImageCache.cachingNetworkImage(savedEpisode.uuid, savedEpisode.image!!)
-                call.respond(HttpStatusCode.Created, savedEpisode)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-            }
-        }
-
         post("/multiple") {
             println("POST $prefix/multiple")
 
@@ -97,7 +77,7 @@ object EpisodeController : IController<Episode>("/episodes") {
                 val episodes = call.receive<List<Episode>>().filter { !isExists("hash", it.hash!!) }
 
                 episodes.forEach {
-                    merge(it, false)
+                    merge(it)
                     val savedEpisode = justSave(it)
                     ImageCache.cachingNetworkImage(savedEpisode.uuid, savedEpisode.image!!)
                 }

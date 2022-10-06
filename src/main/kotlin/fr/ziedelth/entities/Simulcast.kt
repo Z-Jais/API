@@ -8,7 +8,7 @@ import java.util.*
 fun Simulcast?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
-@Table(uniqueConstraints = arrayOf(UniqueConstraint(columnNames = arrayOf("season", "year"))))
+@Table(uniqueConstraints = [UniqueConstraint(columnNames = arrayOf("season", "year"))])
 data class Simulcast(
     @Id
     @GeneratedValue

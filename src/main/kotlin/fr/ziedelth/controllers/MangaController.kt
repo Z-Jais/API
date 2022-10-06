@@ -47,11 +47,7 @@ object MangaController : IController<Manga>("/mangas") {
     }
 
 
-    private fun merge(manga: Manga, checkHash: Boolean = true) {
-        if (checkHash && isExists("hash", manga.hash!!)) {
-            throw Exception("Manga already exists")
-        }
-
+    private fun merge(manga: Manga) {
         manga.platform =
             PlatformController.getBy("uuid", manga.platform!!.uuid) ?: throw Exception("Platform not found")
         manga.anime = AnimeController.getBy("uuid", manga.anime!!.uuid) ?: throw Exception("Anime not found")
@@ -62,22 +58,6 @@ object MangaController : IController<Manga>("/mangas") {
     }
 
     private fun Route.create() {
-        post {
-            println("POST $prefix")
-
-            try {
-                val manga = call.receive<Manga>()
-                merge(manga)
-
-                val savedManga = justSave(manga)
-                ImageCache.cachingNetworkImage(savedManga.uuid, savedManga.cover!!)
-                call.respond(HttpStatusCode.Created, savedManga)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-            }
-        }
-
         post("/multiple") {
             println("POST $prefix/multiple")
 
@@ -85,7 +65,7 @@ object MangaController : IController<Manga>("/mangas") {
                 val mangas = call.receive<List<Manga>>().filter { !isExists("hash", it.hash!!) }
 
                 mangas.forEach {
-                    merge(it, false)
+                    merge(it)
                     val savedManga = justSave(it)
                     ImageCache.cachingNetworkImage(savedManga.uuid, savedManga.cover!!)
                 }

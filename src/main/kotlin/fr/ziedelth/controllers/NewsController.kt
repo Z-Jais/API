@@ -1,6 +1,7 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.News
+import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.utils.Database
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -43,29 +44,16 @@ object NewsController : IController<News>("/news") {
         }
     }
 
-    private fun merge(news: News, checkHash: Boolean = true) {
-        if (checkHash && isExists("hash", news.hash!!)) {
-            throw Exception("News already exists")
-        }
-
+    private fun merge(news: News) {
         news.platform = PlatformController.getBy("uuid", news.platform!!.uuid) ?: throw Exception("Platform not found")
         news.country = CountryController.getBy("uuid", news.country!!.uuid) ?: throw Exception("Country not found")
+
+        if (news.isNullOrNotValid()) {
+            throw Exception("News is not valid")
+        }
     }
 
     private fun Route.create() {
-        post {
-            println("POST $prefix")
-
-            try {
-                val news = call.receive<News>()
-                merge(news)
-                call.respond(HttpStatusCode.Created, justSave(news))
-            } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-            }
-        }
-
         post("/multiple") {
             println("POST $prefix/multiple")
 
@@ -73,7 +61,7 @@ object NewsController : IController<News>("/news") {
                 val news = call.receive<List<News>>().filter { !isExists("hash", it.hash!!) }
 
                 news.forEach {
-                    merge(it, false)
+                    merge(it)
                     justSave(it)
                 }
 

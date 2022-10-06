@@ -35,7 +35,7 @@ object Database {
         }
     }
 
-    fun getEntities(): MutableSet<Class<out Serializable>> =
+    private fun getEntities(): MutableSet<Class<out Serializable>> =
         Reflections("fr.ziedelth.entities").getSubTypesOf(Serializable::class.java)
 
     fun getSessionFactory() = sessionFactory
