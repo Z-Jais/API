@@ -3,6 +3,7 @@ package fr.ziedelth.controllers
 import fr.ziedelth.entities.News
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.RequestCache
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -24,23 +25,29 @@ object NewsController : IController<News>("/news") {
             val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
             val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/country/$country/page/$page/limit/$limit")
-            val session = Database.getSession()
+            val request = RequestCache.get(uuidRequest, country, page, limit)
 
-            try {
-                val query = session.createQuery(
-                    "FROM News WHERE country.tag = :tag ORDER BY releaseDate DESC",
-                    News::class.java
-                )
-                query.setParameter("tag", country)
-                query.firstResult = (limit * page) - limit
-                query.maxResults = limit
-                call.respond(query.list())
-            } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-            } finally {
-                session.close()
+            if (request == null || request.isExpired()) {
+                val session = Database.getSession()
+
+                try {
+                    val query = session.createQuery(
+                        "FROM News WHERE country.tag = :tag ORDER BY releaseDate DESC",
+                        News::class.java
+                    )
+                    query.setParameter("tag", country)
+                    query.firstResult = (limit * page) - limit
+                    query.maxResults = limit
+                    request?.update(query.list()) ?: RequestCache.put(uuidRequest, country, page, limit, value = query.list())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                } finally {
+                    session.close()
+                }
             }
+
+            call.respond(RequestCache.get(uuidRequest, country, page, limit)?.value ?: HttpStatusCode.NotFound)
         }
     }
 
