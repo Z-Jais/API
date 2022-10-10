@@ -24,7 +24,7 @@ data class Anime(
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (country_uuid) REFERENCES country (uuid) ON DELETE CASCADE")
     )
     var country: Country? = null,
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     val name: String? = null,
     @Column(nullable = false)
     val releaseDate: String = Calendar.getInstance().toISO8601(),

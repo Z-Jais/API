@@ -20,6 +20,7 @@ object AnimeController : IController<Anime>("/animes") {
             getWithPage()
             getAttachment()
             create()
+            merge()
         }
     }
 
@@ -152,6 +153,77 @@ object AnimeController : IController<Anime>("/animes") {
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    private fun Route.merge() {
+        put("/merge") {
+            // Get list of uuids
+            val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
+            println("PUT $prefix/merge")
+            // Get anime
+            val animes = uuids.mapNotNull { getBy("uuid", it) }
+
+            if (animes.isEmpty()) {
+                println("Anime not found")
+                call.respond(HttpStatusCode.NotFound, "Anime not found")
+                return@put
+            }
+
+            // Get all countries
+            val countries = animes.map { it.country }.distinctBy { it?.uuid }
+
+            if (countries.size > 1) {
+                println("Anime has different countries")
+                call.respond(HttpStatusCode.BadRequest, "Anime has different countries")
+                return@put
+            }
+
+            // Get all hashes
+            val hashes = animes.map { it.hashes }.flatten().distinct().toMutableSet()
+            // Get all genres
+            val genres = animes.map { it.genres }.flatten().distinctBy { it.uuid }.toMutableSet()
+            // Get all simulcasts
+            val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
+            // Get all episodes
+            val episodes = animes.map { EpisodeController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }.toMutableSet()
+            // Get all mangas
+            val mangas = animes.map { MangaController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }.toMutableSet()
+
+            val firstAnime = animes.first()
+            val mergedAnime = Anime(
+                country = countries.first(),
+                name = "${animes.first().name} (${animes.size})",
+                releaseDate = firstAnime.releaseDate,
+                image = firstAnime.image,
+                description = firstAnime.description,
+                hashes = hashes,
+                genres = genres,
+                simulcasts = simulcasts
+            )
+
+            val savedAnime = justSave(mergedAnime)
+            ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
+            episodes.map { it.copy(anime = savedAnime) }.map { EpisodeController.justSave(it) }
+            mangas.map { it.copy(anime = savedAnime) }.map { MangaController.justSave(it) }
+
+            // Delete animes
+            val session = Database.getSession()
+            val transaction = session.beginTransaction()
+
+            try {
+                session.createQuery("DELETE Anime WHERE uuid IN :list")
+                    .setParameter("list", uuids)
+                    .executeUpdate()
+                transaction.commit()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("Error while deleting $prefix : ${e.message}")
+                transaction.rollback()
+                throw e
+            } finally {
+                session.close()
             }
         }
     }

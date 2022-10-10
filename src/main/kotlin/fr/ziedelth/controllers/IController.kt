@@ -31,13 +31,30 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
+    fun getAllBy(field: String, value: Any?): MutableList<T> {
+        val session = Database.getSession()
+
+        try {
+            val query = session.createQuery("FROM $entityName WHERE $field = :${field.filter { it.isLetterOrDigit() }.trim()}", entityClass)
+            query.setParameter(field.filter { it.isLetterOrDigit() }.trim(), value)
+            return query.list()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Error while getting $prefix : ${e.message}")
+            throw e
+        } finally {
+            session.close()
+        }
+    }
+
     fun getBy(field: String, value: Any?): T? {
         val session = Database.getSession()
 
         try {
             val query = session.createQuery("FROM $entityName WHERE $field = :$field", entityClass)
+            query.maxResults = 1
             query.setParameter(field, value)
-            return query.list().firstOrNull()
+            return query.uniqueResult()
         } catch (e: Exception) {
             e.printStackTrace()
             println("Error while getting $prefix : ${e.message}")
