@@ -95,7 +95,14 @@ object AnimeController : IController<Anime>("/animes") {
                     query.setParameter("simulcast", UUID.fromString(simulcast))
                     query.firstResult = (limit * page) - limit
                     query.maxResults = limit
-                    request?.update(query.list()) ?: RequestCache.put(uuidRequest, country, page, limit, simulcast, query.list())
+                    request?.update(query.list()) ?: RequestCache.put(
+                        uuidRequest,
+                        country,
+                        page,
+                        limit,
+                        simulcast,
+                        query.list()
+                    )
                 } catch (e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -104,7 +111,9 @@ object AnimeController : IController<Anime>("/animes") {
                 }
             }
 
-            call.respond(RequestCache.get(uuidRequest, country, page, limit, simulcast)?.value ?: HttpStatusCode.NotFound)
+            call.respond(
+                RequestCache.get(uuidRequest, country, page, limit, simulcast)?.value ?: HttpStatusCode.NotFound
+            )
         }
     }
 
@@ -187,9 +196,12 @@ object AnimeController : IController<Anime>("/animes") {
             // Get all simulcasts
             val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
             // Get all episodes
-            val episodes = animes.map { EpisodeController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }.toMutableSet()
+            val episodes =
+                animes.map { EpisodeController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
+                    .toMutableSet()
             // Get all mangas
-            val mangas = animes.map { MangaController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }.toMutableSet()
+            val mangas = animes.map { MangaController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
+                .toMutableSet()
 
             val firstAnime = animes.first()
             val mergedAnime = Anime(

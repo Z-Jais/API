@@ -8,7 +8,6 @@ import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 import java.io.Serializable
 import java.util.*
-import kotlin.jvm.Transient
 
 fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
 
@@ -74,10 +73,6 @@ data class Anime(
         ]
     )
     val simulcasts: MutableSet<Simulcast> = mutableSetOf(),
-    @Transient
-    var episodes: MutableList<Episode>? = null,
-    @Transient
-    var mangas: MutableList<Manga>? = null,
 ) : Serializable {
     fun hash(): String? = name?.lowercase()?.filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }?.trim()
         ?.replace("\\s+".toRegex(), "-")?.replace("--", "-")

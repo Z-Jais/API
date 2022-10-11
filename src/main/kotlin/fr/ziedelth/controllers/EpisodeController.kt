@@ -11,12 +11,14 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.util.*
 
 object EpisodeController : IController<Episode>("/episodes") {
     fun Routing.getEpisodes() {
         route(prefix) {
             getAll()
             getWithPage()
+            getAnimeWithPage()
             getAttachment()
             create()
         }
@@ -41,7 +43,13 @@ object EpisodeController : IController<Episode>("/episodes") {
                     query.setParameter("tag", country)
                     query.firstResult = (limit * page) - limit
                     query.maxResults = limit
-                    request?.update(query.list()) ?: RequestCache.put(uuidRequest, country, page, limit, value = query.list())
+                    request?.update(query.list()) ?: RequestCache.put(
+                        uuidRequest,
+                        country,
+                        page,
+                        limit,
+                        value = query.list()
+                    )
                 } catch (e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
@@ -51,6 +59,32 @@ object EpisodeController : IController<Episode>("/episodes") {
             }
 
             call.respond(RequestCache.get(uuidRequest, country, page, limit)?.value ?: HttpStatusCode.NotFound)
+        }
+    }
+
+    private fun Route.getAnimeWithPage() {
+        get("/anime/{uuid}/page/{page}/limit/{limit}") {
+            val animeUuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
+            println("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
+            val session = Database.getSession()
+
+            try {
+                val query = session.createQuery(
+                    "FROM Episode WHERE anime.uuid = :uuid ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
+                    Episode::class.java
+                )
+                query.setParameter("uuid", UUID.fromString(animeUuid))
+                query.firstResult = (limit * page) - limit
+                query.maxResults = limit
+                call.respond(query.list() ?: HttpStatusCode.NotFound)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            } finally {
+                session.close()
+            }
         }
     }
 

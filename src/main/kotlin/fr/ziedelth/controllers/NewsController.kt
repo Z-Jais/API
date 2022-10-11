@@ -38,7 +38,13 @@ object NewsController : IController<News>("/news") {
                     query.setParameter("tag", country)
                     query.firstResult = (limit * page) - limit
                     query.maxResults = limit
-                    request?.update(query.list()) ?: RequestCache.put(uuidRequest, country, page, limit, value = query.list())
+                    request?.update(query.list()) ?: RequestCache.put(
+                        uuidRequest,
+                        country,
+                        page,
+                        limit,
+                        value = query.list()
+                    )
                 } catch (e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")

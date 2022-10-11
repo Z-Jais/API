@@ -18,7 +18,8 @@ object RequestCache {
 
     private val cache = mutableMapOf<Key, Request>()
 
-    fun get(uuid: UUID, country: String, page: Int, limit: Int, simulcast: String? = null) = cache[Key(uuid, country, page, limit, simulcast)]
+    fun get(uuid: UUID, country: String, page: Int, limit: Int, simulcast: String? = null) =
+        cache[Key(uuid, country, page, limit, simulcast)]
 
     fun put(uuid: UUID, country: String, page: Int, limit: Int, simulcast: String? = null, value: Any?) {
         cache[Key(uuid, country, page, limit, simulcast)] = Request(value, System.currentTimeMillis())

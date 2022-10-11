@@ -35,7 +35,10 @@ open class IController<T : Serializable>(val prefix: String) {
         val session = Database.getSession()
 
         try {
-            val query = session.createQuery("FROM $entityName WHERE $field = :${field.filter { it.isLetterOrDigit() }.trim()}", entityClass)
+            val query = session.createQuery(
+                "FROM $entityName WHERE $field = :${field.filter { it.isLetterOrDigit() }.trim()}",
+                entityClass
+            )
             query.setParameter(field.filter { it.isLetterOrDigit() }.trim(), value)
             return query.list()
         } catch (e: Exception) {
@@ -125,6 +128,7 @@ open class IController<T : Serializable>(val prefix: String) {
                 "^[0-9(a-f|A-F)]{8}-[0-9(a-f|A-F)]{4}-4[0-9(a-f|A-F)]{3}-[89ab][0-9(a-f|A-F)]{3}-[0-9(a-f|A-F)]{12}\$".toRegex()
 
             if (!uuidRegex.matches(string)) {
+                println("GET $prefix/attachment/$string : Invalid UUID")
                 return@get call.respond(HttpStatusCode.BadRequest)
             }
 
@@ -132,11 +136,17 @@ open class IController<T : Serializable>(val prefix: String) {
             println("GET ${prefix}/attachment/$uuid")
 
             if (!ImageCache.contains(uuid)) {
+                println("Attachment $uuid not found")
                 call.respond(HttpStatusCode.NoContent)
                 return@get
             }
 
-            val image = ImageCache.get(uuid) ?: return@get call.respond(HttpStatusCode.NoContent)
+            val image = ImageCache.get(uuid) ?: run {
+                println("Attachment $uuid not found")
+                return@get call.respond(HttpStatusCode.NoContent)
+            }
+
+            println("Attachment $uuid found (${image.bytes.size} bytes)")
             call.respondBytes(image.bytes, ContentType("image", "webp"))
         }
     }

@@ -11,28 +11,20 @@ import java.util.concurrent.Executors
 import javax.imageio.ImageIO
 
 object ImageCache {
-    enum class CacheStatus {
-        LOADING,
-        DONE
-    }
-
-    data class Image(var status: CacheStatus, val bytes: ByteArray) {
+    data class Image(val bytes: ByteArray) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
             other as Image
 
-            if (status != other.status) return false
             if (!bytes.contentEquals(other.bytes)) return false
 
             return true
         }
 
         override fun hashCode(): Int {
-            var result = status.hashCode()
-            result = 31 * result + bytes.contentHashCode()
-            return result
+            return bytes.contentHashCode()
         }
     }
 
@@ -57,7 +49,10 @@ object ImageCache {
     private fun BufferedImage.toByteArray(): ByteArray {
         val baos = ByteArrayOutputStream()
         ImageIO.write(this, "jpg", baos)
-        return baos.toByteArray()
+        baos.flush()
+        val bytes = baos.toByteArray()
+        baos.close()
+        return bytes
     }
 
     fun cachingNetworkImage(uuid: UUID, url: String) {
@@ -67,8 +62,10 @@ object ImageCache {
             try {
                 val urlImage = ImageIO.read(URL(url))
                 val bytes = urlImage.toByteArray()
-                cache[uuid] = Image(CacheStatus.LOADING, bytes)
-                cache[uuid] = Image(CacheStatus.DONE, encodeToWebP(bytes))
+                cache[uuid] = Image(bytes)
+
+                val webp = encodeToWebP(bytes)
+                cache[uuid] = Image(webp)
             } catch (e: Exception) {
                 println("Failed to load image $url : ${e.message}")
             }
