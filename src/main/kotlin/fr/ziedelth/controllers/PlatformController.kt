@@ -11,6 +11,7 @@ object PlatformController : IController<Platform>("/platforms") {
     fun Routing.getPlatforms() {
         route(prefix) {
             getAll()
+            getAttachment()
             create()
         }
     }

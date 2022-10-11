@@ -21,6 +21,11 @@ fun main() {
     val session = Database.getSession()
 
     try {
+        // Get all platforms from database
+        val platforms = session.createQuery("SELECT uuid, image FROM Platform WHERE image LIKE 'http%'", Tuple::class.java).list()
+        platforms.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
+        println("Platforms : ${platforms.size}")
+
         // Get all animes from database
         val animes = session.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java).list()
         animes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
