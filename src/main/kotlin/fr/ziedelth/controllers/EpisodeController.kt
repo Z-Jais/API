@@ -72,7 +72,7 @@ object EpisodeController : IController<Episode>("/episodes") {
 
             try {
                 val query = session.createQuery(
-                    "FROM Episode WHERE anime.uuid = :uuid ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
+                    "FROM Episode WHERE anime.uuid = :uuid ORDER BY season DESC, number DESC, episodeType.name, langType.name",
                     Episode::class.java
                 )
                 query.setParameter("uuid", UUID.fromString(animeUuid))
