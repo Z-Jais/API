@@ -16,10 +16,38 @@ object MangaController : IController<Manga>("/mangas") {
     fun Routing.getMangas() {
         route(prefix) {
             getAll()
+            search()
             getWithPage()
             getAnimeWithPage()
             getAttachment()
             create()
+        }
+    }
+
+    private fun Route.search() {
+        route("/country/{country}/search") {
+            get("/ean/{ean}") {
+                val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                val ean = call.parameters["ean"]?.toLongOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
+                println("GET ${prefix}/country/$country/search/ean/$ean")
+                val session = Database.getSession()
+
+                try {
+                    val query = session.createQuery(
+                        "FROM Manga WHERE anime.country.tag = :tag AND ean = :ean",
+                        Manga::class.java
+                    )
+                    query.maxResults = 1
+                    query.setParameter("tag", country)
+                    query.setParameter("ean", ean)
+                    call.respond(query.firstResult)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                } finally {
+                    session.close()
+                }
+            }
         }
     }
 
@@ -36,7 +64,7 @@ object MangaController : IController<Manga>("/mangas") {
 
                 try {
                     val query = session.createQuery(
-                        "FROM Manga WHERE anime.country.tag = :tag ORDER BY releaseDate DESC, anime.name",
+                        "FROM Manga WHERE anime.country.tag = :tag AND ean IS NOT NULL ORDER BY releaseDate DESC, anime.name",
                         Manga::class.java
                     )
                     query.setParameter("tag", country)
