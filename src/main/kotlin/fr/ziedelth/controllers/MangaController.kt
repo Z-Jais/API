@@ -40,7 +40,7 @@ object MangaController : IController<Manga>("/mangas") {
                     query.maxResults = 1
                     query.setParameter("tag", country)
                     query.setParameter("ean", ean)
-                    call.respond(query.firstResult)
+                    call.respond(query.uniqueResult() ?: return@get call.respond(HttpStatusCode.NotFound))
                 } catch (e: Exception) {
                     e.printStackTrace()
                     call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
