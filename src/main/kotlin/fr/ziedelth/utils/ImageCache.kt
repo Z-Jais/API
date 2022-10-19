@@ -9,6 +9,8 @@ import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
 import javax.imageio.ImageIO
+import kotlin.math.max
+import kotlin.math.min
 
 object ImageCache {
     data class Image(val bytes: ByteArray) {
@@ -29,7 +31,7 @@ object ImageCache {
     }
 
     private val cache = mutableMapOf<UUID, Image>()
-    private val newFixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    private val newFixedThreadPool = Executors.newFixedThreadPool(max(1, Runtime.getRuntime().availableProcessors() - 1))
 
     fun contains(uuid: UUID) = cache.containsKey(uuid)
     fun get(uuid: UUID) = cache[uuid]
