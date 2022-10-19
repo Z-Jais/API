@@ -1,6 +1,9 @@
 package fr.ziedelth.entities
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.Id
 import org.hibernate.Hibernate
 import java.io.Serializable
 import java.util.*
@@ -18,9 +21,9 @@ data class Device(
     var os: String? = null,
     @Column(nullable = false)
     var model: String? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, name = "created_at")
     val createdAt: Calendar = Calendar.getInstance(),
-    @Column(nullable = false)
+    @Column(nullable = false, name = "updated_at")
     var updatedAt: Calendar = Calendar.getInstance(),
 ) : Serializable {
     fun isNotValid(): Boolean = name.isNullOrBlank() || os.isNullOrBlank() || model.isNullOrBlank()

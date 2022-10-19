@@ -67,7 +67,7 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    fun isExists(field: String, value: String?): Boolean {
+    fun isExists(field: String, value: Any?): Boolean {
         val session = Database.getSession()
         val query = session.createQuery("SELECT COUNT(*) FROM $entityName WHERE $field = :$field", Long::class.java)
         query.maxResults = 1
