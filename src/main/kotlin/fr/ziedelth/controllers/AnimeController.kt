@@ -60,6 +60,7 @@ object AnimeController : IController<Anime>("/animes") {
                         "FROM Anime a WHERE a.country.tag = :tag AND LOWER(name) LIKE CONCAT('%', :name, '%') ",
                         Anime::class.java
                     )
+                    query.maxResults = 10
                     query.setParameter("tag", country)
                     query.setParameter("name", name.lowercase())
                     call.respond(query.list() ?: HttpStatusCode.NotFound)
@@ -79,6 +80,8 @@ object AnimeController : IController<Anime>("/animes") {
             val simulcast = call.parameters["simulcast"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
             val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
+            if (page < 1 || limit < 1) return@get call.respond(HttpStatusCode.BadRequest)
+            if (limit > 30) return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
             val request = RequestCache.get(uuidRequest, country, page, limit, simulcast)
 
