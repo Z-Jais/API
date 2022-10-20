@@ -3,6 +3,7 @@ package fr.ziedelth.plugins
 import fr.ziedelth.controllers.AnimeController.getAnimes
 import fr.ziedelth.controllers.CountryController.getCountries
 import fr.ziedelth.controllers.DeviceController.getDevices
+import fr.ziedelth.controllers.DeviceRedirectionController.getRedirection
 import fr.ziedelth.controllers.EpisodeController.getEpisodes
 import fr.ziedelth.controllers.EpisodeTypeController.getEpisodeTypes
 import fr.ziedelth.controllers.GenreController.getGenres
@@ -34,5 +35,6 @@ fun Application.configureRouting() {
         getNews()
         getMangas()
         getDevices()
+        getRedirection()
     }
 }

@@ -15,7 +15,6 @@ import java.util.*
 object AnimeController : IController<Anime>("/animes") {
     fun Routing.getAnimes() {
         route(prefix) {
-            getAll()
             search()
             getWithPage()
             getAttachment()

@@ -16,7 +16,6 @@ import java.util.*
 object EpisodeController : IController<Episode>("/episodes") {
     fun Routing.getEpisodes() {
         route(prefix) {
-            getAll()
             getWithPage()
             getAnimeWithPage()
             getAttachment()
@@ -29,6 +28,8 @@ object EpisodeController : IController<Episode>("/episodes") {
             val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
             val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
+            if (page < 1 || limit < 1) return@get call.respond(HttpStatusCode.BadRequest)
+            if (limit > 30) return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/country/$country/page/$page/limit/$limit")
             val request = RequestCache.get(uuidRequest, country, page, limit)
 
@@ -67,6 +68,8 @@ object EpisodeController : IController<Episode>("/episodes") {
             val animeUuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
             val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
+            if (page < 1 || limit < 1) return@get call.respond(HttpStatusCode.BadRequest)
+            if (limit > 30) return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
             val session = Database.getSession()
 

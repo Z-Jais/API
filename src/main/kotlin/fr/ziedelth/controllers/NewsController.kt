@@ -13,7 +13,6 @@ import io.ktor.server.routing.*
 object NewsController : IController<News>("/news") {
     fun Routing.getNews() {
         route(prefix) {
-            getAll()
             getWithPage()
             create()
         }
@@ -24,6 +23,8 @@ object NewsController : IController<News>("/news") {
             val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
             val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
+            if (page < 1 || limit < 1) return@get call.respond(HttpStatusCode.BadRequest)
+            if (limit > 30) return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/country/$country/page/$page/limit/$limit")
             val request = RequestCache.get(uuidRequest, country, page, limit)
 

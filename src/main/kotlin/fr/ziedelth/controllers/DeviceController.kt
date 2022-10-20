@@ -16,57 +16,30 @@ import io.ktor.server.routing.*
 import java.util.*
 
 object DeviceController : IController<Device>("/devices") {
-    fun update(device: Device) {
-        val session = Database.getSession()
-        val transaction = session.beginTransaction()
+    private fun update(device: Device) {
+        val newDevice = getBy("name", device.name)
 
-        try {
-            val newDevice = getBy("name", device.name)
-
-            if (newDevice.isNullOrNotValid()) {
-                println("Missing parameters")
-                println(device)
-                return
-            }
-
-            newDevice!!.os = device.os
-            newDevice.model = device.model
-            newDevice.updatedAt = Calendar.getInstance()
-            session.update(newDevice)
-            transaction.commit()
-        } catch (e: Exception) {
-            println("Error while updating $entityName")
-            println(e)
-            transaction.rollback()
-            throw e
-        } finally {
-            session.close()
+        if (newDevice.isNullOrNotValid()) {
+            println("Missing parameters")
+            println(device)
+            return
         }
+
+        newDevice!!.os = device.os
+        newDevice.model = device.model
+        newDevice.updatedAt = Calendar.getInstance()
+        justUpdate(newDevice)
     }
 
-    fun update(name: String) {
-        val session = Database.getSession()
-        val transaction = session.beginTransaction()
-
-        try {
-            val newDevice = getBy("name", name) ?: return
-            newDevice.updatedAt = Calendar.getInstance()
-            session.update(newDevice)
-            transaction.commit()
-        } catch (e: Exception) {
-            println("Error while updating $entityName")
-            println(e)
-            transaction.rollback()
-            throw e
-        } finally {
-            session.close()
-        }
+    fun update(name: String, device: Device? = null) {
+        val newDevice = device ?: getBy("name", name) ?: return
+        newDevice.updatedAt = Calendar.getInstance()
+        justUpdate(newDevice)
     }
 
     fun Routing.getDevices() {
         route(prefix) {
             create()
-            createRedirection()
         }
     }
 
@@ -110,69 +83,6 @@ object DeviceController : IController<Device>("/devices") {
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-            }
-        }
-    }
-
-    private fun Route.createRedirection() {
-        route("/redirection") {
-            post("/episode") {
-                try {
-                    val deviceName = call.request.header("Device") ?: return@post call.respond(HttpStatusCode.BadRequest)
-                    val episodeId = UUID.fromString(call.request.header("Episode") ?: return@post call.respond(HttpStatusCode.BadRequest))
-                    println("POST $prefix/redirection/episode")
-
-                    if (!isExists("name", deviceName)) {
-                        println("$entityName doesn't exists")
-                        return@post
-                    }
-
-                    if (!EpisodeController.isExists("uuid", episodeId)) {
-                        println("Episode doesn't exists")
-                        return@post
-                    }
-
-                    update(deviceName)
-                    justSave(
-                        DeviceEpisodeRedirection(
-                            device = getBy("name", deviceName),
-                            episode = EpisodeController.getBy("uuid", episodeId)
-                        )
-                    )
-                    call.respond(HttpStatusCode.Created, "$entityName created")
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-                }
-            }
-            post("/manga") {
-                try {
-                    val deviceName = call.request.header("Device") ?: return@post call.respond(HttpStatusCode.BadRequest)
-                    val mangaId = UUID.fromString(call.request.header("Manga") ?: return@post call.respond(HttpStatusCode.BadRequest))
-                    println("POST $prefix/redirection/manga")
-
-                    if (!isExists("name", deviceName)) {
-                        println("$entityName doesn't exists")
-                        return@post
-                    }
-
-                    if (!MangaController.isExists("uuid", mangaId)) {
-                        println("Episode doesn't exists")
-                        return@post
-                    }
-
-                    update(deviceName)
-                    justSave(
-                        DeviceMangaRedirection(
-                            device = getBy("name", deviceName),
-                            manga = MangaController.getBy("uuid", mangaId)
-                        )
-                    )
-                    call.respond(HttpStatusCode.Created, "$entityName created")
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
-                }
             }
         }
     }

@@ -109,6 +109,23 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
+    fun <T : Serializable> justUpdate(dtoIn: T) {
+        val session = Database.getSession()
+        val transaction = session.beginTransaction()
+
+        try {
+            session.update(dtoIn)
+            transaction.commit()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Error while updating $prefix : ${e.message}")
+            transaction.rollback()
+            throw e
+        } finally {
+            session.close()
+        }
+    }
+
     fun Route.getAll() {
         get {
             println("GET $prefix")
