@@ -3,11 +3,7 @@ package fr.ziedelth.controllers
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.ziedelth.entities.Device
-import fr.ziedelth.entities.Manga
-import fr.ziedelth.entities.device_redirections.DeviceEpisodeRedirection
-import fr.ziedelth.entities.device_redirections.DeviceMangaRedirection
 import fr.ziedelth.entities.isNullOrNotValid
-import fr.ziedelth.utils.Database
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

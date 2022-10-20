@@ -25,7 +25,10 @@ object DeviceRedirectionController : IController<Device>("/devices/redirection")
         val session = Database.getSession()
 
         try {
-            val query = session.createQuery("FROM DeviceEpisodeRedirection WHERE device = :device AND episode = :episode", DeviceEpisodeRedirection::class.java)
+            val query = session.createQuery(
+                "FROM DeviceEpisodeRedirection WHERE device = :device AND episode = :episode",
+                DeviceEpisodeRedirection::class.java
+            )
             query.maxResults = 1
             query.setParameter("device", device)
             query.setParameter("episode", episode)
@@ -78,7 +81,10 @@ object DeviceRedirectionController : IController<Device>("/devices/redirection")
         val session = Database.getSession()
 
         try {
-            val query = session.createQuery("FROM DeviceMangaRedirection WHERE device = :device AND manga = :manga", DeviceMangaRedirection::class.java)
+            val query = session.createQuery(
+                "FROM DeviceMangaRedirection WHERE device = :device AND manga = :manga",
+                DeviceMangaRedirection::class.java
+            )
             query.maxResults = 1
             query.setParameter("device", device)
             query.setParameter("manga", manga)

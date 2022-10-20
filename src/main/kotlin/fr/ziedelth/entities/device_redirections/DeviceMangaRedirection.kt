@@ -1,7 +1,6 @@
 package fr.ziedelth.entities.device_redirections
 
 import fr.ziedelth.entities.Device
-import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Manga
 import jakarta.persistence.*
 import org.hibernate.Hibernate
