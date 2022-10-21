@@ -57,10 +57,10 @@ object AnimeController : IController<Anime>("/animes") {
 
                 try {
                     val query = session.createQuery(
-                        "FROM Anime a WHERE a.country.tag = :tag AND LOWER(name) LIKE CONCAT('%', :name, '%') ",
+//                        "FROM Anime a WHERE a.country.tag = :tag AND LOWER(name) LIKE CONCAT('%', :name, '%')",
+                        "SELECT DISTINCT anime FROM Episode e WHERE e.anime.country.tag = :tag AND LOWER(e.anime.name) LIKE CONCAT('%', :name, '%') ORDER BY e.anime.name",
                         Anime::class.java
                     )
-                    query.maxResults = 10
                     query.setParameter("tag", country)
                     query.setParameter("name", name.lowercase())
                     call.respond(query.list() ?: HttpStatusCode.NotFound)
