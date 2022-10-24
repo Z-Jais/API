@@ -1,5 +1,6 @@
 package fr.ziedelth.controllers
 
+import com.google.gson.Gson
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.utils.Database
@@ -10,13 +11,16 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.io.ByteArrayInputStream
 import java.util.*
+import java.util.zip.GZIPInputStream
 
 object AnimeController : IController<Anime>("/animes") {
     fun Routing.getAnimes() {
         route(prefix) {
             search()
             getWithPage()
+            getWatchlistWithPage()
             getAttachment()
             create()
             merge()
@@ -116,6 +120,46 @@ object AnimeController : IController<Anime>("/animes") {
             call.respond(
                 RequestCache.get(uuidRequest, country, page, limit, simulcast)?.value ?: HttpStatusCode.NotFound
             )
+        }
+    }
+
+    private fun base64(string: String): ByteArray = Base64.getDecoder().decode(string)
+
+    private fun fromGzip(string: String): String {
+        val gzip = GZIPInputStream(ByteArrayInputStream(base64(string)))
+        val compressed = gzip.readBytes()
+        gzip.close()
+        return String(compressed)
+    }
+
+    private fun Route.getWatchlistWithPage() {
+        post("/watchlist/page/{page}/limit/{limit}") {
+            val watchlist = call.receive<String>()
+            val page = call.parameters["page"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
+            val limit = call.parameters["limit"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
+            if (page < 1 || limit < 1) return@post call.respond(HttpStatusCode.BadRequest)
+            if (limit > 30) return@post call.respond(HttpStatusCode.BadRequest)
+            println("GET $prefix/watchlist/page/$page/limit/$limit")
+            val session = Database.getSession()
+
+            try {
+                val dataFromGzip =
+                    Gson().fromJson(fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
+
+                val query = session.createQuery(
+                    "FROM Anime WHERE uuid IN :list ORDER BY name",
+                    Anime::class.java
+                )
+                query.setParameter("list", dataFromGzip)
+                query.firstResult = (limit * page) - limit
+                query.maxResults = limit
+                call.respond(query.list())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            } finally {
+                session.close()
+            }
         }
     }
 
