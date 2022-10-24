@@ -18,7 +18,7 @@ object DiaryController : IController<Anime>("/diary") {
 
                 try {
                     val query = session.createQuery(
-                        "SELECT anime FROM Episode episode WHERE episode.anime.country.tag = :tag AND current_date - to_date(episode.releaseDate, 'YYYY-MM-DDTHH:MI:SS') <= 7 AND FUNCTION('date_part', 'dow', to_date(episode.releaseDate, 'YYYY-MM-DDTHH:MI:SS')) = :day ORDER BY episode.releaseDate DESC",
+                        "SELECT anime FROM Episode episode WHERE episode.anime.country.tag = :tag AND current_date - to_date(episode.releaseDate, 'YYYY-MM-DDTHH:MI:SS') <= 7 AND FUNCTION('date_part', 'dow', to_date(episode.releaseDate, 'YYYY-MM-DDTHH:MI:SS')) = :day ORDER BY episode.anime.name ASC",
                         entityClass
                     )
                     query.setParameter("tag", country)
