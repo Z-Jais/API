@@ -11,7 +11,7 @@ import java.lang.reflect.ParameterizedType
 import java.util.*
 
 open class IController<T : Serializable>(val prefix: String) {
-    private val entityClass: Class<T> =
+    val entityClass: Class<T> =
         (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     val entityName: String = entityClass.simpleName
     val uuidRequest: UUID = UUID.randomUUID()
