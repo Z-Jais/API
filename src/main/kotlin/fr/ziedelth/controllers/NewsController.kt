@@ -83,13 +83,7 @@ object NewsController : IController<News>("/news") {
                 }
 
                 call.respond(HttpStatusCode.Created, news)
-
-                try {
-                    PluginManager.callEvent(NewsReleaseEvent(savedNews))
-                } catch (e: Exception) {
-                    println("Error while calling event")
-                    e.printStackTrace()
-                }
+                PluginManager.callEvent(NewsReleaseEvent(savedNews))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")

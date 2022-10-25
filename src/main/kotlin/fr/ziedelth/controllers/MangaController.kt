@@ -147,13 +147,7 @@ object MangaController : IController<Manga>("/mangas") {
                 }
 
                 call.respond(HttpStatusCode.Created, mangas)
-
-                try {
-                    PluginManager.callEvent(MangasReleaseEvent(savedMangas))
-                } catch (e: Exception) {
-                    println("Error while calling event")
-                    e.printStackTrace()
-                }
+                PluginManager.callEvent(MangasReleaseEvent(savedMangas))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")

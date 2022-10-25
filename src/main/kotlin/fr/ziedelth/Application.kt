@@ -50,6 +50,18 @@ fun main() {
 
     try {
         PluginManager.loadPlugins()
+
+        Thread {
+            val scanner = Scanner(System.`in`)
+
+            while (true) {
+                val line = scanner.nextLine()
+
+                if (line == "reload") {
+                    PluginManager.reload()
+                }
+            }
+        }.start()
     } catch (e: Exception) {
         e.printStackTrace()
     }

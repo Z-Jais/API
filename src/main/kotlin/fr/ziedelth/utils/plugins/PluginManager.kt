@@ -7,12 +7,23 @@ import org.pf4j.DefaultPluginManager
 import java.io.File
 
 object PluginManager {
-    private val defaultPluginManager = DefaultPluginManager(File("plugins").toPath())
+    private var defaultPluginManager = DefaultPluginManager(File("plugins").toPath())
     val listeners = mutableListOf<Listener>()
 
     fun loadPlugins() {
         defaultPluginManager.loadPlugins()
         defaultPluginManager.startPlugins()
+
+        defaultPluginManager.plugins.forEach {
+            println("Plugin ${it.descriptor.pluginId} v${it.descriptor.version} loaded")
+        }
+    }
+
+    fun reload() {
+        defaultPluginManager.stopPlugins()
+        defaultPluginManager.unloadPlugins()
+        defaultPluginManager = DefaultPluginManager(File("plugins").toPath())
+        loadPlugins()
     }
 
     fun callEvent(event: Event): Int {
@@ -20,8 +31,12 @@ object PluginManager {
 
         listeners.forEach { listener ->
             listener::class.java.methods.filter { it.isAnnotationPresent(EventHandler::class.java) }.forEach { method ->
-                method.invoke(listener, event)
-                count++
+                try {
+                    method.invoke(listener, event)
+                    count++
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
 

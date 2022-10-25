@@ -131,13 +131,7 @@ object EpisodeController : IController<Episode>("/episodes") {
                 }
 
                 call.respond(HttpStatusCode.Created, episodes)
-
-                try {
-                    PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
-                } catch (e: Exception) {
-                    println("Error while calling event")
-                    e.printStackTrace()
-                }
+                PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
