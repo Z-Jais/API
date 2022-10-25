@@ -3,9 +3,11 @@ package fr.ziedelth.controllers
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
+import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -119,14 +121,23 @@ object EpisodeController : IController<Episode>("/episodes") {
 
             try {
                 val episodes = call.receive<List<Episode>>().filter { !isExists("hash", it.hash!!) }
+                val savedEpisodes = mutableListOf<Episode>()
 
                 episodes.forEach {
                     merge(it)
                     val savedEpisode = justSave(it)
+                    savedEpisodes.add(savedEpisode)
                     ImageCache.cachingNetworkImage(savedEpisode.uuid, savedEpisode.image!!)
                 }
 
                 call.respond(HttpStatusCode.Created, episodes)
+
+                try {
+                    PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
+                } catch (e: Exception) {
+                    println("Error while calling event")
+                    e.printStackTrace()
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")

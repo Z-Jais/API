@@ -4,6 +4,7 @@ import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import jakarta.persistence.Tuple
@@ -45,6 +46,12 @@ fun main() {
         e.printStackTrace()
     } finally {
         session.close()
+    }
+
+    try {
+        PluginManager.loadPlugins()
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 
     println("Starting server...")
