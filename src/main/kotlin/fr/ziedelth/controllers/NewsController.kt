@@ -2,8 +2,10 @@ package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.News
 import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.events.NewsReleaseEvent
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.RequestCache
+import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -73,13 +75,15 @@ object NewsController : IController<News>("/news") {
 
             try {
                 val news = call.receive<List<News>>().filter { !isExists("hash", it.hash!!) }
+                val savedNews = mutableListOf<News>()
 
                 news.forEach {
                     merge(it)
-                    justSave(it)
+                    savedNews.add(justSave(it))
                 }
 
                 call.respond(HttpStatusCode.Created, news)
+                PluginManager.callEvent(NewsReleaseEvent(savedNews))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
