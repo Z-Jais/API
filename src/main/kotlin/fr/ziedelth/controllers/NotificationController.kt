@@ -14,6 +14,8 @@ object NotificationController : IController<Anime>("/notifications") {
     fun Routing.getNotifications() {
         route(prefix) {
             webSocket {
+                println("New websocket connection")
+
                 for (frame in incoming) {
                     frame as? Frame.Text ?: continue
                     val (country, lastCheck) = frame.readText().split(";")
@@ -28,7 +30,7 @@ object NotificationController : IController<Anime>("/notifications") {
                         query.setParameter("tag", country)
                         query.setParameter("lastCheck", lastCheck)
                         val list = query.list().map { mapOf("uuid" to it[0], "name" to it[1]) }
-                        send(Encoder.toGzip(Gson().toJson(list)))
+//                        send(Encoder.toGzip(Gson().toJson(list)))
                         send(Gson().toJson(list))
                         close(CloseReason(CloseReason.Codes.NORMAL, "OK"))
                     } catch (e: Exception) {

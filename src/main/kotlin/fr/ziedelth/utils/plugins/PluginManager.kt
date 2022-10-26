@@ -30,7 +30,7 @@ object PluginManager {
         var count = 0
 
         listeners.forEach { listener ->
-            listener::class.java.methods.filter { it.isAnnotationPresent(EventHandler::class.java) }.forEach { method ->
+            listener::class.java.methods.filter { it.isAnnotationPresent(EventHandler::class.java) && event::class.java == it.parameters[0]?.type }.forEach { method ->
                 try {
                     method.invoke(listener, event)
                     count++
