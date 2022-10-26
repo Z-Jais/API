@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
 import io.ktor.http.*
@@ -123,15 +124,6 @@ object AnimeController : IController<Anime>("/animes") {
         }
     }
 
-    private fun base64(string: String): ByteArray = Base64.getDecoder().decode(string)
-
-    private fun fromGzip(string: String): String {
-        val gzip = GZIPInputStream(ByteArrayInputStream(base64(string)))
-        val compressed = gzip.readBytes()
-        gzip.close()
-        return String(compressed)
-    }
-
     private fun Route.getWatchlistWithPage() {
         post("/watchlist/page/{page}/limit/{limit}") {
             val watchlist = call.receive<String>()
@@ -144,7 +136,7 @@ object AnimeController : IController<Anime>("/animes") {
 
             try {
                 val dataFromGzip =
-                    Gson().fromJson(fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
+                    Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
 
                 val query = session.createQuery(
                     "FROM Anime WHERE uuid IN :list ORDER BY name",
