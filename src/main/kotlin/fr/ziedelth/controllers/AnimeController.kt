@@ -12,9 +12,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.io.ByteArrayInputStream
 import java.util.*
-import java.util.zip.GZIPInputStream
 
 object AnimeController : IController<Anime>("/animes") {
     fun Routing.getAnimes() {

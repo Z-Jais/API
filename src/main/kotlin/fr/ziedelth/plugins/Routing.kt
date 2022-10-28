@@ -11,7 +11,6 @@ import fr.ziedelth.controllers.GenreController.getGenres
 import fr.ziedelth.controllers.LangTypeController.getLangTypes
 import fr.ziedelth.controllers.MangaController.getMangas
 import fr.ziedelth.controllers.NewsController.getNews
-import fr.ziedelth.controllers.NotificationController.getNotifications
 import fr.ziedelth.controllers.PlatformController.getPlatforms
 import fr.ziedelth.controllers.SimulcastController.getSimulcasts
 import io.ktor.serialization.gson.*
@@ -39,6 +38,5 @@ fun Application.configureRouting() {
         getDevices()
         getRedirection()
         getDiary()
-        getNotifications()
     }
 }
