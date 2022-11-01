@@ -1,5 +1,6 @@
 package fr.ziedelth
 
+import fr.ziedelth.listeners.ListenerManager
 import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
@@ -50,6 +51,7 @@ fun main() {
 
     try {
         PluginManager.loadPlugins()
+        ListenerManager()
 
         Thread {
             val scanner = Scanner(System.`in`)
