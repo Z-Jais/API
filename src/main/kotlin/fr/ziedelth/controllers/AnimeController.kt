@@ -129,7 +129,7 @@ object AnimeController : IController<Anime>("/animes") {
             val limit = call.parameters["limit"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
             if (page < 1 || limit < 1) return@post call.respond(HttpStatusCode.BadRequest)
             if (limit > 30) return@post call.respond(HttpStatusCode.BadRequest)
-            println("GET $prefix/watchlist/page/$page/limit/$limit")
+            println("POST $prefix/watchlist/page/$page/limit/$limit")
             val session = Database.getSession()
 
             try {
@@ -137,8 +137,8 @@ object AnimeController : IController<Anime>("/animes") {
                     Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
 
                 val query = session.createQuery(
-                    "FROM Anime WHERE uuid IN :list ORDER BY name",
-                    Anime::class.java
+                    "FROM $entityName WHERE uuid IN :list ORDER BY name",
+                    entityClass
                 )
                 query.setParameter("list", dataFromGzip)
                 query.firstResult = (limit * page) - limit

@@ -1,10 +1,12 @@
 package fr.ziedelth.controllers
 
+import com.google.gson.Gson
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
 import fr.ziedelth.utils.plugins.PluginManager
@@ -20,6 +22,7 @@ object EpisodeController : IController<Episode>("/episodes") {
         route(prefix) {
             getWithPage()
             getAnimeWithPage()
+            getWatchlistWithPage()
             getAttachment()
             create()
         }
@@ -84,6 +87,37 @@ object EpisodeController : IController<Episode>("/episodes") {
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
                 call.respond(query.list() ?: HttpStatusCode.NotFound)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            } finally {
+                session.close()
+            }
+        }
+    }
+
+    private fun Route.getWatchlistWithPage() {
+        post("/watchlist/page/{page}/limit/{limit}") {
+            val watchlist = call.receive<String>()
+            val page = call.parameters["page"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
+            val limit = call.parameters["limit"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
+            if (page < 1 || limit < 1) return@post call.respond(HttpStatusCode.BadRequest)
+            if (limit > 30) return@post call.respond(HttpStatusCode.BadRequest)
+            println("POST $prefix/watchlist/page/$page/limit/$limit")
+            val session = Database.getSession()
+
+            try {
+                val dataFromGzip =
+                    Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
+
+                val query = session.createQuery(
+                    "FROM $entityName WHERE anime.uuid IN :list ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
+                    entityClass
+                )
+                query.setParameter("list", dataFromGzip)
+                query.firstResult = (limit * page) - limit
+                query.maxResults = limit
+                call.respond(query.list())
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
