@@ -37,3 +37,4 @@ out/
 /target/
 /hibernate.cfg.xml
 /test.http
+/firebase_key.json

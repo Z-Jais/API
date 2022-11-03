@@ -2,9 +2,11 @@ package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.Manga
 import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.events.MangasReleaseEvent
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
+import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -135,14 +137,17 @@ object MangaController : IController<Manga>("/mangas") {
 
             try {
                 val mangas = call.receive<List<Manga>>().filter { !isExists("hash", it.hash!!) }
+                val savedMangas = mutableListOf<Manga>()
 
                 mangas.forEach {
                     merge(it)
                     val savedManga = justSave(it)
+                    savedMangas.add(savedManga)
                     ImageCache.cachingNetworkImage(savedManga.uuid, savedManga.cover!!)
                 }
 
                 call.respond(HttpStatusCode.Created, mangas)
+                PluginManager.callEvent(MangasReleaseEvent(savedMangas))
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")

@@ -1,9 +1,11 @@
 package fr.ziedelth
 
+import fr.ziedelth.listeners.ListenerManager
 import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import jakarta.persistence.Tuple
@@ -45,6 +47,25 @@ fun main() {
         e.printStackTrace()
     } finally {
         session.close()
+    }
+
+    try {
+        PluginManager.loadPlugins()
+        ListenerManager()
+
+        Thread {
+            val scanner = Scanner(System.`in`)
+
+            while (true) {
+                val line = scanner.nextLine()
+
+                if (line == "reload") {
+                    PluginManager.reload()
+                }
+            }
+        }.start()
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 
     println("Starting server...")
