@@ -1,9 +1,11 @@
 package fr.ziedelth.controllers
 
+import com.google.gson.Gson
 import fr.ziedelth.entities.Manga
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.MangasReleaseEvent
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
 import fr.ziedelth.utils.plugins.PluginManager
@@ -20,6 +22,7 @@ object MangaController : IController<Manga>("/mangas") {
             search()
             getWithPage()
             getAnimeWithPage()
+            getWatchlistWithPage()
             getAttachment()
             create()
         }
@@ -35,8 +38,8 @@ object MangaController : IController<Manga>("/mangas") {
 
                 try {
                     val query = session.createQuery(
-                        "FROM Manga WHERE anime.country.tag = :tag AND ean = :ean",
-                        Manga::class.java
+                        "FROM $entityName WHERE anime.country.tag = :tag AND ean = :ean",
+                        entityClass
                     )
                     query.maxResults = 1
                     query.setParameter("tag", country)
@@ -67,8 +70,8 @@ object MangaController : IController<Manga>("/mangas") {
 
                 try {
                     val query = session.createQuery(
-                        "FROM Manga WHERE anime.country.tag = :tag AND ean IS NOT NULL ORDER BY releaseDate DESC, anime.name",
-                        Manga::class.java
+                        "FROM $entityName WHERE anime.country.tag = :tag AND ean IS NOT NULL ORDER BY releaseDate DESC, anime.name",
+                        entityClass
                     )
                     query.setParameter("tag", country)
                     query.firstResult = (limit * page) - limit
@@ -104,13 +107,44 @@ object MangaController : IController<Manga>("/mangas") {
 
             try {
                 val query = session.createQuery(
-                    "FROM Manga WHERE anime.uuid = :uuid ORDER BY releaseDate DESC, anime.name",
-                    Manga::class.java
+                    "FROM $entityName WHERE anime.uuid = :uuid ORDER BY releaseDate DESC, anime.name",
+                    entityClass
                 )
                 query.setParameter("uuid", UUID.fromString(animeUuid))
                 query.firstResult = (limit * page) - limit
                 query.maxResults = limit
                 call.respond(query.list() ?: HttpStatusCode.NotFound)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+            } finally {
+                session.close()
+            }
+        }
+    }
+
+    private fun Route.getWatchlistWithPage() {
+        post("/watchlist/page/{page}/limit/{limit}") {
+            val watchlist = call.receive<String>()
+            val page = call.parameters["page"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
+            val limit = call.parameters["limit"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
+            if (page < 1 || limit < 1) return@post call.respond(HttpStatusCode.BadRequest)
+            if (limit > 30) return@post call.respond(HttpStatusCode.BadRequest)
+            println("POST $prefix/watchlist/page/$page/limit/$limit")
+            val session = Database.getSession()
+
+            try {
+                val dataFromGzip =
+                    Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
+
+                val query = session.createQuery(
+                    "FROM $entityName WHERE uuid IN :list ORDER BY releaseDate DESC, anime.name",
+                    entityClass
+                )
+                query.setParameter("list", dataFromGzip)
+                query.firstResult = (limit * page) - limit
+                query.maxResults = limit
+                call.respond(query.list())
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
