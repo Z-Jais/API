@@ -23,7 +23,7 @@ object LangTypeController : IController<LangType>("/langtypes") {
                 val langType = call.receive<LangType>()
 
                 if (langType.name.isNullOrBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
@@ -34,8 +34,7 @@ object LangTypeController : IController<LangType>("/langtypes") {
 
                 call.respond(HttpStatusCode.Created, justSave(langType))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

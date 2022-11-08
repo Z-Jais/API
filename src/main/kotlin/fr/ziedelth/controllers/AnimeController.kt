@@ -12,6 +12,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import java.util.*
 
 object AnimeController : IController<Anime>("/animes") {
@@ -45,8 +46,7 @@ object AnimeController : IController<Anime>("/animes") {
                     val uuid = query.uniqueResult() ?: return@get call.respond(HttpStatusCode.NotFound)
                     call.respond(mapOf("uuid" to uuid))
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }
@@ -60,7 +60,6 @@ object AnimeController : IController<Anime>("/animes") {
 
                 try {
                     val query = session.createQuery(
-//                        "FROM Anime a WHERE a.country.tag = :tag AND LOWER(name) LIKE CONCAT('%', :name, '%')",
                         "SELECT DISTINCT anime FROM Episode e WHERE e.anime.country.tag = :tag AND LOWER(e.anime.name) LIKE CONCAT('%', :name, '%') ORDER BY e.anime.name",
                         Anime::class.java
                     )
@@ -68,8 +67,7 @@ object AnimeController : IController<Anime>("/animes") {
                     query.setParameter("name", name.lowercase())
                     call.respond(query.list() ?: HttpStatusCode.NotFound)
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }
@@ -110,7 +108,7 @@ object AnimeController : IController<Anime>("/animes") {
                     )
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: UNKNOWN_MESSAGE_ERROR)
                 } finally {
                     session.close()
                 }
@@ -145,8 +143,7 @@ object AnimeController : IController<Anime>("/animes") {
                 query.maxResults = limit
                 call.respond(query.list())
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             } finally {
                 session.close()
             }
@@ -169,9 +166,9 @@ object AnimeController : IController<Anime>("/animes") {
                 }
 
                 if (anime.isNullOrNotValid()) {
-                    println("Missing parameters")
+                    println(MISSING_PARAMETERS_MESSAGE_ERROR)
                     println(anime)
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
@@ -196,8 +193,7 @@ object AnimeController : IController<Anime>("/animes") {
                 ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
                 call.respond(HttpStatusCode.Created, savedAnime)
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }
@@ -261,9 +257,7 @@ object AnimeController : IController<Anime>("/animes") {
             val transaction = session.beginTransaction()
 
             try {
-                session.createQuery("DELETE Anime WHERE uuid IN :list")
-                    .setParameter("list", uuids)
-                    .executeUpdate()
+                session.remove(animes)
                 transaction.commit()
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -24,7 +24,7 @@ object PlatformController : IController<Platform>("/platforms") {
                 val platform = call.receive<Platform>()
 
                 if (platform.name.isNullOrBlank() || platform.url.isNullOrBlank() || platform.image.isNullOrBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
@@ -35,8 +35,7 @@ object PlatformController : IController<Platform>("/platforms") {
 
                 call.respond(HttpStatusCode.Created, justSave(platform))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

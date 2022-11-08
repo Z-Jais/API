@@ -16,7 +16,7 @@ object DeviceController : IController<Device>("/devices") {
         val newDevice = getBy("name", device.name)
 
         if (newDevice.isNullOrNotValid()) {
-            println("Missing parameters")
+            println(MISSING_PARAMETERS_MESSAGE_ERROR)
             println(device)
             return
         }
@@ -53,9 +53,9 @@ object DeviceController : IController<Device>("/devices") {
                 println("POST $prefix")
 
                 if (device.isNullOrNotValid()) {
-                    println("Missing parameters")
+                    println(MISSING_PARAMETERS_MESSAGE_ERROR)
                     println(device)
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
@@ -77,8 +77,7 @@ object DeviceController : IController<Device>("/devices") {
                 val savedDevice = justSave(device)
                 call.respond(HttpStatusCode.Created, savedDevice)
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

@@ -46,8 +46,7 @@ object MangaController : IController<Manga>("/mangas") {
                     query.setParameter("ean", ean)
                     call.respond(query.uniqueResult() ?: return@get call.respond(HttpStatusCode.NotFound))
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }
@@ -84,8 +83,7 @@ object MangaController : IController<Manga>("/mangas") {
                         value = query.list()
                     )
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }
@@ -115,8 +113,7 @@ object MangaController : IController<Manga>("/mangas") {
                 query.maxResults = limit
                 call.respond(query.list() ?: HttpStatusCode.NotFound)
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             } finally {
                 session.close()
             }
@@ -146,8 +143,7 @@ object MangaController : IController<Manga>("/mangas") {
                 query.maxResults = limit
                 call.respond(query.list())
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             } finally {
                 session.close()
             }
@@ -183,8 +179,7 @@ object MangaController : IController<Manga>("/mangas") {
                 call.respond(HttpStatusCode.Created, mangas)
                 PluginManager.callEvent(MangasReleaseEvent(savedMangas))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

@@ -23,8 +23,7 @@ object SimulcastController : IController<Simulcast>("/simulcasts") {
                     query.setParameter("tag", country)
                     call.respond(query.list())
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }

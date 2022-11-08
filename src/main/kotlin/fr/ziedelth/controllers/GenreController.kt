@@ -23,7 +23,7 @@ object GenreController : IController<Genre>("/genres") {
                 val genre = call.receive<Genre>()
 
                 if (genre.name.isNullOrBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
@@ -34,8 +34,7 @@ object GenreController : IController<Genre>("/genres") {
 
                 call.respond(HttpStatusCode.Created, justSave(genre))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

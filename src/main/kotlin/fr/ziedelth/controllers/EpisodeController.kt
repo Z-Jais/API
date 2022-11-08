@@ -57,8 +57,7 @@ object EpisodeController : IController<Episode>("/episodes") {
                         value = query.list()
                     )
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }
@@ -88,8 +87,7 @@ object EpisodeController : IController<Episode>("/episodes") {
                 query.maxResults = limit
                 call.respond(query.list() ?: HttpStatusCode.NotFound)
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             } finally {
                 session.close()
             }
@@ -119,8 +117,7 @@ object EpisodeController : IController<Episode>("/episodes") {
                 query.maxResults = limit
                 call.respond(query.list())
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             } finally {
                 session.close()
             }
@@ -167,8 +164,7 @@ object EpisodeController : IController<Episode>("/episodes") {
                 call.respond(HttpStatusCode.Created, episodes)
                 PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

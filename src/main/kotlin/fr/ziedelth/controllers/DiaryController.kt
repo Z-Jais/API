@@ -26,8 +26,7 @@ object DiaryController : IController<Anime>("/diary") {
                     val list = query.list()?.distinctBy { it.uuid }
                     call.respond(list ?: HttpStatusCode.NotFound)
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }

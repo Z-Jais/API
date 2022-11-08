@@ -54,7 +54,7 @@ object DeviceRedirectionController : IController<Device>("/devices/redirection")
                 val episode = EpisodeController.getBy("id", episodeId)
 
                 if (device == null || episode == null) {
-                    println("Missing parameters")
+                    println(MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post call.respond(HttpStatusCode.BadRequest)
                 }
 
@@ -71,8 +71,7 @@ object DeviceRedirectionController : IController<Device>("/devices/redirection")
 
                 call.respond(HttpStatusCode.Created, "$entityName created")
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }
@@ -110,7 +109,7 @@ object DeviceRedirectionController : IController<Device>("/devices/redirection")
                 val manga = MangaController.getBy("uuid", mangaId)
 
                 if (device == null || manga == null) {
-                    println("Missing parameters")
+                    println(MISSING_PARAMETERS_MESSAGE_ERROR)
                     call.respond(HttpStatusCode.BadRequest)
                     return@post
                 }
@@ -128,8 +127,7 @@ object DeviceRedirectionController : IController<Device>("/devices/redirection")
 
                 call.respond(HttpStatusCode.Created, "$entityName created")
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

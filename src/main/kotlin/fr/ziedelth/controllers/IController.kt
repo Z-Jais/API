@@ -10,11 +10,19 @@ import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
+const val UNKNOWN_MESSAGE_ERROR = "Unknown error"
+const val MISSING_PARAMETERS_MESSAGE_ERROR = "Missing parameters"
+
 open class IController<T : Serializable>(val prefix: String) {
     val entityClass: Class<T> =
         (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     val entityName: String = entityClass.simpleName
     val uuidRequest: UUID = UUID.randomUUID()
+
+    suspend fun printError(call: ApplicationCall, e: Exception) {
+        e.printStackTrace()
+        call.respond(HttpStatusCode.InternalServerError, e.message ?: UNKNOWN_MESSAGE_ERROR)
+    }
 
     private fun getAll(): MutableList<T> {
         val session = Database.getSession()
@@ -114,7 +122,7 @@ open class IController<T : Serializable>(val prefix: String) {
         val transaction = session.beginTransaction()
 
         try {
-            session.update(dtoIn)
+            session.persist(session.merge(dtoIn))
             transaction.commit()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -133,7 +141,7 @@ open class IController<T : Serializable>(val prefix: String) {
             try {
                 call.respond(this@IController.getAll())
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

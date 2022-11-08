@@ -49,8 +49,7 @@ object NewsController : IController<News>("/news") {
                         value = query.list()
                     )
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                    printError(call, e)
                 } finally {
                     session.close()
                 }
@@ -85,8 +84,7 @@ object NewsController : IController<News>("/news") {
                 call.respond(HttpStatusCode.Created, news)
                 PluginManager.callEvent(NewsReleaseEvent(savedNews))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }

@@ -23,7 +23,7 @@ object EpisodeTypeController : IController<EpisodeType>("/episodetypes") {
                 val episodeType = call.receive<EpisodeType>()
 
                 if (episodeType.name.isNullOrBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
@@ -34,8 +34,7 @@ object EpisodeTypeController : IController<EpisodeType>("/episodetypes") {
 
                 call.respond(HttpStatusCode.Created, justSave(episodeType))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }
