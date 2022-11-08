@@ -12,6 +12,7 @@ import java.util.*
 fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
+@Table(name = "anime")
 data class Anime(
     @Id
     @GeneratedValue

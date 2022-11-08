@@ -1,9 +1,6 @@
 package fr.ziedelth.entities
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
+import jakarta.persistence.*
 import org.hibernate.Hibernate
 import java.io.Serializable
 import java.util.*
@@ -11,6 +8,7 @@ import java.util.*
 fun LangType?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
+@Table(name = "langtype")
 data class LangType(
     @Id
     @GeneratedValue

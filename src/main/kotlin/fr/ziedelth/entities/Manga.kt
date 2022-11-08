@@ -10,6 +10,7 @@ import java.util.*
 fun Manga?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
+@Table(name = "manga")
 data class Manga(
     @Id
     @GeneratedValue

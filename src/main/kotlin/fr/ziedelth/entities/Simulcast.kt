@@ -8,14 +8,14 @@ import java.util.*
 fun Simulcast?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
-@Table(uniqueConstraints = [UniqueConstraint(columnNames = arrayOf("season", "year"))])
+@Table(name = "simulcast", uniqueConstraints = [UniqueConstraint(columnNames = arrayOf("season", "year"))])
 data class Simulcast(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
     @Column(nullable = false)
     val season: String? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, name = "\"year\"")
     val year: Int? = null
 ) : Serializable {
     fun isNotValid(): Boolean = season.isNullOrBlank() || year == null

@@ -10,6 +10,7 @@ import java.util.*
 fun Episode?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
+@Table(name = "episode")
 data class Episode(
     @Id
     @GeneratedValue
