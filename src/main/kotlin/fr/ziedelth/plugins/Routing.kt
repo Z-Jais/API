@@ -1,16 +1,14 @@
 package fr.ziedelth.plugins
 
-import fr.ziedelth.controllers.AnimeController.getAnimes
-import fr.ziedelth.controllers.CountryController.getCountries
+import fr.ziedelth.controllers.*
 import fr.ziedelth.controllers.DiaryController.getDiary
-import fr.ziedelth.controllers.EpisodeController.getEpisodes
 import fr.ziedelth.controllers.EpisodeTypeController.getEpisodeTypes
 import fr.ziedelth.controllers.GenreController.getGenres
 import fr.ziedelth.controllers.LangTypeController.getLangTypes
-import fr.ziedelth.controllers.MangaController.getMangas
-import fr.ziedelth.controllers.NewsController.getNews
 import fr.ziedelth.controllers.PlatformController.getPlatforms
 import fr.ziedelth.controllers.SimulcastController.getSimulcasts
+import fr.ziedelth.repositories.AnimeRepository
+import fr.ziedelth.repositories.CountryRepository
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -23,16 +21,19 @@ fun Application.configureRouting() {
     }
 
     routing {
-        getCountries()
+        val countryRepository = CountryRepository()
+        val animeRepository = AnimeRepository()
+
+        CountryController(countryRepository).getRoutes(this)
         getPlatforms()
         getSimulcasts()
         getGenres()
-        getAnimes()
+        AnimeController(countryRepository, animeRepository).getRoutes(this)
         getEpisodeTypes()
         getLangTypes()
-        getEpisodes()
-        getNews()
-        getMangas()
+        EpisodeController(animeRepository).getRoutes(this)
+        NewsController(countryRepository).getRoutes(this)
+        MangaController(animeRepository).getRoutes(this)
         getDiary()
     }
 }

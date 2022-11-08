@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 import java.util.*
@@ -18,6 +19,21 @@ open class IController<T : Serializable>(val prefix: String) {
         (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     val entityName: String = entityClass.simpleName
     val uuidRequest: UUID = UUID.randomUUID()
+
+    fun PipelineContext<Unit, ApplicationCall>.getPageAndLimit(): Pair<Int, Int> {
+        val page = call.parameters["page"]?.toInt() ?: throw IllegalArgumentException("Page is not valid")
+        val limit = call.parameters["limit"]?.toInt() ?: throw IllegalArgumentException("Limit is not valid")
+
+        if (page < 1 || limit < 1) {
+            throw IllegalArgumentException("Page or limit is not valid")
+        }
+
+        if (limit > 30) {
+            throw IllegalArgumentException("Limit is too high")
+        }
+
+        return Pair(page, limit)
+    }
 
     suspend fun printError(call: ApplicationCall, e: Exception) {
         e.printStackTrace()
@@ -134,7 +150,7 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    fun Route.getAll() {
+    open fun Route.getAll() {
         get {
             println("GET $prefix")
 

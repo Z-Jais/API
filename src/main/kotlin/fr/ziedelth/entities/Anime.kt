@@ -3,7 +3,6 @@ package fr.ziedelth.entities
 import fr.ziedelth.utils.DATE_FORMAT_REGEX
 import fr.ziedelth.utils.toISO8601
 import jakarta.persistence.*
-import org.hibernate.Hibernate
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 import java.io.Serializable
@@ -13,7 +12,7 @@ fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
 @Table(name = "anime")
-data class Anime(
+class Anime(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
@@ -83,19 +82,4 @@ data class Anime(
                 DATE_FORMAT_REGEX
             )
             ) || image.isNullOrBlank()
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
-        other as Anime
-
-        return uuid != null && uuid == other.uuid
-    }
-
-    override fun hashCode(): Int = javaClass.hashCode()
-
-    @Override
-    override fun toString(): String {
-        return this::class.simpleName + "(uuid = $uuid , country = $country , name = $name , releaseDate = $releaseDate , image = $image , description = $description , hashes = $hashes )"
-    }
 }

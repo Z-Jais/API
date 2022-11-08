@@ -3,7 +3,8 @@ package fr.ziedelth.controllers
 import com.google.gson.Gson
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
-import fr.ziedelth.utils.Database
+import fr.ziedelth.repositories.AnimeRepository
+import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
@@ -15,9 +16,10 @@ import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import java.util.*
 
-object AnimeController : IController<Anime>("/animes") {
-    fun Routing.getAnimes() {
-        route(prefix) {
+class AnimeController(private val countryRepository: CountryRepository, private val animeRepository: AnimeRepository) :
+    IController<Anime>("/animes") {
+    fun getRoutes(routing: Routing) {
+        routing.route(prefix) {
             search()
             getWithPage()
             getWatchlistWithPage()
@@ -33,119 +35,52 @@ object AnimeController : IController<Anime>("/animes") {
                 val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
                 val hash = call.parameters["hash"] ?: return@get call.respond(HttpStatusCode.BadRequest)
                 println("GET $prefix/country/$country/search/hash/$hash")
-                val session = Database.getSession()
-
-                try {
-                    val query = session.createQuery(
-                        "SELECT a.uuid FROM Anime a JOIN a.hashes h WHERE a.country.tag = :tag AND h = :hash",
-                        UUID::class.java
-                    )
-                    query.maxResults = 1
-                    query.setParameter("tag", country)
-                    query.setParameter("hash", hash)
-                    val uuid = query.uniqueResult() ?: return@get call.respond(HttpStatusCode.NotFound)
-                    call.respond(mapOf("uuid" to uuid))
-                } catch (e: Exception) {
-                    printError(call, e)
-                } finally {
-                    session.close()
-                }
+                call.respond(mapOf("uuid" to animeRepository.findByHash(country, hash)))
             }
 
             get("/name/{name}") {
                 val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
                 val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
                 println("GET $prefix/country/$country/search/name/$name")
-                val session = Database.getSession()
-
-                try {
-                    val query = session.createQuery(
-                        "SELECT DISTINCT anime FROM Episode e WHERE e.anime.country.tag = :tag AND LOWER(e.anime.name) LIKE CONCAT('%', :name, '%') ORDER BY e.anime.name",
-                        Anime::class.java
-                    )
-                    query.setParameter("tag", country)
-                    query.setParameter("name", name.lowercase())
-                    call.respond(query.list() ?: HttpStatusCode.NotFound)
-                } catch (e: Exception) {
-                    printError(call, e)
-                } finally {
-                    session.close()
-                }
+                call.respond(animeRepository.findByName(country, name))
             }
         }
     }
 
     private fun Route.getWithPage() {
         get("/country/{country}/simulcast/{simulcast}/page/{page}/limit/{limit}") {
-            val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val simulcast = call.parameters["simulcast"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
-            if (page < 1 || limit < 1) return@get call.respond(HttpStatusCode.BadRequest)
-            if (limit > 30) return@get call.respond(HttpStatusCode.BadRequest)
-            println("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
-            val request = RequestCache.get(uuidRequest, country, page, limit, simulcast)
+            try {
+                val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                val simulcast = call.parameters["simulcast"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                val (page, limit) = getPageAndLimit()
+                println("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
+                val request = RequestCache.get(uuidRequest, country, page, limit, simulcast)
 
-            if (request == null || request.isExpired()) {
-                val session = Database.getSession()
-
-                try {
-                    val query = session.createQuery(
-                        "FROM Anime a JOIN a.simulcasts s WHERE a.country.tag = :tag AND s.uuid = :simulcast ORDER BY a.name",
-                        Anime::class.java
-                    )
-                    query.setParameter("tag", country)
-                    query.setParameter("simulcast", UUID.fromString(simulcast))
-                    query.firstResult = (limit * page) - limit
-                    query.maxResults = limit
-                    request?.update(query.list()) ?: RequestCache.put(
-                        uuidRequest,
-                        country,
-                        page,
-                        limit,
-                        simulcast,
-                        query.list()
-                    )
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: UNKNOWN_MESSAGE_ERROR)
-                } finally {
-                    session.close()
+                if (request == null || request.isExpired()) {
+                    val list = animeRepository.getByPage(country, UUID.fromString(simulcast), page, limit)
+                    request?.update(list) ?: RequestCache.put(uuidRequest, country, page, limit, simulcast, list)
                 }
-            }
 
-            call.respond(
-                RequestCache.get(uuidRequest, country, page, limit, simulcast)?.value ?: HttpStatusCode.NotFound
-            )
+                call.respond(
+                    RequestCache.get(uuidRequest, country, page, limit, simulcast)?.value ?: HttpStatusCode.NotFound
+                )
+            } catch (e: Exception) {
+                printError(call, e)
+            }
         }
     }
 
     private fun Route.getWatchlistWithPage() {
         post("/watchlist/page/{page}/limit/{limit}") {
-            val watchlist = call.receive<String>()
-            val page = call.parameters["page"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
-            val limit = call.parameters["limit"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
-            if (page < 1 || limit < 1) return@post call.respond(HttpStatusCode.BadRequest)
-            if (limit > 30) return@post call.respond(HttpStatusCode.BadRequest)
-            println("POST $prefix/watchlist/page/$page/limit/$limit")
-            val session = Database.getSession()
-
             try {
+                val watchlist = call.receive<String>()
+                val (page, limit) = getPageAndLimit()
+                println("POST $prefix/watchlist/page/$page/limit/$limit")
                 val dataFromGzip =
                     Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
-
-                val query = session.createQuery(
-                    "FROM $entityName WHERE uuid IN :list ORDER BY name",
-                    entityClass
-                )
-                query.setParameter("list", dataFromGzip)
-                query.firstResult = (limit * page) - limit
-                query.maxResults = limit
-                call.respond(query.list())
+                call.respond(animeRepository.findAllByPage(dataFromGzip, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
-            } finally {
-                session.close()
             }
         }
     }
@@ -157,8 +92,9 @@ object AnimeController : IController<Anime>("/animes") {
             try {
                 val anime = call.receive<Anime>()
 
-                anime.country = CountryController.getBy("uuid", anime.country?.uuid) ?: return@post run {
+                anime.country = countryRepository.find(anime.country!!.uuid) ?: return@post run {
                     println("Country not found")
+
                     call.respond(
                         HttpStatusCode.BadRequest,
                         "Country not found"
@@ -172,13 +108,14 @@ object AnimeController : IController<Anime>("/animes") {
                     return@post
                 }
 
-                if (isExists("name", anime.name)) {
+                if (animeRepository.exists("name", anime.name)) {
                     println("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
                 val hash = anime.hash()
+
                 if (contains("hashes", hash)) {
                     println("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
@@ -189,7 +126,7 @@ object AnimeController : IController<Anime>("/animes") {
                     anime.hashes.add(hash!!)
                 }
 
-                val savedAnime = justSave(anime)
+                val savedAnime = animeRepository.save(anime)
                 ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
                 call.respond(HttpStatusCode.Created, savedAnime)
             } catch (e: Exception) {
@@ -200,73 +137,73 @@ object AnimeController : IController<Anime>("/animes") {
 
     private fun Route.merge() {
         put("/merge") {
-            // Get list of uuids
-            val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
-            println("PUT $prefix/merge")
-            // Get anime
-            val animes = uuids.mapNotNull { getBy("uuid", it) }
-
-            if (animes.isEmpty()) {
-                println("Anime not found")
-                call.respond(HttpStatusCode.NotFound, "Anime not found")
-                return@put
-            }
-
-            // Get all countries
-            val countries = animes.map { it.country }.distinctBy { it?.uuid }
-
-            if (countries.size > 1) {
-                println("Anime has different countries")
-                call.respond(HttpStatusCode.BadRequest, "Anime has different countries")
-                return@put
-            }
-
-            // Get all hashes
-            val hashes = animes.map { it.hashes }.flatten().distinct().toMutableSet()
-            // Get all genres
-            val genres = animes.map { it.genres }.flatten().distinctBy { it.uuid }.toMutableSet()
-            // Get all simulcasts
-            val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
-            // Get all episodes
-            val episodes =
-                animes.map { EpisodeController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
-                    .toMutableSet()
-            // Get all mangas
-            val mangas = animes.map { MangaController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
-                .toMutableSet()
-
-            val firstAnime = animes.first()
-            val mergedAnime = Anime(
-                country = countries.first(),
-                name = "${animes.first().name} (${animes.size})",
-                releaseDate = firstAnime.releaseDate,
-                image = firstAnime.image,
-                description = firstAnime.description,
-                hashes = hashes,
-                genres = genres,
-                simulcasts = simulcasts
-            )
-
-            val savedAnime = justSave(mergedAnime)
-            ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
-            episodes.map { it.copy(anime = savedAnime) }.map { EpisodeController.justSave(it) }
-            mangas.map { it.copy(anime = savedAnime) }.map { MangaController.justSave(it) }
-
-            // Delete animes
-            val session = Database.getSession()
-            val transaction = session.beginTransaction()
-
-            try {
-                session.remove(animes)
-                transaction.commit()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("Error while deleting $prefix : ${e.message}")
-                transaction.rollback()
-                throw e
-            } finally {
-                session.close()
-            }
+//            // Get list of uuids
+//            val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
+//            println("PUT $prefix/merge")
+//            // Get anime
+//            val animes = uuids.mapNotNull { getBy("uuid", it) }
+//
+//            if (animes.isEmpty()) {
+//                println("Anime not found")
+//                call.respond(HttpStatusCode.NotFound, "Anime not found")
+//                return@put
+//            }
+//
+//            // Get all countries
+//            val countries = animes.map { it.country }.distinctBy { it?.uuid }
+//
+//            if (countries.size > 1) {
+//                println("Anime has different countries")
+//                call.respond(HttpStatusCode.BadRequest, "Anime has different countries")
+//                return@put
+//            }
+//
+//            // Get all hashes
+//            val hashes = animes.map { it.hashes }.flatten().distinct().toMutableSet()
+//            // Get all genres
+//            val genres = animes.map { it.genres }.flatten().distinctBy { it.uuid }.toMutableSet()
+//            // Get all simulcasts
+//            val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
+//            // Get all episodes
+//            val episodes =
+//                animes.map { EpisodeController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
+//                    .toMutableSet()
+//            // Get all mangas
+//            val mangas = animes.map { MangaController.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
+//                .toMutableSet()
+//
+//            val firstAnime = animes.first()
+//            val mergedAnime = Anime(
+//                country = countries.first(),
+//                name = "${animes.first().name} (${animes.size})",
+//                releaseDate = firstAnime.releaseDate,
+//                image = firstAnime.image,
+//                description = firstAnime.description,
+//                hashes = hashes,
+//                genres = genres,
+//                simulcasts = simulcasts
+//            )
+//
+//            val savedAnime = justSave(mergedAnime)
+//            ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
+//            episodes.map { it.copy(anime = savedAnime) }.map { EpisodeController.justSave(it) }
+//            mangas.map { it.copy(anime = savedAnime) }.map { MangaController.justSave(it) }
+//
+//            // Delete animes
+//            val session = Database.getSession()
+//            val transaction = session.beginTransaction()
+//
+//            try {
+//                session.remove(animes)
+//                transaction.commit()
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//                println("Error while deleting $prefix : ${e.message}")
+//                transaction.rollback()
+//                throw e
+//            } finally {
+//                session.close()
+//            }
         }
     }
 }

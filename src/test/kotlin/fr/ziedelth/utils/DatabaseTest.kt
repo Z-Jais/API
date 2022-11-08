@@ -14,7 +14,10 @@ object DatabaseTest {
 
     init {
         try {
-            val file = File(javaClass.classLoader.getResource("hibernate.cfg.xml")?.file ?: throw Exception("hibernate.cfg.xml not found"))
+            val file = File(
+                javaClass.classLoader.getResource("hibernate.cfg.xml")?.file
+                    ?: throw Exception("hibernate.cfg.xml not found")
+            )
 
             Configuration().let { configuration ->
                 getEntities().forEach { configuration.addAnnotatedClass(it) }
@@ -33,7 +36,6 @@ object DatabaseTest {
     private fun getEntities(): MutableSet<Class<out Serializable>> =
         Reflections("fr.ziedelth.entities").getSubTypesOf(Serializable::class.java)
 
-    fun getSessionFactory() = sessionFactory
     fun getSession(): Session = sessionFactory.openSession()
 
     fun clean() {

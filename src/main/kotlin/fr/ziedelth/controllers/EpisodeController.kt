@@ -5,6 +5,7 @@ import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.EpisodesReleaseEvent
+import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
@@ -17,9 +18,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.*
 
-object EpisodeController : IController<Episode>("/episodes") {
-    fun Routing.getEpisodes() {
-        route(prefix) {
+class EpisodeController(private val animeRepository: AnimeRepository) : IController<Episode>("/episodes") {
+    fun getRoutes(routing: Routing) {
+        routing.route(prefix) {
             getWithPage()
             getAnimeWithPage()
             getWatchlistWithPage()
@@ -127,7 +128,7 @@ object EpisodeController : IController<Episode>("/episodes") {
     private fun merge(episode: Episode) {
         episode.platform =
             PlatformController.getBy("uuid", episode.platform!!.uuid) ?: throw Exception("Platform not found")
-        episode.anime = AnimeController.getBy("uuid", episode.anime!!.uuid) ?: throw Exception("Anime not found")
+        episode.anime = animeRepository.find(episode.anime!!.uuid) ?: throw Exception("Anime not found")
         episode.episodeType =
             EpisodeTypeController.getBy("uuid", episode.episodeType!!.uuid) ?: throw Exception("EpisodeType not found")
         episode.langType =
