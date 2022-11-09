@@ -1,27 +1,14 @@
 package fr.ziedelth.repositories
 
+import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.Country
-import fr.ziedelth.utils.DatabaseTest
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import fr.ziedelth.plugins.countryRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.*
 import kotlin.test.expect
 
-internal class CountryRepositoryTest {
-    private val countryRepository = CountryRepository { DatabaseTest.getSession() }
-
-    @BeforeEach
-    fun tearUp() {
-        countryRepository.saveAll(listOf(Country(tag = "fr", name = "France"), Country(tag = "jp", name = "Japan")))
-    }
-
-    @AfterEach
-    fun tearDown() {
-        DatabaseTest.clean()
-    }
-
+internal class CountryRepositoryTest : AbstractAPITest() {
     @Test
     fun find() {
         val country = countryRepository.find(UUID.randomUUID())

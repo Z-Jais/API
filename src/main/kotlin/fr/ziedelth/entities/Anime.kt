@@ -16,7 +16,7 @@ class Anime(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
-    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
     @JoinColumn(
         name = "country_uuid",
         nullable = false,
@@ -39,7 +39,7 @@ class Anime(
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime (uuid) ON DELETE CASCADE")
     )
     val hashes: MutableSet<String> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
     @JoinTable(
         name = "anime_genre",
         joinColumns = [
@@ -56,7 +56,7 @@ class Anime(
         ]
     )
     val genres: MutableSet<Genre> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
     @JoinTable(
         name = "anime_simulcast",
         joinColumns = [
@@ -74,8 +74,8 @@ class Anime(
     )
     val simulcasts: MutableSet<Simulcast> = mutableSetOf(),
 ) : Serializable {
-    fun hash(): String? = name?.lowercase()?.filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }?.trim()
-        ?.replace("\\s+".toRegex(), "-")?.replace("--", "-")
+    fun hash(): String = name!!.lowercase().filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }.trim()
+        .replace("\\s+".toRegex(), "-").replace("--", "-")
 
     fun isNotValid(): Boolean = country.isNullOrNotValid() || name.isNullOrBlank() || (
             releaseDate.isBlank() || !releaseDate.matches(

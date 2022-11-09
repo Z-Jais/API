@@ -43,14 +43,24 @@ open class IRepository<T>(val getSession: () -> Session = { Database.getSession(
         return list
     }
 
+    fun getAllBy(field: String, value: Any?): MutableList<T> {
+        val session = getSession.invoke()
+        val query = session.createQuery("FROM $entityName WHERE $field = :value", entityClass)
+        query.setParameter("value", value)
+        val list = query.list()
+        session.close()
+        return list
+    }
+
     fun save(entity: T): T {
         val session = getSession.invoke()
         val transaction = session.beginTransaction()
 
         try {
-            session.persist(session.merge(entity))
+            val mergedEntity = session.merge(entity)
+            session.persist(mergedEntity)
             transaction.commit()
-            return entity
+            return mergedEntity
         } catch (e: Exception) {
             transaction.rollback()
             throw e
@@ -64,9 +74,14 @@ open class IRepository<T>(val getSession: () -> Session = { Database.getSession(
         val transaction = session.beginTransaction()
 
         try {
-            entities.forEach { session.persist(session.merge(it)) }
+            val mergedEntities = entities.map {
+                val mergedEntity = session.merge(it)
+                session.persist(mergedEntity)
+                mergedEntity
+            }
+
             transaction.commit()
-            return entities
+            return mergedEntities
         } catch (e: Exception) {
             transaction.rollback()
             throw e
@@ -81,6 +96,21 @@ open class IRepository<T>(val getSession: () -> Session = { Database.getSession(
 
         try {
             session.remove(session.merge(entity))
+            transaction.commit()
+        } catch (e: Exception) {
+            transaction.rollback()
+            throw e
+        } finally {
+            session.close()
+        }
+    }
+
+    fun deleteAll(entities: List<T>) {
+        val session = getSession.invoke()
+        val transaction = session.beginTransaction()
+
+        try {
+            entities.forEach { session.remove(session.merge(it)) }
             transaction.commit()
         } catch (e: Exception) {
             transaction.rollback()

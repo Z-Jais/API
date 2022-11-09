@@ -1,37 +1,16 @@
 package fr.ziedelth.repositories
 
+import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Country
-import fr.ziedelth.entities.Simulcast
-import fr.ziedelth.utils.DatabaseTest
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import fr.ziedelth.plugins.animeRepository
+import fr.ziedelth.plugins.simulcastRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.*
 import kotlin.test.expect
 
-internal class AnimeRepositoryTest {
-    private val countryRepository = CountryRepository { DatabaseTest.getSession() }
-    private val simulcastRepository = SimulcastRepository { DatabaseTest.getSession() }
-    private val animeRepository = AnimeRepository { DatabaseTest.getSession() }
-
-    @BeforeEach
-    fun tearUp() {
-        countryRepository.save(Country(tag = "fr", name = "France"))
-        val country = countryRepository.getAll().first()
-
-        val anime1 = Anime(country = country, name = "One Piece", image = "hello")
-        val anime2 = Anime(country = country, name = "Naruto", image = "hello")
-        val anime3 = Anime(country = country, name = "Bleach", image = "hello")
-        animeRepository.saveAll(listOf(anime1, anime2, anime3))
-    }
-
-    @AfterEach
-    fun tearDown() {
-        DatabaseTest.clean()
-    }
-
+internal class AnimeRepositoryTest : AbstractAPITest() {
     @Test
     fun find() {
         val anime = animeRepository.find(UUID.randomUUID())
@@ -61,6 +40,12 @@ internal class AnimeRepositoryTest {
     @Test
     fun getAll() {
         expect(3) { animeRepository.getAll().size }
+    }
+
+    @Test
+    fun getAllByCountry() {
+        expect(3) { animeRepository.getAllBy("country.tag", "fr").size }
+        expect(0) { animeRepository.getAllBy("country.tag", "us").size }
     }
 
     @Test
@@ -126,30 +111,39 @@ internal class AnimeRepositoryTest {
     }
 
     @Test
-    fun findByHash() {
-        val anime = animeRepository.getAll().first()
-        anime.hashes.add("hello")
-        animeRepository.save(anime)
+    fun deleteAll() {
+        assertThrows<Exception> {
+            animeRepository.deleteAll(
+                listOf(
+                    Anime(
+                        country = Country(tag = "fr", name = "France"),
+                        name = "Naruto",
+                        image = "hello"
+                    )
+                )
+            )
+        }
 
+        val animes = animeRepository.getAll()
+        animeRepository.deleteAll(listOf(animes.first(), animes[1]))
+        expect(1) { animes.size - 2 }
+    }
+
+    @Test
+    fun findByHash() {
         val anime2 = animeRepository.findByHash("fr", "hello")
-        expect(anime.uuid) { anime2 }
+        checkNotNull { anime2 }
     }
 
     @Test
     fun findByName() {
-        // TODO: Add episode
         val animes = animeRepository.findByName("fr", "Naruto")
-        expect(0) { animes.size }
+        expect(1) { animes.size }
     }
 
     @Test
     fun getByPage() {
-        simulcastRepository.save(Simulcast(season = "TEST", year = 2022))
         val simulcast = simulcastRepository.getAll().first()
-
-        val animes = animeRepository.getAll()
-        animes.forEach { it.simulcasts.add(simulcast) }
-        animeRepository.saveAll(animes)
 
         val page1 = animeRepository.getByPage("fr", simulcast.uuid, 1, 2)
         expect(2) { page1.size }

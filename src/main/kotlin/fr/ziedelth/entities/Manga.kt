@@ -45,4 +45,18 @@ class Manga(
         platform.isNullOrNotValid() || anime.isNullOrNotValid() || hash.isNullOrBlank() || (releaseDate.isBlank() || !releaseDate.matches(
             DATE_FORMAT_REGEX
         )) || url.isNullOrBlank() || cover.isNullOrBlank() || editor.isNullOrBlank()
+
+    fun copy(anime: Anime? = this.anime) = Manga(
+        platform = platform,
+        anime = anime,
+        hash = hash,
+        releaseDate = releaseDate,
+        url = url,
+        cover = cover,
+        editor = editor,
+        ref = ref,
+        ean = ean,
+        age = age,
+        price = price
+    )
 }

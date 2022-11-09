@@ -7,20 +7,22 @@ import fr.ziedelth.controllers.GenreController.getGenres
 import fr.ziedelth.controllers.LangTypeController.getLangTypes
 import fr.ziedelth.controllers.PlatformController.getPlatforms
 import fr.ziedelth.controllers.SimulcastController.getSimulcasts
-import fr.ziedelth.repositories.AnimeRepository
-import fr.ziedelth.repositories.CountryRepository
-import fr.ziedelth.repositories.EpisodeRepository
-import fr.ziedelth.repositories.MangaRepository
+import fr.ziedelth.repositories.*
+import fr.ziedelth.utils.DatabaseTest
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting() {
-    routing {
-        val countryRepository = CountryRepository()
-        val animeRepository = AnimeRepository()
-        val episodeRepository = EpisodeRepository()
-        val mangaRepository = MangaRepository()
+val countryRepository = CountryRepository { DatabaseTest.getSession() }
+val platformRepository = PlatformRepository { DatabaseTest.getSession() }
+val simulcastRepository = SimulcastRepository { DatabaseTest.getSession() }
+val animeRepository = AnimeRepository { DatabaseTest.getSession() }
+val episodeTypeRepository = EpisodeTypeRepository { DatabaseTest.getSession() }
+val langTypeRepository = LangTypeRepository { DatabaseTest.getSession() }
+val episodeRepository = EpisodeRepository { DatabaseTest.getSession() }
+val mangaRepository = MangaRepository { DatabaseTest.getSession() }
 
+fun Application.configureRoutingTest() {
+    routing {
         CountryController(countryRepository).getRoutes(this)
         getPlatforms()
         getSimulcasts()

@@ -57,4 +57,20 @@ class Episode(
         platform.isNullOrNotValid() || anime.isNullOrNotValid() || episodeType.isNullOrNotValid() || langType.isNullOrNotValid() || hash.isNullOrBlank() || (
                 releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)
                 ) || season == null || number == null || url.isNullOrBlank() || image.isNullOrBlank()
+
+    fun copy(anime: Anime? = this.anime) = Episode(
+        this.uuid,
+        platform,
+        anime,
+        episodeType,
+        langType,
+        hash,
+        releaseDate,
+        season,
+        number,
+        title,
+        url,
+        image,
+        duration
+    )
 }
