@@ -52,9 +52,9 @@ data class Episode(
     val number: Int? = null,
     @Column(nullable = true)
     val title: String? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     val url: String? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     val image: String? = null,
     @Column(nullable = false)
     val duration: Long = -1
