@@ -28,9 +28,9 @@ class News(
     val releaseDate: String = Calendar.getInstance().toISO8601(),
     @Column(nullable = false)
     val title: String? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     val description: String? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     val url: String? = null
 ) : Platformeable(platform), Serializable {
     fun isNotValid(): Boolean =
