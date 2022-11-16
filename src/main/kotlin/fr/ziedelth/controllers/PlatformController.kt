@@ -1,6 +1,7 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.Platform
+import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.PlatformRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -31,7 +32,7 @@ class PlatformController(private val platformRepository: PlatformRepository) : I
             try {
                 val platform = call.receive<Platform>()
 
-                if (platform.isNotValid()) {
+                if (platform.isNullOrNotValid()) {
                     call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }

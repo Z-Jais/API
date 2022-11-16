@@ -1,6 +1,7 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.EpisodeType
+import fr.ziedelth.entities.isNullOrNotValid
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -22,7 +23,7 @@ object EpisodeTypeController : IController<EpisodeType>("/episodetypes") {
             try {
                 val episodeType = call.receive<EpisodeType>()
 
-                if (episodeType.name.isNullOrBlank()) {
+                if (episodeType.isNullOrNotValid()) {
                     call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }

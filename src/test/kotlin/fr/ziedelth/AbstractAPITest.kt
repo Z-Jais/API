@@ -23,8 +23,9 @@ internal abstract class AbstractAPITest {
         platformRepository.saveAll(listOf(platform1, platform2, platform3))
         val platforms = platformRepository.getAll()
 
-        val simulcast = Simulcast(season = "Winter", year = 2020)
-        simulcastRepository.save(simulcast)
+        val simulcast1 = Simulcast(season = "WINTER", year = 2020)
+        val simulcast2 = Simulcast(season = "SPRING", year = 2020)
+        simulcastRepository.saveAll(listOf(simulcast1, simulcast2))
         val simulcasts = simulcastRepository.getAll()
 
         val anime1 = Anime(
@@ -32,21 +33,21 @@ internal abstract class AbstractAPITest {
             name = "One Piece",
             image = "hello",
             hashes = mutableSetOf("hello"),
-            simulcasts = mutableSetOf(simulcasts.random())
+            simulcasts = mutableSetOf(simulcasts.first())
         )
         val anime2 = Anime(
             country = countries.first(),
             name = "Naruto",
             image = "hello",
             hashes = mutableSetOf("hello2"),
-            simulcasts = mutableSetOf(simulcasts.random())
+            simulcasts = mutableSetOf(simulcasts.first())
         )
         val anime3 = Anime(
             country = countries.first(),
             name = "Bleach",
             image = "hello",
             hashes = mutableSetOf("hello3"),
-            simulcasts = mutableSetOf(simulcasts.random())
+            simulcasts = mutableSetOf(simulcasts.first())
         )
         animeRepository.saveAll(listOf(anime1, anime2, anime3))
         val animes = animeRepository.getAll()
