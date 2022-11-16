@@ -91,4 +91,10 @@ internal class SimulcastRepositoryTest : AbstractAPITest() {
         simulcastRepository.delete(simulcasts.first())
         expect(1) { simulcasts.size - 1 }
     }
+
+    @Test
+    fun findBySeasonAndYear() {
+        val simulcast = simulcastRepository.findBySeasonAndYear("WINTER", 2020)
+        checkNotNull(simulcast?.uuid)
+    }
 }
