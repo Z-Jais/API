@@ -18,7 +18,14 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <main.class>fr.ziedelth.ApplicationKt</main.class>
         <junit-jupiter.version>5.9.1</junit-jupiter.version>
-        <sonar.coverage.exclusions>**/fr/ziedelth/events/**,**/fr/ziedelth/listeners/**,**/fr/ziedelth/plugins/**,**/fr/ziedelth/utils/**</sonar.coverage.exclusions>
+
+        <sonar.coverage.exclusions>
+            **/fr/ziedelth/events/**,
+            **/fr/ziedelth/listeners/**,
+            **/fr/ziedelth/plugins/**,
+            **/fr/ziedelth/utils/**,
+            **/fr/ziedelth/Application.kt
+        </sonar.coverage.exclusions>
     </properties>
 
     <repositories>
