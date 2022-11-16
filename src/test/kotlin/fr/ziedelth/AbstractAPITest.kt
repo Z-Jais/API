@@ -28,26 +28,35 @@ internal abstract class AbstractAPITest {
         simulcastRepository.saveAll(listOf(simulcast1, simulcast2))
         val simulcasts = simulcastRepository.getAll()
 
+        val genre1 = Genre(name = "Action")
+        val genre2 = Genre(name = "Comedy")
+        val genre3 = Genre(name = "Drama")
+        genreRepository.saveAll(listOf(genre1, genre2, genre3))
+        val genres = genreRepository.getAll()
+
         val anime1 = Anime(
             country = countries.first(),
             name = "One Piece",
             image = "hello",
             hashes = mutableSetOf("hello"),
-            simulcasts = mutableSetOf(simulcasts.first())
+            simulcasts = mutableSetOf(simulcasts.first()),
+            genres = mutableSetOf(genres.first(), genres.last()),
         )
         val anime2 = Anime(
             country = countries.first(),
             name = "Naruto",
             image = "hello",
             hashes = mutableSetOf("hello2"),
-            simulcasts = mutableSetOf(simulcasts.first())
+            simulcasts = mutableSetOf(simulcasts.first()),
+            genres = mutableSetOf(genres.first(), genres.last()),
         )
         val anime3 = Anime(
             country = countries.first(),
             name = "Bleach",
             image = "hello",
             hashes = mutableSetOf("hello3"),
-            simulcasts = mutableSetOf(simulcasts.first())
+            simulcasts = mutableSetOf(simulcasts.first()),
+            genres = mutableSetOf(genres.first(), genres.last()),
         )
         animeRepository.saveAll(listOf(anime1, anime2, anime3))
         val animes = animeRepository.getAll()

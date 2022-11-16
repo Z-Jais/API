@@ -209,7 +209,7 @@ class AnimeController(
     private fun Route.diary() {
         get("/diary/country/{country}/day/{day}") {
             val country = call.parameters["country"]!!
-            val day = call.parameters["day"]?.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val day = call.parameters["day"]!!.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/diary/country/$country/day/$day")
             call.respond(animeRepository.getDiary(country, day))
         }

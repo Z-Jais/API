@@ -1,7 +1,6 @@
 package fr.ziedelth.plugins
 
 import fr.ziedelth.controllers.*
-import fr.ziedelth.controllers.GenreController.getGenres
 import fr.ziedelth.repositories.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
@@ -10,8 +9,9 @@ fun Application.configureRouting() {
     routing {
         val countryRepository = CountryRepository()
         val platformRepository = PlatformRepository()
-        val animeRepository = AnimeRepository()
         val simulcastRepository = SimulcastRepository()
+        val genreRepository = GenreRepository()
+        val animeRepository = AnimeRepository()
         val episodeTypeRepository = EpisodeTypeRepository()
         val langTypeRepository = LangTypeRepository()
         val episodeRepository = EpisodeRepository()
@@ -20,7 +20,7 @@ fun Application.configureRouting() {
         CountryController(countryRepository).getRoutes(this)
         PlatformController(platformRepository).getRoutes(this)
         SimulcastController(simulcastRepository).getRoutes(this)
-        getGenres()
+        GenreController(genreRepository).getRoutes(this)
         AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
         EpisodeTypeController(episodeTypeRepository).getRoutes(this)
         LangTypeController(langTypeRepository).getRoutes(this)
