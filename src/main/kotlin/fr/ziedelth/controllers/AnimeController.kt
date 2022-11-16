@@ -113,7 +113,11 @@ class AnimeController(
                     return@post
                 }
 
-                if (animeRepository.exists("name", anime.name)) {
+                if (animeRepository.findOneByName(
+                        anime.country!!.tag!!,
+                        anime.name!!
+                    )?.country?.uuid == anime.country!!.uuid
+                ) {
                     println("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post

@@ -20,6 +20,20 @@ class AnimeRepository(session: () -> Session = { Database.getSession() }) : IRep
         return uuid
     }
 
+    fun findOneByName(tag: String, name: String): Anime? {
+        val session = getSession.invoke()
+        val query = session.createQuery(
+            "FROM Anime WHERE country.tag = :tag AND LOWER(name) = :name",
+            Anime::class.java
+        )
+        query.maxResults = 1
+        query.setParameter("tag", tag)
+        query.setParameter("name", name.lowercase())
+        val uuid = query.uniqueResult()
+        session.close()
+        return uuid
+    }
+
     fun findByName(tag: String, name: String): List<Anime> {
         val session = getSession.invoke()
         val query = session.createQuery(

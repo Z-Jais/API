@@ -168,9 +168,8 @@ internal class AnimeControllerTest : AbstractAPITest() {
                 setBody(Anime(country = country, name = "Test", description = "Test", image = "Test"))
             }
 
-            val json = Gson().fromJson(response.bodyAsText(), Anime::class.java)
-
             expect(HttpStatusCode.Created) { response.status }
+            val json = Gson().fromJson(response.bodyAsText(), Anime::class.java)
             checkNotNull(json.uuid)
         }
     }
@@ -245,6 +244,29 @@ internal class AnimeControllerTest : AbstractAPITest() {
 
             expect(HttpStatusCode.OK) { response.status }
             expect(1) { animeRepository.getAll().size }
+        }
+    }
+
+    @Test
+    fun mergeError() {
+        testApplication {
+            val client = createClient {
+                install(ContentNegotiation) {
+                    gson()
+                }
+            }
+
+            application {
+                configureHTTP()
+                configureRoutingTest()
+            }
+
+            expect(HttpStatusCode.NotFound) {
+                client.put("/animes/merge") {
+                    contentType(ContentType.Application.Json)
+                    setBody(emptyList<String>())
+                }.status
+            }
         }
     }
 }
