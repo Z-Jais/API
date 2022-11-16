@@ -4,7 +4,6 @@ import fr.ziedelth.controllers.*
 import fr.ziedelth.controllers.EpisodeTypeController.getEpisodeTypes
 import fr.ziedelth.controllers.GenreController.getGenres
 import fr.ziedelth.controllers.LangTypeController.getLangTypes
-import fr.ziedelth.controllers.PlatformController.getPlatforms
 import fr.ziedelth.controllers.SimulcastController.getSimulcasts
 import fr.ziedelth.repositories.*
 import fr.ziedelth.utils.DatabaseTest
@@ -23,7 +22,7 @@ val mangaRepository = MangaRepository { DatabaseTest.getSession() }
 fun Application.configureRoutingTest() {
     routing {
         CountryController(countryRepository).getRoutes(this)
-        getPlatforms()
+        PlatformController(platformRepository).getRoutes(this)
         getSimulcasts()
         getGenres()
         AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)

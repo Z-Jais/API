@@ -2,7 +2,7 @@ package fr.ziedelth.controllers
 
 import com.google.gson.Gson
 import fr.ziedelth.AbstractAPITest
-import fr.ziedelth.entities.Country
+import fr.ziedelth.entities.Platform
 import fr.ziedelth.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.expect
 
-internal class CountryControllerTest : AbstractAPITest() {
+internal class PlatformControllerTest : AbstractAPITest() {
     @Test
     fun getAll() {
         testApplication {
@@ -24,10 +24,10 @@ internal class CountryControllerTest : AbstractAPITest() {
                 configureRoutingTest()
             }
 
-            val response = client.get("/countries")
+            val response = client.get("/platforms")
             expect(HttpStatusCode.OK) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Array<Country>::class.java)
-            expect(2) { json.size }
+            val json = Gson().fromJson(response.bodyAsText(), Array<Platform>::class.java)
+            expect(3) { json.size }
         }
     }
 
@@ -45,13 +45,13 @@ internal class CountryControllerTest : AbstractAPITest() {
                 configureRoutingTest()
             }
 
-            val response = client.post("/countries") {
+            val response = client.post("/platforms") {
                 contentType(ContentType.Application.Json)
-                setBody(Country(tag = "us", name = "United States"))
+                setBody(Platform(name = "MangaNews", url = "hello", image = "hello"))
             }
 
             expect(HttpStatusCode.Created) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Country::class.java)
+            val json = Gson().fromJson(response.bodyAsText(), Platform::class.java)
             checkNotNull(json.uuid)
         }
     }
@@ -71,23 +71,30 @@ internal class CountryControllerTest : AbstractAPITest() {
             }
 
             expect(HttpStatusCode.BadRequest) {
-                client.post("/countries") {
+                client.post("/platforms") {
                     contentType(ContentType.Application.Json)
-                    setBody(Country(name = "France"))
+                    setBody(Platform(name = "MangaNews"))
+                }.status
+            }
+
+            expect(HttpStatusCode.BadRequest) {
+                client.post("/platforms") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Platform(url = "hello"))
+                }.status
+            }
+
+            expect(HttpStatusCode.BadRequest) {
+                client.post("/platforms") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Platform(image = "hello"))
                 }.status
             }
 
             expect(HttpStatusCode.Conflict) {
-                client.post("/countries") {
+                client.post("/platforms") {
                     contentType(ContentType.Application.Json)
-                    setBody(Country(tag = "fr", name = "Test"))
-                }.status
-            }
-
-            expect(HttpStatusCode.Conflict) {
-                client.post("/countries") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Country(tag = "test", name = "France"))
+                    setBody(Platform(name = "Netflix", url = "hello", image = "hello"))
                 }.status
             }
         }
