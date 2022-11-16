@@ -18,6 +18,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <main.class>fr.ziedelth.ApplicationKt</main.class>
         <junit-jupiter.version>5.9.1</junit-jupiter.version>
+        <sonar.coverage.exclusions>**/fr/ziedelth/events/**,**/fr/ziedelth/listeners/**,**/fr/ziedelth/plugins/**,**/fr/ziedelth/utils/**</sonar.coverage.exclusions>
     </properties>
 
     <repositories>
@@ -227,17 +228,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.8</version>
-                <configuration>
-                    <formats>
-                        <format>XML</format>
-                    </formats>
-                    <excludes>
-                        <exclude>fr/ziedelth/events/**</exclude>
-                        <exclude>fr/ziedelth/listeners/**</exclude>
-                        <exclude>fr/ziedelth/plugins/**</exclude>
-                        <exclude>fr/ziedelth/utils/**</exclude>
-                    </excludes>
-                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
