@@ -60,11 +60,13 @@ internal class AnimeControllerTest : AbstractAPITest() {
                 configureRoutingTest()
             }
 
+            val country = countryRepository.getAll().first()
             val simulcast = simulcastRepository.getAll().first()
 
             // NOT CACHED
 
-            val responseNotCached = client.get("/animes/country/fr/simulcast/${simulcast.uuid}/page/1/limit/12")
+            val responseNotCached =
+                client.get("/animes/country/${country.tag}/simulcast/${simulcast.uuid}/page/1/limit/12")
             val jsonNotCached = Gson().fromJson(responseNotCached.bodyAsText(), Array<Anime>::class.java)
 
             expect(HttpStatusCode.OK) { responseNotCached.status }
@@ -72,7 +74,8 @@ internal class AnimeControllerTest : AbstractAPITest() {
 
             // CACHED
 
-            val responseCached = client.get("/animes/country/fr/simulcast/${simulcast.uuid}/page/1/limit/12")
+            val responseCached =
+                client.get("/animes/country/${country.tag}/simulcast/${simulcast.uuid}/page/1/limit/12")
             val jsonCached = Gson().fromJson(responseCached.bodyAsText(), Array<Anime>::class.java)
 
             expect(HttpStatusCode.OK) { responseCached.status }
@@ -88,11 +91,13 @@ internal class AnimeControllerTest : AbstractAPITest() {
                 configureRoutingTest()
             }
 
+            val country = countryRepository.getAll().first()
             val simulcast = simulcastRepository.getAll().first()
 
             // ERROR
 
-            val responseError = client.get("/animes/country/fr/simulcast/${simulcast.uuid}/page/ae/limit/12")
+            val responseError =
+                client.get("/animes/country/${country.tag}/simulcast/${simulcast.uuid}/page/ae/limit/12")
 
             expect(HttpStatusCode.InternalServerError) { responseError.status }
         }

@@ -7,6 +7,7 @@ import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.repositories.PlatformRepository
+import fr.ziedelth.repositories.SimulcastRepository
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
@@ -21,7 +22,8 @@ import java.util.*
 
 class EpisodeController(
     private val platformRepository: PlatformRepository,
-    private val animeRepository: AnimeRepository
+    private val animeRepository: AnimeRepository,
+    private val simulcastRepository: SimulcastRepository,
 ) : IController<Episode>("/episodes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
@@ -143,7 +145,8 @@ class EpisodeController(
 
         val tmpSimulcast =
             Simulcast.getSimulcast(episode.releaseDate.split("-")[0].toInt(), episode.releaseDate.split("-")[1].toInt())
-        val simulcast = SimulcastController.getBy(tmpSimulcast)
+        val simulcast =
+            simulcastRepository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
 
         if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
             episode.anime!!.simulcasts.add(simulcast)

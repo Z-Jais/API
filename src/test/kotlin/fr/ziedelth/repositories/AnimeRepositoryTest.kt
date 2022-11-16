@@ -4,6 +4,7 @@ import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Country
 import fr.ziedelth.plugins.animeRepository
+import fr.ziedelth.plugins.countryRepository
 import fr.ziedelth.plugins.simulcastRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -44,7 +45,8 @@ internal class AnimeRepositoryTest : AbstractAPITest() {
 
     @Test
     fun getAllByCountry() {
-        expect(3) { animeRepository.getAllBy("country.tag", "fr").size }
+        val country = countryRepository.getAll().first()
+        expect(3) { animeRepository.getAllBy("country.tag", country.tag).size }
         expect(0) { animeRepository.getAllBy("country.tag", "us").size }
     }
 

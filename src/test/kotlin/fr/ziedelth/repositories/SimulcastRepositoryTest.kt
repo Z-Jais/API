@@ -2,6 +2,7 @@ package fr.ziedelth.repositories
 
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.Simulcast
+import fr.ziedelth.plugins.countryRepository
 import fr.ziedelth.plugins.simulcastRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -90,6 +91,14 @@ internal class SimulcastRepositoryTest : AbstractAPITest() {
         val simulcasts = simulcastRepository.getAll()
         simulcastRepository.delete(simulcasts.first())
         expect(1) { simulcasts.size - 1 }
+    }
+
+    @Test
+    fun getAllByTag() {
+        val country = countryRepository.getAll().first()
+        val simulcasts = simulcastRepository.getAll(country.tag)
+        expect(1) { simulcasts.size }
+        expect("WINTER") { simulcasts.first().season }
     }
 
     @Test
