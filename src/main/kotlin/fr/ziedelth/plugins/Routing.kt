@@ -12,19 +12,20 @@ import io.ktor.server.routing.*
 fun Application.configureRouting() {
     routing {
         val countryRepository = CountryRepository()
+        val platformRepository = PlatformRepository()
         val animeRepository = AnimeRepository()
         val episodeRepository = EpisodeRepository()
         val mangaRepository = MangaRepository()
 
         CountryController(countryRepository).getRoutes(this)
-        PlatformController(PlatformRepository()).getRoutes(this)
+        PlatformController(platformRepository).getRoutes(this)
         getSimulcasts()
         getGenres()
         AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
         getEpisodeTypes()
         getLangTypes()
-        EpisodeController(animeRepository).getRoutes(this)
-        NewsController(countryRepository).getRoutes(this)
-        MangaController(animeRepository).getRoutes(this)
+        EpisodeController(platformRepository, animeRepository).getRoutes(this)
+        NewsController(countryRepository, platformRepository).getRoutes(this)
+        MangaController(platformRepository, animeRepository).getRoutes(this)
     }
 }

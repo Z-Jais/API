@@ -4,6 +4,7 @@ import fr.ziedelth.entities.News
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.NewsReleaseEvent
 import fr.ziedelth.repositories.CountryRepository
+import fr.ziedelth.repositories.PlatformRepository
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.RequestCache
 import fr.ziedelth.utils.plugins.PluginManager
@@ -13,7 +14,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class NewsController(private val countryRepository: CountryRepository) : IController<News>("/news") {
+class NewsController(
+    private val countryRepository: CountryRepository,
+    private val platformRepository: PlatformRepository
+) : IController<News>("/news") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
             getWithPage()
@@ -61,7 +65,7 @@ class NewsController(private val countryRepository: CountryRepository) : IContro
     }
 
     private fun merge(news: News) {
-        news.platform = PlatformController.getBy("uuid", news.platform!!.uuid) ?: throw Exception("Platform not found")
+        news.platform = platformRepository.find(news.platform!!.uuid) ?: throw Exception("Platform not found")
         news.country = countryRepository.find(news.country!!.uuid) ?: throw Exception("Country not found")
 
         if (news.isNullOrNotValid()) {

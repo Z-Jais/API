@@ -5,6 +5,7 @@ import fr.ziedelth.entities.Manga
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.MangasReleaseEvent
 import fr.ziedelth.repositories.AnimeRepository
+import fr.ziedelth.repositories.PlatformRepository
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
@@ -17,7 +18,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.*
 
-class MangaController(private val animeRepository: AnimeRepository) : IController<Manga>("/mangas") {
+class MangaController(
+    private val platformRepository: PlatformRepository,
+    private val animeRepository: AnimeRepository
+) : IController<Manga>("/mangas") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
             search()
@@ -154,7 +158,7 @@ class MangaController(private val animeRepository: AnimeRepository) : IControlle
 
     private fun merge(manga: Manga) {
         manga.platform =
-            PlatformController.getBy("uuid", manga.platform!!.uuid) ?: throw Exception("Platform not found")
+            platformRepository.find(manga.platform!!.uuid) ?: throw Exception("Platform not found")
         manga.anime = animeRepository.find(manga.anime!!.uuid) ?: throw Exception("Anime not found")
 
         if (manga.isNullOrNotValid()) {

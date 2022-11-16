@@ -28,8 +28,8 @@ fun Application.configureRoutingTest() {
         AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
         getEpisodeTypes()
         getLangTypes()
-        EpisodeController(animeRepository).getRoutes(this)
-        NewsController(countryRepository).getRoutes(this)
-        MangaController(animeRepository).getRoutes(this)
+        EpisodeController(platformRepository, animeRepository).getRoutes(this)
+        NewsController(countryRepository, platformRepository).getRoutes(this)
+        MangaController(platformRepository, animeRepository).getRoutes(this)
     }
 }
