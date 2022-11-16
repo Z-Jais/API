@@ -156,7 +156,7 @@ class AnimeController(
             }
 
             // Get all countries
-            val countries = animes.map { it.country }.distinctBy { it?.uuid }
+            val countries = animes.map { it.country }.distinctBy { it!!.uuid }
 
             if (countries.size > 1) {
                 println("Anime has different countries")
