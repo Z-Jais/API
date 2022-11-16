@@ -2,7 +2,6 @@ package fr.ziedelth.plugins
 
 import fr.ziedelth.controllers.*
 import fr.ziedelth.controllers.GenreController.getGenres
-import fr.ziedelth.controllers.LangTypeController.getLangTypes
 import fr.ziedelth.repositories.*
 import fr.ziedelth.utils.DatabaseTest
 import io.ktor.server.application.*
@@ -25,8 +24,8 @@ fun Application.configureRoutingTest() {
         getGenres()
         AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
         EpisodeTypeController(episodeTypeRepository).getRoutes(this)
-        getLangTypes()
-        EpisodeController(platformRepository, animeRepository, simulcastRepository, episodeTypeRepository).getRoutes(this)
+        LangTypeController(langTypeRepository).getRoutes(this)
+        EpisodeController(platformRepository, animeRepository, simulcastRepository, episodeTypeRepository, langTypeRepository).getRoutes(this)
         NewsController(countryRepository, platformRepository).getRoutes(this)
         MangaController(platformRepository, animeRepository).getRoutes(this)
     }

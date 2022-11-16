@@ -5,10 +5,7 @@ import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.EpisodesReleaseEvent
-import fr.ziedelth.repositories.AnimeRepository
-import fr.ziedelth.repositories.EpisodeTypeRepository
-import fr.ziedelth.repositories.PlatformRepository
-import fr.ziedelth.repositories.SimulcastRepository
+import fr.ziedelth.repositories.*
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
@@ -25,7 +22,8 @@ class EpisodeController(
     private val platformRepository: PlatformRepository,
     private val animeRepository: AnimeRepository,
     private val simulcastRepository: SimulcastRepository,
-    private val episodeTypeRepository: EpisodeTypeRepository
+    private val episodeTypeRepository: EpisodeTypeRepository,
+    private val langTypeRepository: LangTypeRepository,
 ) : IController<Episode>("/episodes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
@@ -137,8 +135,7 @@ class EpisodeController(
         episode.platform = platformRepository.find(episode.platform!!.uuid) ?: throw Exception("Platform not found")
         episode.anime = animeRepository.find(episode.anime!!.uuid) ?: throw Exception("Anime not found")
         episode.episodeType = episodeTypeRepository.find(episode.episodeType!!.uuid) ?: throw Exception("EpisodeType not found")
-        episode.langType =
-            LangTypeController.getBy("uuid", episode.langType!!.uuid) ?: throw Exception("LangType not found")
+        episode.langType = langTypeRepository.find(episode.langType!!.uuid) ?: throw Exception("LangType not found")
 
         if (episode.isNullOrNotValid()) {
             throw Exception("Episode is not valid")
