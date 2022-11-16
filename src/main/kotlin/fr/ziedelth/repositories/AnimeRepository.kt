@@ -72,4 +72,17 @@ class AnimeRepository(session: () -> Session = { Database.getSession() }) : IRep
         session.close()
         return list
     }
+
+    fun getDiary(tag: String, day: Int): List<Anime> {
+        val session = getSession.invoke()
+        val query = session.createQuery(
+            "SELECT DISTINCT anime FROM Episode episode WHERE episode.anime.country.tag = :tag AND current_date - to_date(episode.releaseDate, 'YYYY-MM-DDTHH:MI:SS') <= 7 AND FUNCTION('date_part', 'dow', to_date(episode.releaseDate, 'YYYY-MM-DDTHH:MI:SS')) = :day ORDER BY episode.anime.name ASC",
+            Anime::class.java
+        )
+        query.setParameter("tag", tag)
+        query.setParameter("day", day)
+        val list = query.list()
+        session.close()
+        return list ?: emptyList()
+    }
 }

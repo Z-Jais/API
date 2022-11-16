@@ -161,4 +161,11 @@ internal class AnimeRepositoryTest : AbstractAPITest() {
         val page2 = animeRepository.findAllByPage(uuids, 2, 2)
         expect(1) { page2.size }
     }
+
+//    @Test
+//    fun getDiary() {
+//        val country = countryRepository.getAll().first()
+//        val diary = animeRepository.getDiary(country.tag!!, Calendar.getInstance().get(Calendar.DAY_OF_WEEK))
+//        expect(3) { diary.size }
+//    }
 }

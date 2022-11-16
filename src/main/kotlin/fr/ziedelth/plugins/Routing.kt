@@ -1,7 +1,6 @@
 package fr.ziedelth.plugins
 
 import fr.ziedelth.controllers.*
-import fr.ziedelth.controllers.DiaryController.getDiary
 import fr.ziedelth.controllers.EpisodeTypeController.getEpisodeTypes
 import fr.ziedelth.controllers.GenreController.getGenres
 import fr.ziedelth.controllers.LangTypeController.getLangTypes
@@ -31,6 +30,5 @@ fun Application.configureRouting() {
         EpisodeController(animeRepository).getRoutes(this)
         NewsController(countryRepository).getRoutes(this)
         MangaController(animeRepository).getRoutes(this)
-        getDiary()
     }
 }
