@@ -5,7 +5,7 @@ import org.hibernate.Session
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
-open class IRepository<T>(val getSession: () -> Session = { Database.getSession() }) {
+open class AbstractRepository<T>(val getSession: () -> Session = { Database.getSession() }) {
     private val entityClass: Class<T> =
         (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     private val entityName: String = entityClass.simpleName

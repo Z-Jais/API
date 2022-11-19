@@ -5,7 +5,7 @@ import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
-class AnimeRepository(session: () -> Session = { Database.getSession() }) : IRepository<Anime>(session) {
+class AnimeRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Anime>(session) {
     fun findByHash(tag: String, hash: String): UUID? {
         val session = getSession.invoke()
         val query = session.createQuery(

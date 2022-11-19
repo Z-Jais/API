@@ -4,4 +4,4 @@ import fr.ziedelth.entities.Platform
 import fr.ziedelth.utils.Database
 import org.hibernate.Session
 
-class PlatformRepository(session: () -> Session = { Database.getSession() }) : IRepository<Platform>(session)
+class PlatformRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Platform>(session)
