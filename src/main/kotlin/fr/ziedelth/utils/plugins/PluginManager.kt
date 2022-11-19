@@ -22,6 +22,7 @@ object PluginManager {
     fun reload() {
         defaultPluginManager.stopPlugins()
         defaultPluginManager.unloadPlugins()
+        listeners.clear()
         defaultPluginManager = DefaultPluginManager(File("plugins").toPath())
         loadPlugins()
     }
