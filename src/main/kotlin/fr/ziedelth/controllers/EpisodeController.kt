@@ -6,7 +6,6 @@ import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.repositories.*
-import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
@@ -24,6 +23,7 @@ class EpisodeController(
     private val simulcastRepository: SimulcastRepository,
     private val episodeTypeRepository: EpisodeTypeRepository,
     private val langTypeRepository: LangTypeRepository,
+    private val episodeRepository: EpisodeRepository,
 ) : IController<Episode>("/episodes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
@@ -37,96 +37,47 @@ class EpisodeController(
 
     private fun Route.getWithPage() {
         get("/country/{country}/page/{page}/limit/{limit}") {
-            val country = call.parameters["country"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
-            if (page < 1 || limit < 1) return@get call.respond(HttpStatusCode.BadRequest)
-            if (limit > 30) return@get call.respond(HttpStatusCode.BadRequest)
-            println("GET $prefix/country/$country/page/$page/limit/$limit")
-            val request = RequestCache.get(uuidRequest, country, page, limit)
+            try {
+                val country = call.parameters["country"]!!
+                val (page, limit) = getPageAndLimit()
+                println("GET $prefix/country/$country/page/$page/limit/$limit")
+                val request = RequestCache.get(uuidRequest, country, page, limit)
 
-            if (request == null || request.isExpired()) {
-                val session = Database.getSession()
-
-                try {
-                    val query = session.createQuery(
-                        "FROM Episode WHERE anime.country.tag = :tag ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
-                        Episode::class.java
-                    )
-                    query.setParameter("tag", country)
-                    query.firstResult = (limit * page) - limit
-                    query.maxResults = limit
-                    request?.update(query.list()) ?: RequestCache.put(
-                        uuidRequest,
-                        country,
-                        page,
-                        limit,
-                        value = query.list()
-                    )
-                } catch (e: Exception) {
-                    printError(call, e)
-                } finally {
-                    session.close()
+                if (request == null || request.isExpired()) {
+                    val list = episodeRepository.getByPage(country, page, limit)
+                    request?.update(list) ?: RequestCache.put(uuidRequest, country, page, limit, value = list)
                 }
-            }
 
-            call.respond(RequestCache.get(uuidRequest, country, page, limit)?.value ?: HttpStatusCode.NotFound)
+                call.respond(RequestCache.get(uuidRequest, country, page, limit)!!.value!!)
+            } catch (e: Exception) {
+                printError(call, e)
+            }
         }
     }
 
     private fun Route.getAnimeWithPage() {
         get("/anime/{uuid}/page/{page}/limit/{limit}") {
-            val animeUuid = call.parameters["uuid"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val page = call.parameters["page"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val limit = call.parameters["limit"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest)
-            if (page < 1 || limit < 1) return@get call.respond(HttpStatusCode.BadRequest)
-            if (limit > 30) return@get call.respond(HttpStatusCode.BadRequest)
-            println("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
-            val session = Database.getSession()
-
             try {
-                val query = session.createQuery(
-                    "FROM Episode WHERE anime.uuid = :uuid ORDER BY season DESC, number DESC, episodeType.name, langType.name",
-                    Episode::class.java
-                )
-                query.setParameter("uuid", UUID.fromString(animeUuid))
-                query.firstResult = (limit * page) - limit
-                query.maxResults = limit
-                call.respond(query.list() ?: HttpStatusCode.NotFound)
+                val animeUuid = call.parameters["uuid"]!!
+                val (page, limit) = getPageAndLimit()
+                println("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
+                call.respond(episodeRepository.getByPageWithAnime(UUID.fromString(animeUuid), page, limit))
             } catch (e: Exception) {
                 printError(call, e)
-            } finally {
-                session.close()
             }
         }
     }
 
     private fun Route.getWatchlistWithPage() {
         post("/watchlist/page/{page}/limit/{limit}") {
-            val watchlist = call.receive<String>()
-            val page = call.parameters["page"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
-            val limit = call.parameters["limit"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest)
-            if (page < 1 || limit < 1) return@post call.respond(HttpStatusCode.BadRequest)
-            if (limit > 30) return@post call.respond(HttpStatusCode.BadRequest)
-            println("POST $prefix/watchlist/page/$page/limit/$limit")
-            val session = Database.getSession()
-
             try {
-                val dataFromGzip =
-                    Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
-
-                val query = session.createQuery(
-                    "FROM $entityName WHERE anime.uuid IN :list ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
-                    entityClass
-                )
-                query.setParameter("list", dataFromGzip)
-                query.firstResult = (limit * page) - limit
-                query.maxResults = limit
-                call.respond(query.list())
+                val watchlist = call.receive<String>()
+                val (page, limit) = getPageAndLimit()
+                println("POST $prefix/watchlist/page/$page/limit/$limit")
+                val dataFromGzip = Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
+                call.respond(episodeRepository.getByPageWithList(dataFromGzip, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
-            } finally {
-                session.close()
             }
         }
     }
@@ -156,17 +107,17 @@ class EpisodeController(
             println("POST $prefix/multiple")
 
             try {
-                val episodes = call.receive<List<Episode>>().filter { !isExists("hash", it.hash!!) }
+                val episodes = call.receive<List<Episode>>().filter { !episodeRepository.exists("hash", it.hash!!) }
                 val savedEpisodes = mutableListOf<Episode>()
 
                 episodes.forEach {
                     merge(it)
-                    val savedEpisode = justSave(it)
+                    val savedEpisode = episodeRepository.save(it)
                     savedEpisodes.add(savedEpisode)
                     ImageCache.cachingNetworkImage(savedEpisode.uuid, savedEpisode.image!!)
                 }
 
-                call.respond(HttpStatusCode.Created, episodes)
+                call.respond(HttpStatusCode.Created, savedEpisodes)
                 PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
             } catch (e: Exception) {
                 printError(call, e)
