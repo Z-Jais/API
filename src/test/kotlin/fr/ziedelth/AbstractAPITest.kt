@@ -92,7 +92,46 @@ internal abstract class AbstractAPITest {
                 )
             }
             episodeRepository.saveAll(episodes)
+
+            val mangas = (1..10).map { manga ->
+                val platform = platforms.random()
+
+                Manga(
+                    platform = platform,
+                    anime = it,
+                    hash = "MA-$manga-${platform.name}-${Math.random()}",
+                    url = "hello",
+                    cover = "hello",
+                    editor = "MyEditor $manga",
+                    ref = "MyRef $manga",
+                    ean = Math.random().toLong(),
+                    age = 18,
+                    price = 10.0,
+                )
+            }
+            mangaRepository.saveAll(mangas)
         }
+
+        newsRepository.saveAll(
+            listOf(
+                News(
+                    country = countries.first(),
+                    platform = platforms.first(),
+                    title = "News 1",
+                    description = "Content 1",
+                    hash = "hello",
+                    url = "hello",
+                ),
+                News(
+                    country = countries.first(),
+                    platform = platforms.first(),
+                    title = "News 2",
+                    description = "Content 2",
+                    hash = "hello2",
+                    url = "hello",
+                ),
+            )
+        )
     }
 
     @AfterEach

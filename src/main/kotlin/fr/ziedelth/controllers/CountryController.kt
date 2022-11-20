@@ -17,7 +17,7 @@ class CountryController(private val countryRepository: CountryRepository) : ICon
         }
     }
 
-    override fun Route.getAll() {
+    fun Route.getAll() {
         get {
             println("GET $prefix")
             call.respond(countryRepository.getAll())

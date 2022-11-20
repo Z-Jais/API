@@ -47,6 +47,7 @@ class Manga(
         )) || url.isNullOrBlank() || cover.isNullOrBlank() || editor.isNullOrBlank()
 
     fun copy(anime: Anime? = this.anime) = Manga(
+        uuid = uuid,
         platform = platform,
         anime = anime,
         hash = hash,

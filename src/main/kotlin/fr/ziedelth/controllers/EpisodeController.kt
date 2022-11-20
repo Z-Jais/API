@@ -74,7 +74,8 @@ class EpisodeController(
                 val watchlist = call.receive<String>()
                 val (page, limit) = getPageAndLimit()
                 println("POST $prefix/watchlist/page/$page/limit/$limit")
-                val dataFromGzip = Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
+                val dataFromGzip =
+                    Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
                 call.respond(episodeRepository.getByPageWithList(dataFromGzip, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
@@ -85,7 +86,8 @@ class EpisodeController(
     private fun merge(episode: Episode) {
         episode.platform = platformRepository.find(episode.platform!!.uuid) ?: throw Exception("Platform not found")
         episode.anime = animeRepository.find(episode.anime!!.uuid) ?: throw Exception("Anime not found")
-        episode.episodeType = episodeTypeRepository.find(episode.episodeType!!.uuid) ?: throw Exception("EpisodeType not found")
+        episode.episodeType =
+            episodeTypeRepository.find(episode.episodeType!!.uuid) ?: throw Exception("EpisodeType not found")
         episode.langType = langTypeRepository.find(episode.langType!!.uuid) ?: throw Exception("LangType not found")
 
         if (episode.isNullOrNotValid()) {

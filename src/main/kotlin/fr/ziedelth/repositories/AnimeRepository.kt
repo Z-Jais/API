@@ -48,29 +48,22 @@ class AnimeRepository(session: () -> Session = { Database.getSession() }) : Abst
     }
 
     fun getByPage(tag: String, simulcast: UUID, page: Int, limit: Int): List<Anime> {
-        val session = getSession.invoke()
-        val query = session.createQuery(
+        return super.getByPage(
+            page,
+            limit,
             "FROM Anime a JOIN a.simulcasts s WHERE a.country.tag = :tag AND s.uuid = :simulcast ORDER BY a.name",
-            Anime::class.java
+            "tag" to tag,
+            "simulcast" to simulcast
         )
-        query.setParameter("tag", tag)
-        query.setParameter("simulcast", simulcast)
-        query.firstResult = (limit * page) - limit
-        query.maxResults = limit
-        val list = query.list()
-        session.close()
-        return list
     }
 
     fun findAllByPage(uuids: List<UUID>, page: Int, limit: Int): List<Anime> {
-        val session = getSession.invoke()
-        val query = session.createQuery("FROM Anime WHERE uuid IN :list ORDER BY name", Anime::class.java)
-        query.setParameter("list", uuids)
-        query.firstResult = (limit * page) - limit
-        query.maxResults = limit
-        val list = query.list()
-        session.close()
-        return list
+        return super.getByPage(
+            page,
+            limit,
+            "FROM Anime WHERE uuid IN :list ORDER BY name",
+            "list" to uuids
+        )
     }
 
     fun getDiary(tag: String, day: Int): List<Anime> {

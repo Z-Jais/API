@@ -17,7 +17,7 @@ class LangTypeController(private val langTypeRepository: LangTypeRepository) : I
         }
     }
 
-    override fun Route.getAll() {
+    fun Route.getAll() {
         get {
             println("GET $prefix")
             call.respond(langTypeRepository.getAll())

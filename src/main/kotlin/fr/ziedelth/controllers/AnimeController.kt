@@ -197,8 +197,8 @@ class AnimeController(
             )!!
 
             ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
-            episodes.map { it.copy(anime = savedAnime) }.map { episodeRepository.save(it) }
-            mangas.map { it.copy(anime = savedAnime) }.map { mangaRepository.save(it) }
+            episodeRepository.saveAll(episodes.map { it.copy(anime = savedAnime) })
+            mangaRepository.saveAll(mangas.map { it.copy(anime = savedAnime) })
 
             // Delete animes
             animeRepository.deleteAll(animes)

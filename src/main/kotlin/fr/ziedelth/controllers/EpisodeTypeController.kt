@@ -9,7 +9,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class EpisodeTypeController(private val episodeTypeRepository: EpisodeTypeRepository) : IController<EpisodeType>("/episodetypes") {
+class EpisodeTypeController(private val episodeTypeRepository: EpisodeTypeRepository) :
+    IController<EpisodeType>("/episodetypes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
             getAll()
@@ -17,7 +18,7 @@ class EpisodeTypeController(private val episodeTypeRepository: EpisodeTypeReposi
         }
     }
 
-    override fun Route.getAll() {
+    fun Route.getAll() {
         get {
             println("GET $prefix")
             call.respond(episodeTypeRepository.getAll())

@@ -16,6 +16,7 @@ fun Application.configureRouting() {
         val langTypeRepository = LangTypeRepository()
         val episodeRepository = EpisodeRepository()
         val mangaRepository = MangaRepository()
+        val newsRepository = NewsRepository()
 
         CountryController(countryRepository).getRoutes(this)
         PlatformController(platformRepository).getRoutes(this)
@@ -24,8 +25,15 @@ fun Application.configureRouting() {
         AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
         EpisodeTypeController(episodeTypeRepository).getRoutes(this)
         LangTypeController(langTypeRepository).getRoutes(this)
-        EpisodeController(platformRepository, animeRepository, simulcastRepository, episodeTypeRepository, langTypeRepository, episodeRepository).getRoutes(this)
-        NewsController(countryRepository, platformRepository).getRoutes(this)
-        MangaController(platformRepository, animeRepository).getRoutes(this)
+        EpisodeController(
+            platformRepository,
+            animeRepository,
+            simulcastRepository,
+            episodeTypeRepository,
+            langTypeRepository,
+            episodeRepository
+        ).getRoutes(this)
+        NewsController(countryRepository, platformRepository, newsRepository).getRoutes(this)
+        MangaController(platformRepository, animeRepository, mangaRepository).getRoutes(this)
     }
 }

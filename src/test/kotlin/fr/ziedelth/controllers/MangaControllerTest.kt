@@ -16,7 +16,26 @@ import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.expect
 
-internal class EpisodeControllerTest : AbstractAPITest() {
+internal class MangaControllerTest : AbstractAPITest() {
+    @Test
+    fun searchByEAN() {
+        testApplication {
+            application {
+                configureHTTP()
+                configureRoutingTest()
+            }
+
+            val country = countryRepository.getAll().first()
+            val ean = mangaRepository.getAll().first().ean
+
+            val responseNotCached = client.get("/mangas/country/${country.tag}/search/ean/$ean")
+            val json = Gson().fromJson(responseNotCached.bodyAsText(), Manga::class.java)
+
+            expect(HttpStatusCode.OK) { responseNotCached.status }
+            checkNotNull(json.uuid)
+        }
+    }
+
     @Test
     fun getByPage() {
         testApplication {
@@ -30,8 +49,8 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             // NOT CACHED
 
             val responseNotCached =
-                client.get("/episodes/country/${country.tag}/page/1/limit/12")
-            val jsonNotCached = Gson().fromJson(responseNotCached.bodyAsText(), Array<Episode>::class.java)
+                client.get("/mangas/country/${country.tag}/page/1/limit/12")
+            val jsonNotCached = Gson().fromJson(responseNotCached.bodyAsText(), Array<Manga>::class.java)
 
             expect(HttpStatusCode.OK) { responseNotCached.status }
             expect(12) { jsonNotCached.size }
@@ -39,8 +58,8 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             // CACHED
 
             val responseCached =
-                client.get("/episodes/country/${country.tag}/page/1/limit/12")
-            val jsonCached = Gson().fromJson(responseCached.bodyAsText(), Array<Episode>::class.java)
+                client.get("/mangas/country/${country.tag}/page/1/limit/12")
+            val jsonCached = Gson().fromJson(responseCached.bodyAsText(), Array<Manga>::class.java)
 
             expect(HttpStatusCode.OK) { responseCached.status }
             expect(12) { jsonCached.size }
@@ -60,7 +79,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             // ERROR
 
             val responseError =
-                client.get("/episodes/country/${country.tag}/page/ae/limit/12")
+                client.get("/mangas/country/${country.tag}/page/ae/limit/12")
 
             expect(HttpStatusCode.InternalServerError) { responseError.status }
         }
@@ -77,8 +96,8 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val anime = animeRepository.getAll().first()
 
             val response =
-                client.get("/episodes/anime/${anime.uuid}/page/1/limit/12")
-            val json = Gson().fromJson(response.bodyAsText(), Array<Episode>::class.java)
+                client.get("/mangas/anime/${anime.uuid}/page/1/limit/12")
+            val json = Gson().fromJson(response.bodyAsText(), Array<Manga>::class.java)
 
             expect(HttpStatusCode.OK) { response.status }
             expect(10) { json.size }
@@ -98,7 +117,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             // ERROR
 
             val responseError =
-                client.get("/episodes/anime/${anime.uuid}/page/ae/limit/12")
+                client.get("/mangas/anime/${anime.uuid}/page/ae/limit/12")
 
             expect(HttpStatusCode.InternalServerError) { responseError.status }
         }
@@ -112,17 +131,17 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                 configureRoutingTest()
             }
 
-            val anime = animeRepository.getAll().first()
-            val bodyRequest = Encoder.toGzip("[\"${anime.uuid}\"]")
+            val manga = mangaRepository.getAll().first()
+            val bodyRequest = Encoder.toGzip("[\"${manga.uuid}\"]")
 
-            val response = client.post("/episodes/watchlist/page/1/limit/12") {
+            val response = client.post("/mangas/watchlist/page/1/limit/12") {
                 setBody(bodyRequest)
             }
 
-            val json = Gson().fromJson(response.bodyAsText(), Array<Episode>::class.java)
+            val json = Gson().fromJson(response.bodyAsText(), Array<Manga>::class.java)
 
             expect(HttpStatusCode.OK) { response.status }
-            expect(10) { json.size }
+            expect(1) { json.size }
         }
     }
 
@@ -134,10 +153,10 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                 configureRoutingTest()
             }
 
-            val anime = animeRepository.getAll().first()
-            val bodyRequest = Encoder.toGzip("[\"${anime.uuid}\"]")
+            val manga = mangaRepository.getAll().first()
+            val bodyRequest = Encoder.toGzip("[\"${manga.uuid}\"]")
 
-            val responseError = client.post("/episodes/watchlist/page/ae/limit/12") {
+            val responseError = client.post("/mangas/watchlist/page/ae/limit/12") {
                 setBody(bodyRequest)
             }
 
@@ -161,41 +180,41 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val platform = platformRepository.getAll().first()
             val anime = animeRepository.getAll().first()
-            val episodeType = episodeTypeRepository.getAll().first()
-            val langType = langTypeRepository.getAll().first()
 
-            val response = client.post("/episodes/multiple") {
+            val response = client.post("/mangas/multiple") {
                 contentType(ContentType.Application.Json)
                 setBody(
                     listOf(
-                        Episode(
-                            anime = anime,
+                        Manga(
                             platform = platform,
-                            episodeType = episodeType,
-                            langType = langType,
-                            number = 1,
-                            season = 1,
-                            url = "https://www.google.com",
-                            image = "https://www.google.com",
+                            anime = anime,
                             hash = "hash",
+                            url = "test",
+                            cover = "test",
+                            editor = "test",
+                            ref = "test",
+                            ean = Math.random().toLong(),
+                            age = 12,
+                            price = 7.5,
                         ),
-                        Episode(
-                            anime = anime,
+                        Manga(
                             platform = platform,
-                            episodeType = episodeType,
-                            langType = langType,
-                            number = 2,
-                            season = 1,
-                            url = "https://www.google.com",
-                            image = "https://www.google.com",
-                            hash = "azertyuiop",
+                            anime = anime,
+                            hash = "hash2",
+                            url = "test2",
+                            cover = "test2",
+                            editor = "test2",
+                            ref = "test2",
+                            ean = Math.random().toLong(),
+                            age = 12,
+                            price = 7.5,
                         )
                     )
                 )
             }
 
             expect(HttpStatusCode.Created) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Array<Episode>::class.java)
+            val json = Gson().fromJson(response.bodyAsText(), Array<Manga>::class.java)
             expect(2) { json.size }
         }
     }
@@ -215,19 +234,21 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             }
 
             expect(HttpStatusCode.InternalServerError) {
-                client.post("/episodes/multiple") {
+                client.post("/mangas/multiple") {
                     contentType(ContentType.Application.Json)
                     setBody(
                         listOf(
-                            Episode(
+                            Manga(
                                 platform = Platform(),
                                 anime = Anime(),
-                                episodeType = EpisodeType(),
-                                langType = LangType(),
-                                number = 1,
-                                season = 1,
-                                url = "https://www.google.com",
-                                image = "https://www.google.com",
+                                hash = "hash2",
+                                url = "test2",
+                                cover = "test2",
+                                editor = "test2",
+                                ref = "test2",
+                                ean = Math.random().toLong(),
+                                age = 12,
+                                price = 7.5,
                             ),
                         )
                     )
@@ -237,19 +258,21 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val platform = platformRepository.getAll().first()
 
             expect(HttpStatusCode.InternalServerError) {
-                client.post("/episodes/multiple") {
+                client.post("/mangas/multiple") {
                     contentType(ContentType.Application.Json)
                     setBody(
                         listOf(
-                            Episode(
+                            Manga(
                                 platform = platform,
                                 anime = Anime(),
-                                episodeType = EpisodeType(),
-                                langType = LangType(),
-                                number = 1,
-                                season = 1,
-                                url = "https://www.google.com",
-                                image = "https://www.google.com",
+                                hash = "hash2",
+                                url = "test2",
+                                cover = "test2",
+                                editor = "test2",
+                                ref = "test2",
+                                ean = Math.random().toLong(),
+                                age = 12,
+                                price = 7.5,
                             ),
                         )
                     )
@@ -263,59 +286,16 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                     contentType(ContentType.Application.Json)
                     setBody(
                         listOf(
-                            Episode(
+                            Manga(
                                 platform = platform,
                                 anime = anime,
-                                episodeType = EpisodeType(),
-                                langType = LangType(),
-                                number = 1,
-                                season = 1,
-                                url = "https://www.google.com",
-                                image = "https://www.google.com",
-                            ),
-                        )
-                    )
-                }.status
-            }
-
-            val episodeType = episodeTypeRepository.getAll().first()
-
-            expect(HttpStatusCode.InternalServerError) {
-                client.post("/episodes/multiple") {
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        listOf(
-                            Episode(
-                                platform = platform,
-                                anime = anime,
-                                episodeType = episodeType,
-                                langType = LangType(),
-                                number = 1,
-                                season = 1,
-                                url = "https://www.google.com",
-                                image = "https://www.google.com",
-                            ),
-                        )
-                    )
-                }.status
-            }
-
-            val langType = langTypeRepository.getAll().first()
-
-            expect(HttpStatusCode.InternalServerError) {
-                client.post("/episodes/multiple") {
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        listOf(
-                            Episode(
-                                platform = platform,
-                                anime = anime,
-                                episodeType = episodeType,
-                                langType = langType,
-                                number = 1,
-                                season = 1,
-                                url = "https://www.google.com",
-                                image = "https://www.google.com",
+                                url = "test2",
+                                cover = "test2",
+                                editor = "test2",
+                                ref = "test2",
+                                ean = Math.random().toLong(),
+                                age = 12,
+                                price = 7.5,
                             ),
                         )
                     )

@@ -119,4 +119,15 @@ open class AbstractRepository<T>(val getSession: () -> Session = { Database.getS
             session.close()
         }
     }
+
+    fun getByPage(page: Int, limit: Int, queryRaw: String, vararg pair: Pair<String, Any>): List<T> {
+        val session = getSession.invoke()
+        val query = session.createQuery(queryRaw, entityClass)
+        pair.forEach { query.setParameter(it.first, it.second) }
+        query.firstResult = (limit * page) - limit
+        query.maxResults = limit
+        val list = query.list()
+        session.close()
+        return list
+    }
 }

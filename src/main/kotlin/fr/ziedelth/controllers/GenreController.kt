@@ -17,7 +17,7 @@ class GenreController(private val genreRepository: GenreRepository) : IControlle
         }
     }
 
-    override fun Route.getAll() {
+    fun Route.getAll() {
         get {
             println("GET $prefix")
             call.respond(genreRepository.getAll())

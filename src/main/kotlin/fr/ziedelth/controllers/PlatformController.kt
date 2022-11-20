@@ -18,7 +18,7 @@ class PlatformController(private val platformRepository: PlatformRepository) : I
         }
     }
 
-    override fun Route.getAll() {
+    fun Route.getAll() {
         get {
             println("GET $prefix")
             call.respond(platformRepository.getAll())
