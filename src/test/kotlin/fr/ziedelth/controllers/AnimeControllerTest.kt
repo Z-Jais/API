@@ -122,14 +122,6 @@ internal class AnimeControllerTest : AbstractAPITest() {
 
             expect(HttpStatusCode.OK) { response.status }
             expect(1) { json.size }
-
-            // ERROR
-
-            val responseError = client.post("/animes/watchlist/page/ae/limit/12") {
-                setBody(bodyRequest)
-            }
-
-            expect(HttpStatusCode.InternalServerError) { responseError.status }
         }
     }
 
