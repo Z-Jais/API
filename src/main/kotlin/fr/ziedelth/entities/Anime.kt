@@ -27,7 +27,7 @@ class Anime(
     val name: String? = null,
     @Column(nullable = false)
     val releaseDate: String = Calendar.getInstance().toISO8601(),
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     val image: String? = null,
     @Column(nullable = true, columnDefinition = "TEXT")
     val description: String? = null,

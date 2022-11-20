@@ -26,7 +26,7 @@ class News(
     val hash: String? = null,
     @Column(nullable = false)
     val releaseDate: String = Calendar.getInstance().toISO8601(),
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     val title: String? = null,
     @Column(nullable = false, columnDefinition = "TEXT")
     val description: String? = null,
