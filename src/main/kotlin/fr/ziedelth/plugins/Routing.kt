@@ -24,7 +24,7 @@ fun Application.configureRouting() {
         AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
         EpisodeTypeController(episodeTypeRepository).getRoutes(this)
         LangTypeController(langTypeRepository).getRoutes(this)
-        EpisodeController(platformRepository, animeRepository, simulcastRepository, episodeTypeRepository, langTypeRepository).getRoutes(this)
+        EpisodeController(platformRepository, animeRepository, simulcastRepository, episodeTypeRepository, langTypeRepository, episodeRepository).getRoutes(this)
         NewsController(countryRepository, platformRepository).getRoutes(this)
         MangaController(platformRepository, animeRepository).getRoutes(this)
     }
