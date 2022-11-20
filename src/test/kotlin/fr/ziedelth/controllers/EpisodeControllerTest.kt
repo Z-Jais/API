@@ -218,15 +218,102 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                     setBody(
                         listOf(
                             Episode(
-                                anime = Anime(),
                                 platform = Platform(),
+                                anime = Anime(),
                                 episodeType = EpisodeType(),
                                 langType = LangType(),
                                 number = 1,
                                 season = 1,
                                 url = "https://www.google.com",
                                 image = "https://www.google.com",
-                                hash = "hash",
+                            ),
+                        )
+                    )
+                }.status
+            }
+
+            val platform = platformRepository.getAll().first()
+
+            expect(HttpStatusCode.InternalServerError) {
+                client.post("/episodes/multiple") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        listOf(
+                            Episode(
+                                platform = platform,
+                                anime = Anime(),
+                                episodeType = EpisodeType(),
+                                langType = LangType(),
+                                number = 1,
+                                season = 1,
+                                url = "https://www.google.com",
+                                image = "https://www.google.com",
+                            ),
+                        )
+                    )
+                }.status
+            }
+
+            val anime = animeRepository.getAll().first()
+
+            expect(HttpStatusCode.InternalServerError) {
+                client.post("/episodes/multiple") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        listOf(
+                            Episode(
+                                platform = platform,
+                                anime = anime,
+                                episodeType = EpisodeType(),
+                                langType = LangType(),
+                                number = 1,
+                                season = 1,
+                                url = "https://www.google.com",
+                                image = "https://www.google.com",
+                            ),
+                        )
+                    )
+                }.status
+            }
+
+            val episodeType = episodeTypeRepository.getAll().first()
+
+            expect(HttpStatusCode.InternalServerError) {
+                client.post("/episodes/multiple") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        listOf(
+                            Episode(
+                                platform = platform,
+                                anime = anime,
+                                episodeType = episodeType,
+                                langType = LangType(),
+                                number = 1,
+                                season = 1,
+                                url = "https://www.google.com",
+                                image = "https://www.google.com",
+                            ),
+                        )
+                    )
+                }.status
+            }
+
+            val langType = langTypeRepository.getAll().first()
+
+            expect(HttpStatusCode.InternalServerError) {
+                client.post("/episodes/multiple") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        listOf(
+                            Episode(
+                                platform = platform,
+                                anime = anime,
+                                episodeType = episodeType,
+                                langType = langType,
+                                number = 1,
+                                season = 1,
+                                url = "https://www.google.com",
+                                image = "https://www.google.com",
                             ),
                         )
                     )
