@@ -4,8 +4,6 @@ import jakarta.persistence.*
 import java.io.Serializable
 import java.util.*
 
-fun Simulcast?.isNullOrNotValid() = this == null || this.isNotValid()
-
 @Entity
 @Table(name = "simulcast", uniqueConstraints = [UniqueConstraint(columnNames = arrayOf("season", "year"))])
 class Simulcast(
@@ -17,8 +15,6 @@ class Simulcast(
     @Column(nullable = false, name = "\"year\"")
     val year: Int? = null
 ) : Serializable {
-    fun isNotValid(): Boolean = season.isNullOrBlank() || year == null
-
     companion object {
         fun getSimulcast(year: Int, month: Int): Simulcast {
             val seasons = arrayOf("WINTER", "SPRING", "SUMMER", "AUTUMN")
