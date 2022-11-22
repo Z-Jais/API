@@ -75,8 +75,8 @@ internal abstract class AbstractAPITest {
         animes.forEach {
             val episodes = (1..10).map { episode ->
                 val platform = platforms.random()
-                val episodeType = episodeTypes.random()
-                val langType = langTypes.random()
+                val episodeType = episodeTypes.first()
+                val langType = langTypes.first()
 
                 Episode(
                     platform = platform,

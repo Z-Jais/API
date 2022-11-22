@@ -161,8 +161,8 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             }
 
             val platform = platformRepository.getAll().first()
-            val anime = animeRepository.getAll().first()
-            val episodeType = episodeTypeRepository.getAll().first()
+            val anime = animeRepository.getAll().last()
+            val episodeType = episodeTypeRepository.getAll().last()
             val langType = langTypeRepository.getAll().first()
 
             val response = client.post("/episodes/multiple") {
@@ -190,6 +190,17 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                             url = "https://www.google.com",
                             image = "https://www.google.com",
                             hash = "azertyuiop",
+                        ),
+                        Episode(
+                            anime = anime,
+                            platform = platform,
+                            episodeType = episodeType,
+                            langType = langType,
+                            number = -1,
+                            season = 1,
+                            url = "https://www.google.com",
+                            image = "https://www.google.com",
+                            hash = "awzsxedcrfvtgbyhn",
                         )
                     )
                 )
@@ -197,7 +208,8 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             expect(HttpStatusCode.Created) { response.status }
             val json = Gson().fromJson(response.bodyAsText(), Array<Episode>::class.java)
-            expect(2) { json.size }
+            expect(3) { json.size }
+            expect(3) { json[2].number }
         }
     }
 

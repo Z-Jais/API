@@ -33,4 +33,21 @@ class EpisodeRepository(session: () -> Session = { Database.getSession() }) : Ab
             "list" to list
         )
     }
+
+    fun getLastNumber(episode: Episode): Int {
+        val session = getSession.invoke()
+        val query = session.createQuery(
+            "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType.uuid = :episodeType AND langType.uuid = :langType ORDER BY number DESC",
+            Int::class.java
+        )
+        query.maxResults = 1
+        query.setParameter("uuid", episode.anime?.uuid)
+        query.setParameter("platform", episode.platform)
+        query.setParameter("season", episode.season)
+        query.setParameter("episodeType", episode.episodeType?.uuid)
+        query.setParameter("langType", episode.langType?.uuid)
+        val number = query.uniqueResult() ?: 0
+        session.close()
+        return number
+    }
 }

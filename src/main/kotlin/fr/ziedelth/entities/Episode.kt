@@ -43,7 +43,7 @@ class Episode(
     @Column(nullable = false)
     val season: Int? = null,
     @Column(nullable = false)
-    val number: Int? = null,
+    var number: Int? = null,
     @Column(nullable = true)
     val title: String? = null,
     @Column(nullable = false, columnDefinition = "TEXT")

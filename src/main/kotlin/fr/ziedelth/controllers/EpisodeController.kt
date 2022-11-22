@@ -42,6 +42,10 @@ class EpisodeController(
             throw Exception("Episode is not valid")
         }
 
+        if (episode.number == -1) {
+            episode.number = episodeRepository.getLastNumber(episode) + 1
+        }
+
         val tmpSimulcast =
             Simulcast.getSimulcast(episode.releaseDate.split("-")[0].toInt(), episode.releaseDate.split("-")[1].toInt())
         val simulcast =
