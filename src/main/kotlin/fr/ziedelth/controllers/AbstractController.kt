@@ -110,11 +110,7 @@ open class IController<T : Serializable>(val prefix: String) {
                 return@get
             }
 
-            val image = ImageCache.get(uuid) ?: run {
-                println("Attachment $uuid not found")
-                return@get call.respond(HttpStatusCode.NoContent)
-            }
-
+            val image = ImageCache.get(uuid)!!
             println("Attachment $uuid found (${image.bytes.size} bytes)")
             call.respondBytes(image.bytes, ContentType("image", "webp"))
         }
