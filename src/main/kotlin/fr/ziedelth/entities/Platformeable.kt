@@ -2,6 +2,7 @@ package fr.ziedelth.entities
 
 import jakarta.persistence.*
 
+@MappedSuperclass
 open class Platformeable(
     @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
     @JoinColumn(
