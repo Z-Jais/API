@@ -40,7 +40,8 @@ class AnimeController(
                 val country = call.parameters["country"]!!
                 val hash = call.parameters["hash"]!!
                 println("GET $prefix/country/$country/search/hash/$hash")
-                call.respond(mapOf("uuid" to animeRepository.findByHash(country, hash)))
+                val anime = animeRepository.findByHash(country, hash)
+                call.respond(if (anime != null) mapOf("uuid" to anime) else HttpStatusCode.NotFound)
             }
 
             get("/name/{name}") {

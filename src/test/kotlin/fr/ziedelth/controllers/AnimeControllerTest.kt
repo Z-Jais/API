@@ -33,6 +33,8 @@ internal class AnimeControllerTest : AbstractAPITest() {
 
             expect(HttpStatusCode.OK) { response.status }
             checkNotNull(uuid)
+
+            expect(HttpStatusCode.NotFound) { client.get("/animes/country/fr/search/hash/azertyuiop").status }
         }
     }
 
