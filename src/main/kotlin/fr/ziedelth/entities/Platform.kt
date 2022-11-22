@@ -1,17 +1,14 @@
 package fr.ziedelth.entities
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
-import org.hibernate.Hibernate
+import jakarta.persistence.*
 import java.io.Serializable
 import java.util.*
 
 fun Platform?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
-data class Platform(
+@Table(name = "platform")
+class Platform(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
@@ -23,19 +20,4 @@ data class Platform(
     val image: String? = null
 ) : Serializable {
     fun isNotValid(): Boolean = name.isNullOrBlank() || url.isNullOrBlank() || image.isNullOrBlank()
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
-        other as Platform
-
-        return uuid == other.uuid
-    }
-
-    override fun hashCode(): Int = javaClass.hashCode()
-
-    @Override
-    override fun toString(): String {
-        return this::class.simpleName + "(uuid = $uuid , name = $name , url = $url , image = $image )"
-    }
 }

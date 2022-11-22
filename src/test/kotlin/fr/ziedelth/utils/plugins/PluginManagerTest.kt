@@ -1,7 +1,6 @@
-package fr.ziedelth
+package fr.ziedelth.utils.plugins
 
 import fr.ziedelth.events.ExampleEvent
-import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.plugins.events.EventHandler
 import fr.ziedelth.utils.plugins.events.Listener
 import org.junit.jupiter.api.Assertions.assertEquals
