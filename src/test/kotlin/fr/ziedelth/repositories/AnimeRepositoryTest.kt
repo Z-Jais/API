@@ -158,9 +158,9 @@ internal class AnimeRepositoryTest : AbstractAPITest() {
         val animes = animeRepository.getAll()
         val uuids = listOf(animes[0].uuid, animes[1].uuid, animes[2].uuid)
 
-        val page1 = animeRepository.findAllByPage(uuids, 1, 2)
+        val page1 = animeRepository.getByPageWithList(uuids, 1, 2)
         expect(2) { page1.size }
-        val page2 = animeRepository.findAllByPage(uuids, 2, 2)
+        val page2 = animeRepository.getByPageWithList(uuids, 2, 2)
         expect(1) { page2.size }
     }
 

@@ -5,8 +5,9 @@ import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
-class EpisodeRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Episode>(session) {
-    fun getByPage(tag: String, page: Int, limit: Int): List<Episode> {
+class EpisodeRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Episode>(session),
+    IPageRepository<Episode> {
+    override fun getByPage(tag: String, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
             page,
             limit,
@@ -15,7 +16,7 @@ class EpisodeRepository(session: () -> Session = { Database.getSession() }) : Ab
         )
     }
 
-    fun getByPageWithAnime(uuid: UUID, page: Int, limit: Int): List<Episode> {
+    override fun getByPageWithAnime(uuid: UUID, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
             page,
             limit,
@@ -24,7 +25,7 @@ class EpisodeRepository(session: () -> Session = { Database.getSession() }) : Ab
         )
     }
 
-    fun getByPageWithList(list: List<UUID>, page: Int, limit: Int): List<Episode> {
+    override fun getByPageWithList(list: List<UUID>, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
             page,
             limit,

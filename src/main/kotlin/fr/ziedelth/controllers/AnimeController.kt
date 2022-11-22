@@ -1,13 +1,11 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.repositories.EpisodeRepository
 import fr.ziedelth.repositories.MangaRepository
-import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
 import io.ktor.http.*
@@ -15,7 +13,6 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.pipeline.*
 import java.util.*
 
 class AnimeController(
@@ -29,7 +26,7 @@ class AnimeController(
         routing.route(prefix) {
             search()
             getByPage()
-            getWatchlistWithPage()
+            getWatchlistWithPage(animeRepository)
             getAttachment()
             create()
             merge()
@@ -70,21 +67,6 @@ class AnimeController(
                 }
 
                 call.respond(RequestCache.get(uuidRequest, country, page, limit, simulcast)!!.value!!)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
-    }
-
-    private fun Route.getWatchlistWithPage() {
-        post("/watchlist/page/{page}/limit/{limit}") {
-            try {
-                val watchlist = call.receive<String>()
-                val (page, limit) = getPageAndLimit()
-                println("POST $prefix/watchlist/page/$page/limit/$limit")
-                val dataFromGzip =
-                    Gson().fromJson(Decoder.fromGzip(watchlist), Array<String>::class.java).map { UUID.fromString(it) }
-                call.respond(animeRepository.findAllByPage(dataFromGzip, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
             }

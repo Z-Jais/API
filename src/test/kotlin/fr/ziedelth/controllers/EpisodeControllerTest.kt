@@ -59,10 +59,11 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             // ERROR
 
-            val responseError =
-                client.get("/episodes/country/${country.tag}/page/ae/limit/12")
-
-            expect(HttpStatusCode.InternalServerError) { responseError.status }
+            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/ae/limit/12").status }
+            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/1/limit/ae").status }
+            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/0/limit/12").status }
+            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/1/limit/0").status }
+            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/1/limit/31").status }
         }
     }
 

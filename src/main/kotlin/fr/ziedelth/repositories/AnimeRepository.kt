@@ -5,7 +5,8 @@ import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
-class AnimeRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Anime>(session) {
+class AnimeRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Anime>(session),
+    IPageRepository<Anime> {
     fun findByHash(tag: String, hash: String): UUID? {
         val session = getSession.invoke()
         val query = session.createQuery(
@@ -57,12 +58,12 @@ class AnimeRepository(session: () -> Session = { Database.getSession() }) : Abst
         )
     }
 
-    fun findAllByPage(uuids: List<UUID>, page: Int, limit: Int): List<Anime> {
+    override fun getByPageWithList(list: List<UUID>, page: Int, limit: Int): List<Anime> {
         return super.getByPage(
             page,
             limit,
             "FROM Anime WHERE uuid IN :list ORDER BY name",
-            "list" to uuids
+            "list" to list
         )
     }
 
@@ -77,5 +78,13 @@ class AnimeRepository(session: () -> Session = { Database.getSession() }) : Abst
         val list = query.list()
         session.close()
         return list ?: emptyList()
+    }
+
+    override fun getByPage(tag: String, page: Int, limit: Int): List<Anime> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getByPageWithAnime(uuid: UUID, page: Int, limit: Int): List<Anime> {
+        TODO("Not yet implemented")
     }
 }

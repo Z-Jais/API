@@ -5,7 +5,8 @@ import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
-class MangaRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Manga>(session) {
+class MangaRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Manga>(session),
+    IPageRepository<Manga> {
     fun getByEAN(tag: String, ean: Long): Manga? {
         val session = getSession.invoke()
         val query = session.createQuery("FROM Manga WHERE anime.country.tag = :tag AND ean = :ean", Manga::class.java)
@@ -17,7 +18,7 @@ class MangaRepository(session: () -> Session = { Database.getSession() }) : Abst
         return result
     }
 
-    fun getByPage(tag: String, page: Int, limit: Int): List<Manga> {
+    override fun getByPage(tag: String, page: Int, limit: Int): List<Manga> {
         return super.getByPage(
             page,
             limit,
@@ -26,7 +27,7 @@ class MangaRepository(session: () -> Session = { Database.getSession() }) : Abst
         )
     }
 
-    fun getByPageWithAnime(uuid: UUID, page: Int, limit: Int): List<Manga> {
+    override fun getByPageWithAnime(uuid: UUID, page: Int, limit: Int): List<Manga> {
         return super.getByPage(
             page,
             limit,
@@ -35,7 +36,7 @@ class MangaRepository(session: () -> Session = { Database.getSession() }) : Abst
         )
     }
 
-    fun getByPageWithList(list: List<UUID>, page: Int, limit: Int): List<Manga> {
+    override fun getByPageWithList(list: List<UUID>, page: Int, limit: Int): List<Manga> {
         return super.getByPage(
             page,
             limit,

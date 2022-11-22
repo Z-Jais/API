@@ -6,7 +6,6 @@ import fr.ziedelth.events.NewsReleaseEvent
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.repositories.NewsRepository
 import fr.ziedelth.repositories.PlatformRepository
-import fr.ziedelth.utils.RequestCache
 import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -21,28 +20,8 @@ class NewsController(
 ) : IController<News>("/news") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
-            getWithPage()
+            getWithPage(newsRepository)
             create()
-        }
-    }
-
-    private fun Route.getWithPage() {
-        get("/country/{country}/page/{page}/limit/{limit}") {
-            try {
-                val country = call.parameters["country"]!!
-                val (page, limit) = getPageAndLimit()
-                println("GET $prefix/country/$country/page/$page/limit/$limit")
-                val request = RequestCache.get(uuidRequest, country, page, limit)
-
-                if (request == null || request.isExpired()) {
-                    val list = newsRepository.getByPage(country, page, limit)
-                    request?.update(list) ?: RequestCache.put(uuidRequest, country, page, limit, value = list)
-                }
-
-                call.respond(RequestCache.get(uuidRequest, country, page, limit)!!.value!!)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
         }
     }
 
