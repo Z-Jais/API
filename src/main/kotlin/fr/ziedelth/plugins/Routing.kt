@@ -1,42 +1,39 @@
 package fr.ziedelth.plugins
 
-import fr.ziedelth.controllers.AnimeController.getAnimes
-import fr.ziedelth.controllers.CountryController.getCountries
-import fr.ziedelth.controllers.DeviceController.getDevices
-import fr.ziedelth.controllers.DeviceRedirectionController.getRedirection
-import fr.ziedelth.controllers.DiaryController.getDiary
-import fr.ziedelth.controllers.EpisodeController.getEpisodes
-import fr.ziedelth.controllers.EpisodeTypeController.getEpisodeTypes
-import fr.ziedelth.controllers.GenreController.getGenres
-import fr.ziedelth.controllers.LangTypeController.getLangTypes
-import fr.ziedelth.controllers.MangaController.getMangas
-import fr.ziedelth.controllers.NewsController.getNews
-import fr.ziedelth.controllers.PlatformController.getPlatforms
-import fr.ziedelth.controllers.SimulcastController.getSimulcasts
-import io.ktor.serialization.gson.*
+import fr.ziedelth.controllers.*
+import fr.ziedelth.repositories.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
-    install(ContentNegotiation) {
-        gson {
-        }
-    }
-
     routing {
-        getCountries()
-        getPlatforms()
-        getSimulcasts()
-        getGenres()
-        getAnimes()
-        getEpisodeTypes()
-        getLangTypes()
-        getEpisodes()
-        getNews()
-        getMangas()
-        getDevices()
-        getRedirection()
-        getDiary()
+        val countryRepository = CountryRepository()
+        val platformRepository = PlatformRepository()
+        val simulcastRepository = SimulcastRepository()
+        val genreRepository = GenreRepository()
+        val animeRepository = AnimeRepository()
+        val episodeTypeRepository = EpisodeTypeRepository()
+        val langTypeRepository = LangTypeRepository()
+        val episodeRepository = EpisodeRepository()
+        val mangaRepository = MangaRepository()
+        val newsRepository = NewsRepository()
+
+        CountryController(countryRepository).getRoutes(this)
+        PlatformController(platformRepository).getRoutes(this)
+        SimulcastController(simulcastRepository).getRoutes(this)
+        GenreController(genreRepository).getRoutes(this)
+        AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
+        EpisodeTypeController(episodeTypeRepository).getRoutes(this)
+        LangTypeController(langTypeRepository).getRoutes(this)
+        EpisodeController(
+            platformRepository,
+            animeRepository,
+            simulcastRepository,
+            episodeTypeRepository,
+            langTypeRepository,
+            episodeRepository
+        ).getRoutes(this)
+        NewsController(countryRepository, platformRepository, newsRepository).getRoutes(this)
+        MangaController(platformRepository, animeRepository, mangaRepository).getRoutes(this)
     }
 }
