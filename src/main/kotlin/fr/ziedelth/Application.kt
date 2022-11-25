@@ -61,6 +61,7 @@ fun main() {
 
                 if (line == "reload") {
                     PluginManager.reload()
+                    ListenerManager()
                 }
             }
         }.start()
