@@ -3,7 +3,6 @@ package fr.ziedelth.entities
 import fr.ziedelth.utils.DATE_FORMAT_REGEX
 import fr.ziedelth.utils.toISO8601
 import jakarta.persistence.*
-import org.hibernate.Hibernate
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 import java.io.Serializable
@@ -12,11 +11,12 @@ import java.util.*
 fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
-data class Anime(
+@Table(name = "anime")
+class Anime(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
-    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
     @JoinColumn(
         name = "country_uuid",
         nullable = false,
@@ -39,7 +39,7 @@ data class Anime(
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime (uuid) ON DELETE CASCADE")
     )
     val hashes: MutableSet<String> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
     @JoinTable(
         name = "anime_genre",
         joinColumns = [
@@ -56,7 +56,7 @@ data class Anime(
         ]
     )
     val genres: MutableSet<Genre> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
+    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
     @JoinTable(
         name = "anime_simulcast",
         joinColumns = [
@@ -74,27 +74,12 @@ data class Anime(
     )
     val simulcasts: MutableSet<Simulcast> = mutableSetOf(),
 ) : Serializable {
-    fun hash(): String? = name?.lowercase()?.filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }?.trim()
-        ?.replace("\\s+".toRegex(), "-")?.replace("--", "-")
+    fun hash(): String = name!!.lowercase().filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }.trim()
+        .replace("\\s+".toRegex(), "-").replace("--", "-")
 
     fun isNotValid(): Boolean = country.isNullOrNotValid() || name.isNullOrBlank() || (
             releaseDate.isBlank() || !releaseDate.matches(
                 DATE_FORMAT_REGEX
             )
             ) || image.isNullOrBlank()
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
-        other as Anime
-
-        return uuid != null && uuid == other.uuid
-    }
-
-    override fun hashCode(): Int = javaClass.hashCode()
-
-    @Override
-    override fun toString(): String {
-        return this::class.simpleName + "(uuid = $uuid , country = $country , name = $name , releaseDate = $releaseDate , image = $image , description = $description , hashes = $hashes )"
-    }
 }

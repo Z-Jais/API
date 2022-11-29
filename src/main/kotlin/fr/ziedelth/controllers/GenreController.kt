@@ -1,17 +1,26 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.Genre
+import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.repositories.GenreRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-object GenreController : IController<Genre>("/genres") {
-    fun Routing.getGenres() {
-        route(prefix) {
+class GenreController(private val genreRepository: GenreRepository) : IController<Genre>("/genres") {
+    fun getRoutes(routing: Routing) {
+        routing.route(prefix) {
             getAll()
             create()
+        }
+    }
+
+    fun Route.getAll() {
+        get {
+            println("GET $prefix")
+            call.respond(genreRepository.getAll())
         }
     }
 
@@ -22,20 +31,19 @@ object GenreController : IController<Genre>("/genres") {
             try {
                 val genre = call.receive<Genre>()
 
-                if (genre.name.isNullOrBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                if (genre.isNullOrNotValid()) {
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
-                if (isExists("name", genre.name)) {
+                if (genreRepository.exists("name", genre.name)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                call.respond(HttpStatusCode.Created, justSave(genre))
+                call.respond(HttpStatusCode.Created, genreRepository.save(genre))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }
