@@ -1,17 +1,26 @@
 package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.LangType
+import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.repositories.LangTypeRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-object LangTypeController : IController<LangType>("/langtypes") {
-    fun Routing.getLangTypes() {
-        route(prefix) {
+class LangTypeController(private val langTypeRepository: LangTypeRepository) : IController<LangType>("/langtypes") {
+    fun getRoutes(routing: Routing) {
+        routing.route(prefix) {
             getAll()
             create()
+        }
+    }
+
+    fun Route.getAll() {
+        get {
+            println("GET $prefix")
+            call.respond(langTypeRepository.getAll())
         }
     }
 
@@ -22,20 +31,19 @@ object LangTypeController : IController<LangType>("/langtypes") {
             try {
                 val langType = call.receive<LangType>()
 
-                if (langType.name.isNullOrBlank()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing parameters")
+                if (langType.isNullOrNotValid()) {
+                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
 
-                if (isExists("name", langType.name)) {
+                if (langTypeRepository.exists("name", langType.name)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                call.respond(HttpStatusCode.Created, justSave(langType))
+                call.respond(HttpStatusCode.Created, langTypeRepository.save(langType))
             } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
+                printError(call, e)
             }
         }
     }
