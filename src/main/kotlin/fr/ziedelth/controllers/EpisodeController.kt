@@ -91,7 +91,7 @@ class EpisodeController(
                         description = LIMIT
                     }
                     body<String> {
-                        description = "Anime ids encoded in GZIP"
+                        description = "Anime uuids encoded in GZIP"
                     }
                 }
                 response {
@@ -173,7 +173,7 @@ class EpisodeController(
                     body<List<Episode>>()
                 }
                 HttpStatusCode.BadRequest to {
-                    description = "Episodes is null or not valid"
+                    description = "Episodes are null or not valid"
                 }
                 HttpStatusCode.InternalServerError to {
                     description = UNKNOWN_MESSAGE_ERROR

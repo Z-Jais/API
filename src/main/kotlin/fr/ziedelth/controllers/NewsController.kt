@@ -7,6 +7,7 @@ import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.repositories.NewsRepository
 import fr.ziedelth.repositories.PlatformRepository
 import fr.ziedelth.utils.plugins.PluginManager
+import io.github.smiley4.ktorswaggerui.dsl.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -20,7 +21,32 @@ class NewsController(
 ) : IController<News>("/news") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
-            getWithPage(newsRepository)
+            getWithPage(newsRepository) {
+                tags = listOf("News")
+                summary = "Get news by page"
+                description = "Get news by page"
+                request {
+                    pathParameter<String>("country") {
+                        description = COUNTRY_TAG
+                    }
+                    pathParameter<Int>("page") {
+                        description = PAGE
+                    }
+                    pathParameter<Int>("limit") {
+                        description = LIMIT
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "News found"
+                        body<List<News>>()
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = UNKNOWN_MESSAGE_ERROR
+                    }
+                }
+            }
+
             create()
         }
     }
@@ -35,7 +61,28 @@ class NewsController(
     }
 
     private fun Route.create() {
-        post("/multiple") {
+        post("/multiple", {
+            tags = listOf("News")
+            summary = "Create multiple news"
+            description = "Create multiple news"
+            request {
+                body<List<News>> {
+                    description = "News to create"
+                }
+            }
+            response {
+                HttpStatusCode.Created to {
+                    description = "News created"
+                    body<List<News>>()
+                }
+                HttpStatusCode.BadRequest to {
+                    description = "News is null or not valid"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = UNKNOWN_MESSAGE_ERROR
+                }
+            }
+        }) {
             println("POST $prefix/multiple")
 
             try {
