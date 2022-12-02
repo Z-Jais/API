@@ -3,6 +3,8 @@ package fr.ziedelth.controllers
 import fr.ziedelth.entities.Genre
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.GenreRepository
+import io.github.smiley4.ktorswaggerui.dsl.get
+import io.github.smiley4.ktorswaggerui.dsl.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -18,14 +20,48 @@ class GenreController(private val genreRepository: GenreRepository) : IControlle
     }
 
     fun Route.getAll() {
-        get {
+        get({
+            tags = listOf("Genre")
+            summary = "Get all genres"
+            description = "Get all genres"
+            response {
+                HttpStatusCode.OK to {
+                    description = "All genres"
+                    body<List<Genre>>()
+                }
+            }
+        }) {
             println("GET $prefix")
             call.respond(genreRepository.getAll())
         }
     }
 
     private fun Route.create() {
-        post {
+        post({
+            tags = listOf("Genre")
+            summary = "Create a genre"
+            description = "Create a genre"
+            request {
+                body<Genre> {
+                    description = "Genre to create"
+                }
+            }
+            response {
+                HttpStatusCode.Created to {
+                    description = "Genre created"
+                    body<Genre>()
+                }
+                HttpStatusCode.BadRequest to {
+                    description = "Genre is null or not valid"
+                }
+                HttpStatusCode.Conflict to {
+                    description = "Genre already exists"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = UNKNOWN_MESSAGE_ERROR
+                }
+            }
+        }) {
             println("POST $prefix")
 
             try {

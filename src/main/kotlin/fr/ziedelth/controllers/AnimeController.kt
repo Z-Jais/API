@@ -64,7 +64,7 @@ class AnimeController(
                 summary = "Get anime attachment"
                 description = "Get anime attachment"
                 request {
-                    pathParameter<String>("uuid") {
+                    pathParameter<UUID>("uuid") {
                         description = "Anime uuid"
                     }
                 }

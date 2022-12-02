@@ -3,6 +3,8 @@ package fr.ziedelth.controllers
 import fr.ziedelth.entities.LangType
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.LangTypeRepository
+import io.github.smiley4.ktorswaggerui.dsl.get
+import io.github.smiley4.ktorswaggerui.dsl.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -18,14 +20,48 @@ class LangTypeController(private val langTypeRepository: LangTypeRepository) : I
     }
 
     fun Route.getAll() {
-        get {
+        get({
+            tags = listOf("LangType")
+            summary = "Get all langtypes"
+            description = "Get all langtypes"
+            response {
+                HttpStatusCode.OK to {
+                    description = "All langtypes"
+                    body<List<LangType>>()
+                }
+            }
+        }) {
             println("GET $prefix")
             call.respond(langTypeRepository.getAll())
         }
     }
 
     private fun Route.create() {
-        post {
+        post({
+            tags = listOf("LangType")
+            summary = "Create a lang type"
+            description = "Create a lang type"
+            request {
+                body<LangType> {
+                    description = "Lang type to create"
+                }
+            }
+            response {
+                HttpStatusCode.Created to {
+                    description = "Lang type created"
+                    body<LangType>()
+                }
+                HttpStatusCode.BadRequest to {
+                    description = "Lang type is null or not valid"
+                }
+                HttpStatusCode.Conflict to {
+                    description = "Lang type already exists"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = UNKNOWN_MESSAGE_ERROR
+                }
+            }
+        }) {
             println("POST $prefix")
 
             try {
