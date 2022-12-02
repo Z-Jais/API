@@ -18,6 +18,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.*
 
+private const val FOUND = "Animes found"
+private const val NOT_FOUND = "No anime found"
+
 class AnimeController(
     private val countryRepository: CountryRepository,
     private val animeRepository: AnimeRepository,
@@ -36,10 +39,10 @@ class AnimeController(
                 description = "Get watchlist animes"
                 request {
                     pathParameter<Int>("page") {
-                        description = "Page (Minimum 1)"
+                        description = PAGE
                     }
                     pathParameter<Int>("limit") {
-                        description = "Limit (Minimum 1 and Maximum 30)"
+                        description = LIMIT
                     }
                     body<String> {
                         description = "Anime ids encoded in GZIP"
@@ -51,7 +54,7 @@ class AnimeController(
                         body<List<Anime>>()
                     }
                     HttpStatusCode.InternalServerError to {
-                        description = "Internal server error"
+                        description = UNKNOWN_MESSAGE_ERROR
                     }
                 }
             }
@@ -93,7 +96,7 @@ class AnimeController(
                 description = "Search animes by hash"
                 request {
                     pathParameter<String>("country") {
-                        description = "Country tag"
+                        description = COUNTRY_TAG
                     }
                     pathParameter<String>("hash") {
                         description = "Hash"
@@ -101,11 +104,11 @@ class AnimeController(
                 }
                 response {
                     HttpStatusCode.OK to {
-                        description = "Animes found"
+                        description = FOUND
                         body<Map<String, Anime>>()
                     }
                     HttpStatusCode.NotFound to {
-                        description = "No anime found"
+                        description = NOT_FOUND
                     }
                 }
             }) {
@@ -122,7 +125,7 @@ class AnimeController(
                 description = "Search animes by name"
                 request {
                     pathParameter<String>("country") {
-                        description = "Country tag"
+                        description = COUNTRY_TAG
                     }
                     pathParameter<String>("name") {
                         description = "Name"
@@ -130,11 +133,11 @@ class AnimeController(
                 }
                 response {
                     HttpStatusCode.OK to {
-                        description = "Animes found"
+                        description = FOUND
                         body<List<Anime>>()
                     }
                     HttpStatusCode.NotFound to {
-                        description = "No anime found"
+                        description = NOT_FOUND
                     }
                 }
             }) {
@@ -153,25 +156,25 @@ class AnimeController(
             description = "Get animes by page"
             request {
                 pathParameter<String>("country") {
-                    description = "Country tag"
+                    description = COUNTRY_TAG
                 }
                 pathParameter<UUID>("simulcast") {
                     description = "Simulcast UUID"
                 }
                 pathParameter<Int>("page") {
-                    description = "Page (Minimum 1)"
+                    description = PAGE
                 }
                 pathParameter<Int>("limit") {
-                    description = "Limit (Minimum 1 and Maximum 30)"
+                    description = LIMIT
                 }
             }
             response {
                 HttpStatusCode.OK to {
-                    description = "Animes found"
+                    description = FOUND
                     body<List<Anime>>()
                 }
                 HttpStatusCode.InternalServerError to {
-                    description = "Internal server error"
+                    description = UNKNOWN_MESSAGE_ERROR
                 }
             }
         }) {
@@ -216,7 +219,7 @@ class AnimeController(
                     description = "Anime already exists"
                 }
                 HttpStatusCode.InternalServerError to {
-                    description = "Internal server error"
+                    description = UNKNOWN_MESSAGE_ERROR
                 }
             }
         }) {
@@ -288,10 +291,10 @@ class AnimeController(
                     description = "Different countries"
                 }
                 HttpStatusCode.NotFound to {
-                    description = "Anime not found"
+                    description = NOT_FOUND
                 }
                 HttpStatusCode.InternalServerError to {
-                    description = "Internal server error"
+                    description = UNKNOWN_MESSAGE_ERROR
                 }
             }
         }) {
@@ -364,7 +367,7 @@ class AnimeController(
             description = "Get anime diary"
             request {
                 pathParameter<String>("country") {
-                    description = "Country tag"
+                    description = COUNTRY_TAG
                 }
                 pathParameter<Int>("day") {
                     description = "Day of the week"

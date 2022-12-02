@@ -18,6 +18,9 @@ import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
+const val COUNTRY_TAG = "Country tag"
+const val PAGE = "Page (Minimum 1)"
+const val LIMIT = "Limit (Minimum 1 and Maximum 30)"
 const val UNKNOWN_MESSAGE_ERROR = "Unknown error"
 const val MISSING_PARAMETERS_MESSAGE_ERROR = "Missing parameters"
 

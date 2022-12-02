@@ -58,7 +58,7 @@ class CountryController(private val countryRepository: CountryRepository) : ICon
                     description = "Country already exists"
                 }
                 HttpStatusCode.InternalServerError to {
-                    description = "Internal server error"
+                    description = UNKNOWN_MESSAGE_ERROR
                 }
             }
         }) {

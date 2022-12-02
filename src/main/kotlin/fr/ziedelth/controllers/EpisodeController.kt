@@ -15,6 +15,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.UUID
 
+private const val FOUND = "Episodes found"
+
 class EpisodeController(
     private val platformRepository: PlatformRepository,
     private val animeRepository: AnimeRepository,
@@ -31,22 +33,22 @@ class EpisodeController(
                 description = "Get episodes by page"
                 request {
                     pathParameter<String>("country") {
-                        description = "Country tag"
+                        description = COUNTRY_TAG
                     }
                     pathParameter<Int>("page") {
-                        description = "Page (Minimum 1)"
+                        description = PAGE
                     }
                     pathParameter<Int>("limit") {
-                        description = "Limit (Minimum 1 and Maximum 30)"
+                        description = LIMIT
                     }
                 }
                 response {
                     HttpStatusCode.OK to {
-                        description = "Episodes found"
+                        description = FOUND
                         body<List<Episode>>()
                     }
                     HttpStatusCode.InternalServerError to {
-                        description = "Internal server error"
+                        description = UNKNOWN_MESSAGE_ERROR
                     }
                 }
             }
@@ -60,19 +62,19 @@ class EpisodeController(
                         description = "Anime uuid"
                     }
                     pathParameter<Int>("page") {
-                        description = "Page (Minimum 1)"
+                        description = PAGE
                     }
                     pathParameter<Int>("limit") {
-                        description = "Limit (Minimum 1 and Maximum 30)"
+                        description = LIMIT
                     }
                 }
                 response {
                     HttpStatusCode.OK to {
-                        description = "Episodes found"
+                        description = FOUND
                         body<List<Episode>>()
                     }
                     HttpStatusCode.InternalServerError to {
-                        description = "Internal server error"
+                        description = UNKNOWN_MESSAGE_ERROR
                     }
                 }
             }
@@ -83,10 +85,10 @@ class EpisodeController(
                 description = "Get watchlist episodes"
                 request {
                     pathParameter<Int>("page") {
-                        description = "Page (Minimum 1)"
+                        description = PAGE
                     }
                     pathParameter<Int>("limit") {
-                        description = "Limit (Minimum 1 and Maximum 30)"
+                        description = LIMIT
                     }
                     body<String> {
                         description = "Anime ids encoded in GZIP"
@@ -94,11 +96,11 @@ class EpisodeController(
                 }
                 response {
                     HttpStatusCode.OK to {
-                        description = "Episodes found"
+                        description = FOUND
                         body<List<Episode>>()
                     }
                     HttpStatusCode.InternalServerError to {
-                        description = "Internal server error"
+                        description = UNKNOWN_MESSAGE_ERROR
                     }
                 }
             }
@@ -174,7 +176,7 @@ class EpisodeController(
                     description = "Episodes is null or not valid"
                 }
                 HttpStatusCode.InternalServerError to {
-                    description = "Internal server error"
+                    description = UNKNOWN_MESSAGE_ERROR
                 }
             }
         }) {
