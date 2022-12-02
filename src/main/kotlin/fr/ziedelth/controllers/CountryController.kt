@@ -3,6 +3,8 @@ package fr.ziedelth.controllers
 import fr.ziedelth.entities.Country
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.CountryRepository
+import io.github.smiley4.ktorswaggerui.dsl.get
+import io.github.smiley4.ktorswaggerui.dsl.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -18,14 +20,43 @@ class CountryController(private val countryRepository: CountryRepository) : ICon
     }
 
     fun Route.getAll() {
-        get {
+        get({
+            tags = listOf("Country")
+            summary = "Get all countries"
+            description = "Get all countries"
+            response {
+                HttpStatusCode.OK to {
+                    description = "All countries"
+                    body<List<Country>>()
+                }
+            }
+        }) {
             println("GET $prefix")
             call.respond(countryRepository.getAll())
         }
     }
 
     private fun Route.create() {
-        post {
+        post({
+            tags = listOf("Country")
+            summary = "Create a country"
+            description = "Create a country"
+            request {
+                body<Country>()
+            }
+            response {
+                HttpStatusCode.BadRequest to {
+                    description = "Country is null or not valid"
+                }
+                HttpStatusCode.Conflict to {
+                    description = "Country already exists"
+                }
+                HttpStatusCode.Created to {
+                    description = "Country created"
+                    body<Country>()
+                }
+            }
+        }) {
             println("POST $prefix")
 
             try {

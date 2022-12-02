@@ -34,6 +34,10 @@
             <name>Clojars</name>
             <url>https://repo.clojars.org/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -141,6 +145,11 @@
             <groupId>com.google.firebase</groupId>
             <artifactId>firebase-admin</artifactId>
             <version>9.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.smiley4</groupId>
+            <artifactId>ktor-swagger-ui</artifactId>
+            <version>0.8.0</version>
         </dependency>
     </dependencies>
 

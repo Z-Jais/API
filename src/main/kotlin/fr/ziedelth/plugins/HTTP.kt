@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
+import io.github.smiley4.ktorswaggerui.SwaggerUI
 
 fun Application.configureHTTP() {
     install(Compression) {
@@ -26,6 +27,13 @@ fun Application.configureHTTP() {
 
     install(ContentNegotiation) {
         gson {
+        }
+    }
+
+    install(SwaggerUI) {
+        swagger {
+            swaggerUrl = "swagger"
+            forwardRoot = true
         }
     }
 
