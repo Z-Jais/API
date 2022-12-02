@@ -42,18 +42,23 @@ class CountryController(private val countryRepository: CountryRepository) : ICon
             summary = "Create a country"
             description = "Create a country"
             request {
-                body<Country>()
+                body<Country> {
+                    description = "Country to create"
+                }
             }
             response {
+                HttpStatusCode.Created to {
+                    description = "Country created"
+                    body<Country>()
+                }
                 HttpStatusCode.BadRequest to {
                     description = "Country is null or not valid"
                 }
                 HttpStatusCode.Conflict to {
                     description = "Country already exists"
                 }
-                HttpStatusCode.Created to {
-                    description = "Country created"
-                    body<Country>()
+                HttpStatusCode.InternalServerError to {
+                    description = "Internal server error"
                 }
             }
         }) {

@@ -8,6 +8,9 @@ import fr.ziedelth.repositories.EpisodeRepository
 import fr.ziedelth.repositories.MangaRepository
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
+import io.github.smiley4.ktorswaggerui.dsl.get
+import io.github.smiley4.ktorswaggerui.dsl.post
+import io.github.smiley4.ktorswaggerui.dsl.put
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -26,8 +29,56 @@ class AnimeController(
         routing.route(prefix) {
             search()
             getByPage()
-            getWatchlistWithPage(animeRepository)
-            getAttachment()
+
+            getWatchlistWithPage(animeRepository) {
+                tags = listOf("Anime", "Watchlist")
+                summary = "Get watchlist animes"
+                description = "Get watchlist animes"
+                request {
+                    pathParameter<Int>("page") {
+                        description = "Page (Minimum 1)"
+                    }
+                    pathParameter<Int>("limit") {
+                        description = "Limit (Minimum 1 and Maximum 30)"
+                    }
+                    body<String> {
+                        description = "Anime ids encoded in GZIP"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Watchlist"
+                        body<List<Anime>>()
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Internal server error"
+                    }
+                }
+            }
+
+            getAttachment {
+                tags = listOf("Anime", "Attachment")
+                summary = "Get anime attachment"
+                description = "Get anime attachment"
+                request {
+                    pathParameter<String>("uuid") {
+                        description = "Anime uuid"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Attachment"
+                        body<ByteArray>()
+                    }
+                    HttpStatusCode.BadRequest to {
+                        description = "Anime uuid is null or not valid"
+                    }
+                    HttpStatusCode.NoContent to {
+                        description = "Anime attachment not found"
+                    }
+                }
+            }
+
             create()
             merge()
             diary()
@@ -36,7 +87,28 @@ class AnimeController(
 
     private fun Route.search() {
         route("/country/{country}/search") {
-            get("/hash/{hash}") {
+            get("/hash/{hash}", {
+                tags = listOf("Anime")
+                summary = "Search animes by hash"
+                description = "Search animes by hash"
+                request {
+                    pathParameter<String>("country") {
+                        description = "Country tag"
+                    }
+                    pathParameter<String>("hash") {
+                        description = "Hash"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Animes found"
+                        body<Map<String, Anime>>()
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "No anime found"
+                    }
+                }
+            }) {
                 val country = call.parameters["country"]!!
                 val hash = call.parameters["hash"]!!
                 println("GET $prefix/country/$country/search/hash/$hash")
@@ -44,7 +116,28 @@ class AnimeController(
                 call.respond(if (anime != null) mapOf("uuid" to anime) else HttpStatusCode.NotFound)
             }
 
-            get("/name/{name}") {
+            get("/name/{name}", {
+                tags = listOf("Anime")
+                summary = "Search animes by name"
+                description = "Search animes by name"
+                request {
+                    pathParameter<String>("country") {
+                        description = "Country tag"
+                    }
+                    pathParameter<String>("name") {
+                        description = "Name"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Animes found"
+                        body<List<Anime>>()
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "No anime found"
+                    }
+                }
+            }) {
                 val country = call.parameters["country"]!!
                 val name = call.parameters["name"]!!
                 println("GET $prefix/country/$country/search/name/$name")
@@ -54,7 +147,34 @@ class AnimeController(
     }
 
     private fun Route.getByPage() {
-        get("/country/{country}/simulcast/{simulcast}/page/{page}/limit/{limit}") {
+        get("/country/{country}/simulcast/{simulcast}/page/{page}/limit/{limit}", {
+            tags = listOf("Anime")
+            summary = "Get animes by page"
+            description = "Get animes by page"
+            request {
+                pathParameter<String>("country") {
+                    description = "Country tag"
+                }
+                pathParameter<UUID>("simulcast") {
+                    description = "Simulcast UUID"
+                }
+                pathParameter<Int>("page") {
+                    description = "Page (Minimum 1)"
+                }
+                pathParameter<Int>("limit") {
+                    description = "Limit (Minimum 1 and Maximum 30)"
+                }
+            }
+            response {
+                HttpStatusCode.OK to {
+                    description = "Animes found"
+                    body<List<Anime>>()
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = "Internal server error"
+                }
+            }
+        }) {
             try {
                 val country = call.parameters["country"]!!
                 val simulcast = call.parameters["simulcast"]!!
@@ -75,7 +195,31 @@ class AnimeController(
     }
 
     private fun Route.create() {
-        post {
+        post({
+            tags = listOf("Anime")
+            summary = "Create an anime"
+            description = "Create an anime"
+            request {
+                body<Anime> {
+                    description = "Anime to create"
+                }
+            }
+            response {
+                HttpStatusCode.Created to {
+                    description = "Anime created"
+                    body<Anime>()
+                }
+                HttpStatusCode.BadRequest to {
+                    description = "Anime is not valid or country not found"
+                }
+                HttpStatusCode.Conflict to {
+                    description = "Anime already exists"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = "Internal server error"
+                }
+            }
+        }) {
             println("POST $prefix")
 
             try {
@@ -126,7 +270,31 @@ class AnimeController(
     }
 
     private fun Route.merge() {
-        put("/merge") {
+        put("/merge", {
+            tags = listOf("Anime")
+            summary = "Merge animes"
+            description = "Merge animes"
+            request {
+                body<List<UUID>> {
+                    description = "Animes UUID"
+                }
+            }
+            response {
+                HttpStatusCode.OK to {
+                    description = "Anime merged"
+                    body<Anime>()
+                }
+                HttpStatusCode.BadRequest to {
+                    description = "Different countries"
+                }
+                HttpStatusCode.NotFound to {
+                    description = "Anime not found"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = "Internal server error"
+                }
+            }
+        }) {
             // Get list of uuids
             val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
             println("PUT $prefix/merge")
@@ -190,7 +358,28 @@ class AnimeController(
     }
 
     private fun Route.diary() {
-        get("/diary/country/{country}/day/{day}") {
+        get("/diary/country/{country}/day/{day}", {
+            tags = listOf("Anime")
+            summary = "Get anime diary"
+            description = "Get anime diary"
+            request {
+                pathParameter<String>("country") {
+                    description = "Country tag"
+                }
+                pathParameter<Int>("day") {
+                    description = "Day of the week"
+                }
+            }
+            response {
+                HttpStatusCode.OK to {
+                    description = "Anime diary"
+                    body<List<Anime>>()
+                }
+                HttpStatusCode.BadRequest to {
+                    description = "Day is not valid"
+                }
+            }
+        }) {
             val country = call.parameters["country"]!!
             val day = call.parameters["day"]!!.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/diary/country/$country/day/$day")

@@ -7,11 +7,13 @@ import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.repositories.*
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.plugins.PluginManager
+import io.github.smiley4.ktorswaggerui.dsl.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.util.UUID
 
 class EpisodeController(
     private val platformRepository: PlatformRepository,
@@ -23,10 +25,107 @@ class EpisodeController(
 ) : IController<Episode>("/episodes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
-            getWithPage(episodeRepository)
-            getAnimeWithPage(episodeRepository)
-            getWatchlistWithPage(episodeRepository)
-            getAttachment()
+            getWithPage(episodeRepository) {
+                tags = listOf("Episode")
+                summary = "Get episodes by page"
+                description = "Get episodes by page"
+                request {
+                    pathParameter<String>("country") {
+                        description = "Country tag"
+                    }
+                    pathParameter<Int>("page") {
+                        description = "Page (Minimum 1)"
+                    }
+                    pathParameter<Int>("limit") {
+                        description = "Limit (Minimum 1 and Maximum 30)"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Episodes found"
+                        body<List<Episode>>()
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Internal server error"
+                    }
+                }
+            }
+
+            getAnimeWithPage(episodeRepository) {
+                tags = listOf("Episode")
+                summary = "Get episodes by anime and page"
+                description = "Get episodes by anime and page"
+                request {
+                    pathParameter<UUID>("uuid") {
+                        description = "Anime uuid"
+                    }
+                    pathParameter<Int>("page") {
+                        description = "Page (Minimum 1)"
+                    }
+                    pathParameter<Int>("limit") {
+                        description = "Limit (Minimum 1 and Maximum 30)"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Episodes found"
+                        body<List<Episode>>()
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Internal server error"
+                    }
+                }
+            }
+
+            getWatchlistWithPage(episodeRepository) {
+                tags = listOf("Episode", "Watchlist")
+                summary = "Get watchlist episodes"
+                description = "Get watchlist episodes"
+                request {
+                    pathParameter<Int>("page") {
+                        description = "Page (Minimum 1)"
+                    }
+                    pathParameter<Int>("limit") {
+                        description = "Limit (Minimum 1 and Maximum 30)"
+                    }
+                    body<String> {
+                        description = "Anime ids encoded in GZIP"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Episodes found"
+                        body<List<Episode>>()
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Internal server error"
+                    }
+                }
+            }
+
+            getAttachment {
+                tags = listOf("Episode", "Attachment")
+                summary = "Get episode attachment"
+                description = "Get episode attachment"
+                request {
+                    pathParameter<UUID>("uuid") {
+                        description = "Episode uuid"
+                    }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "Attachment"
+                        body<ByteArray>()
+                    }
+                    HttpStatusCode.BadRequest to {
+                        description = "Episode uuid is null or not valid"
+                    }
+                    HttpStatusCode.NoContent to {
+                        description = "Episode attachment not found"
+                    }
+                }
+            }
+
             create()
         }
     }
@@ -57,7 +156,28 @@ class EpisodeController(
     }
 
     private fun Route.create() {
-        post("/multiple") {
+        post("/multiple", {
+            tags = listOf("Episode")
+            summary = "Create multiple episodes"
+            description = "Create multiple episodes"
+            request {
+                body<List<Episode>> {
+                    description = "Episodes to create"
+                }
+            }
+            response {
+                HttpStatusCode.Created to {
+                    description = "Episodes created"
+                    body<List<Episode>>()
+                }
+                HttpStatusCode.BadRequest to {
+                    description = "Episodes is null or not valid"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = "Internal server error"
+                }
+            }
+        }) {
             println("POST $prefix/multiple")
 
             try {

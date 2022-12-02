@@ -5,6 +5,9 @@ import fr.ziedelth.repositories.IPageRepository
 import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
+import io.github.smiley4.ktorswaggerui.dsl.OpenApiRoute
+import io.github.smiley4.ktorswaggerui.dsl.get
+import io.github.smiley4.ktorswaggerui.dsl.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -42,8 +45,8 @@ open class IController<T : Serializable>(val prefix: String) {
         call.respond(HttpStatusCode.InternalServerError, e.message ?: UNKNOWN_MESSAGE_ERROR)
     }
 
-    protected fun Route.getWithPage(iPageRepository: IPageRepository<T>) {
-        get("/country/{country}/page/{page}/limit/{limit}") {
+    protected fun Route.getWithPage(iPageRepository: IPageRepository<T>, builder: OpenApiRoute.() -> Unit = { }) {
+        get("/country/{country}/page/{page}/limit/{limit}", builder) {
             try {
                 val country = call.parameters["country"]!!
                 val (page, limit) = getPageAndLimit()
@@ -62,8 +65,8 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    protected fun Route.getAnimeWithPage(iPageRepository: IPageRepository<T>) {
-        get("/anime/{uuid}/page/{page}/limit/{limit}") {
+    protected fun Route.getAnimeWithPage(iPageRepository: IPageRepository<T>, builder: OpenApiRoute.() -> Unit = { }) {
+        get("/anime/{uuid}/page/{page}/limit/{limit}", builder) {
             try {
                 val animeUuid = call.parameters["uuid"]!!
                 val (page, limit) = getPageAndLimit()
@@ -75,8 +78,8 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    protected fun Route.getWatchlistWithPage(iPageRepository: IPageRepository<T>) {
-        post("/watchlist/page/{page}/limit/{limit}") {
+    protected fun Route.getWatchlistWithPage(iPageRepository: IPageRepository<T>, builder: OpenApiRoute.() -> Unit = { }) {
+        post("/watchlist/page/{page}/limit/{limit}", builder) {
             try {
                 val watchlist = call.receive<String>()
                 val (page, limit) = getPageAndLimit()
@@ -90,8 +93,8 @@ open class IController<T : Serializable>(val prefix: String) {
         }
     }
 
-    fun Route.getAttachment() {
-        get("/attachment/{uuid}") {
+    fun Route.getAttachment(builder: OpenApiRoute.() -> Unit = { }) {
+        get("/attachment/{uuid}", builder) {
             val string = call.parameters["uuid"]!!
             val uuidRegex =
                 "^[0-9(a-f|A-F)]{8}-[0-9(a-f|A-F)]{4}-4[0-9(a-f|A-F)]{3}-[89ab][0-9(a-f|A-F)]{3}-[0-9(a-f|A-F)]{12}\$".toRegex()
