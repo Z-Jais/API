@@ -14,13 +14,13 @@ class EpisodesRelease : Listener {
     @EventHandler
     fun onEpisodesRelease(event: EpisodesReleaseEvent) {
         val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-        val animes = event.episodes.map { it.anime }.distinctBy { it!!.uuid }.filter { !lastSend.contains(it!!.uuid) }
 
         if (currentDay != lastDaySend) {
             lastDaySend = currentDay
             lastSend.clear()
         }
 
+        val animes = event.episodes.map { it.anime }.distinctBy { it!!.uuid }.filter { !lastSend.contains(it!!.uuid) }
         if (animes.isEmpty()) return
         lastSend.addAll(animes.map { it!!.uuid })
         val animeNames = animes.mapNotNull { it?.name }.sortedBy { it.lowercase() }

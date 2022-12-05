@@ -38,3 +38,4 @@ out/
 /hibernate.cfg.xml
 /test.http
 /firebase_key.json
+/plugins/
