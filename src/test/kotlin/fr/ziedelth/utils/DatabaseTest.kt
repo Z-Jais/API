@@ -1,5 +1,6 @@
 package fr.ziedelth.utils
 
+import fr.ziedelth.plugins.session
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder
@@ -39,17 +40,23 @@ object DatabaseTest {
     fun getSession(): Session = sessionFactory.openSession()
 
     fun clean() {
-        val session = getSession()
         val transaction = session.beginTransaction()
 
         try {
-            getEntities().forEach { session.createQuery("DELETE FROM ${it.simpleName}").executeUpdate() }
+            session.createQuery("DELETE FROM Episode").executeUpdate()
+            session.createQuery("DELETE FROM Manga").executeUpdate()
+            session.createQuery("DELETE FROM News").executeUpdate()
+            session.createQuery("DELETE FROM EpisodeType").executeUpdate()
+            session.createQuery("DELETE FROM LangType").executeUpdate()
+            session.createQuery("DELETE FROM Genre").executeUpdate()
+            session.createQuery("DELETE FROM Anime").executeUpdate()
+            session.createQuery("DELETE FROM Simulcast").executeUpdate()
+            session.createQuery("DELETE FROM Platform").executeUpdate()
+            session.createQuery("DELETE FROM Country").executeUpdate()
             transaction.commit()
         } catch (e: Exception) {
             transaction.rollback()
             throw e
-        } finally {
-            session.close()
         }
     }
 }

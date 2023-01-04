@@ -6,16 +6,17 @@ import fr.ziedelth.utils.DatabaseTest
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
-val countryRepository = CountryRepository { DatabaseTest.getSession() }
-val platformRepository = PlatformRepository { DatabaseTest.getSession() }
-val simulcastRepository = SimulcastRepository { DatabaseTest.getSession() }
-val genreRepository = GenreRepository { DatabaseTest.getSession() }
-val animeRepository = AnimeRepository { DatabaseTest.getSession() }
-val episodeTypeRepository = EpisodeTypeRepository { DatabaseTest.getSession() }
-val langTypeRepository = LangTypeRepository { DatabaseTest.getSession() }
-val episodeRepository = EpisodeRepository { DatabaseTest.getSession() }
-val mangaRepository = MangaRepository { DatabaseTest.getSession() }
-val newsRepository = NewsRepository { DatabaseTest.getSession() }
+val session = DatabaseTest.getSession()
+val countryRepository = CountryRepository(session)
+val platformRepository = PlatformRepository(session)
+val simulcastRepository = SimulcastRepository(session)
+val genreRepository = GenreRepository(session)
+val animeRepository = AnimeRepository(session)
+val episodeTypeRepository = EpisodeTypeRepository(session)
+val langTypeRepository = LangTypeRepository(session)
+val episodeRepository = EpisodeRepository(session)
+val mangaRepository = MangaRepository(session)
+val newsRepository = NewsRepository(session)
 
 fun Application.configureRoutingTest() {
     routing {

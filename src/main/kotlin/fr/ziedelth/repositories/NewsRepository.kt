@@ -1,12 +1,10 @@
 package fr.ziedelth.repositories
 
 import fr.ziedelth.entities.News
-import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
-class NewsRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<News>(session),
-    IPageRepository<News> {
+class NewsRepository(session: Session) : AbstractRepository<News>(session), IPageRepository<News> {
     override fun getByPage(tag: String, page: Int, limit: Int): List<News> {
         return super.getByPage(
             page,

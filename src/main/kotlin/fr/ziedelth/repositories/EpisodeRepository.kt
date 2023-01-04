@@ -1,12 +1,10 @@
 package fr.ziedelth.repositories
 
 import fr.ziedelth.entities.Episode
-import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
-class EpisodeRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Episode>(session),
-    IPageRepository<Episode> {
+class EpisodeRepository(session: Session) : AbstractRepository<Episode>(session), IPageRepository<Episode> {
     override fun getByPage(tag: String, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
             page,
@@ -35,7 +33,6 @@ class EpisodeRepository(session: () -> Session = { Database.getSession() }) : Ab
     }
 
     fun getLastNumber(episode: Episode): Int {
-        val session = getSession.invoke()
         val query = session.createQuery(
             "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType.uuid = :episodeType AND langType.uuid = :langType ORDER BY number DESC",
             Int::class.java
@@ -46,8 +43,6 @@ class EpisodeRepository(session: () -> Session = { Database.getSession() }) : Ab
         query.setParameter("season", episode.season)
         query.setParameter("episodeType", episode.episodeType?.uuid)
         query.setParameter("langType", episode.langType?.uuid)
-        val number = query.uniqueResult() ?: 0
-        session.close()
-        return number
+        return query.uniqueResult() ?: 0
     }
 }

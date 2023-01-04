@@ -1,21 +1,16 @@
 package fr.ziedelth.repositories
 
 import fr.ziedelth.entities.Manga
-import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
-class MangaRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Manga>(session),
-    IPageRepository<Manga> {
+class MangaRepository(session: Session) : AbstractRepository<Manga>(session), IPageRepository<Manga> {
     fun getByEAN(tag: String, ean: Long): Manga? {
-        val session = getSession.invoke()
         val query = session.createQuery("FROM Manga WHERE anime.country.tag = :tag AND ean = :ean", Manga::class.java)
         query.maxResults = 1
         query.setParameter("tag", tag)
         query.setParameter("ean", ean)
-        val result = query.uniqueResult()
-        session.close()
-        return result
+        return query.uniqueResult()
     }
 
     override fun getByPage(tag: String, page: Int, limit: Int): List<Manga> {
