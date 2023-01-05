@@ -12,6 +12,7 @@ import java.io.FileInputStream
 
 object Notifications {
     init {
+        println("Initializing Firebase")
         val file = File("firebase_key.json")
 
         if (file.exists()) {
@@ -19,6 +20,8 @@ object Notifications {
                 FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(FileInputStream(file))).build()
             )
         }
+
+        println("Firebase initialized")
     }
 
     fun send(title: String? = null, body: String? = null) {

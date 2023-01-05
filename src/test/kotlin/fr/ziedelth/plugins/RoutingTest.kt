@@ -14,8 +14,6 @@ val animeRepository = AnimeRepository { DatabaseTest.getSession() }
 val episodeTypeRepository = EpisodeTypeRepository { DatabaseTest.getSession() }
 val langTypeRepository = LangTypeRepository { DatabaseTest.getSession() }
 val episodeRepository = EpisodeRepository { DatabaseTest.getSession() }
-val mangaRepository = MangaRepository { DatabaseTest.getSession() }
-val newsRepository = NewsRepository { DatabaseTest.getSession() }
 
 fun Application.configureRoutingTest() {
     routing {
@@ -23,7 +21,7 @@ fun Application.configureRoutingTest() {
         PlatformController(platformRepository).getRoutes(this)
         SimulcastController(simulcastRepository).getRoutes(this)
         GenreController(genreRepository).getRoutes(this)
-        AnimeController(countryRepository, animeRepository, episodeRepository, mangaRepository).getRoutes(this)
+        AnimeController(countryRepository, animeRepository, episodeRepository).getRoutes(this)
         EpisodeTypeController(episodeTypeRepository).getRoutes(this)
         LangTypeController(langTypeRepository).getRoutes(this)
         EpisodeController(
@@ -34,7 +32,5 @@ fun Application.configureRoutingTest() {
             langTypeRepository,
             episodeRepository
         ).getRoutes(this)
-        NewsController(countryRepository, platformRepository, newsRepository).getRoutes(this)
-        MangaController(platformRepository, animeRepository, mangaRepository).getRoutes(this)
     }
 }

@@ -28,9 +28,14 @@ class SimulcastController(private val simulcastRepository: SimulcastRepository) 
                     }
                 }
             }) {
-                val country = call.parameters["country"]!!
-                println("GET $prefix/country/$country")
-                call.respond(simulcastRepository.getAll(country))
+                try {
+                    val country = call.parameters["country"]!!
+                    println("GET $prefix/country/$country")
+                    call.respond(simulcastRepository.getAll(country))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, e)
+                }
             }
         }
     }

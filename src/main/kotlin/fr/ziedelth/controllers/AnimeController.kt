@@ -5,7 +5,6 @@ import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.repositories.EpisodeRepository
-import fr.ziedelth.repositories.MangaRepository
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
 import io.github.smiley4.ktorswaggerui.dsl.get
@@ -24,8 +23,7 @@ private const val NOT_FOUND = "No anime found"
 class AnimeController(
     private val countryRepository: CountryRepository,
     private val animeRepository: AnimeRepository,
-    private val episodeRepository: EpisodeRepository,
-    private val mangaRepository: MangaRepository
+    private val episodeRepository: EpisodeRepository
 ) :
     IController<Anime>("/animes") {
     fun getRoutes(routing: Routing) {
@@ -329,9 +327,6 @@ class AnimeController(
             val episodes =
                 animes.map { episodeRepository.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
                     .toMutableSet()
-            // Get all mangas
-            val mangas = animes.map { mangaRepository.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
-                .toMutableSet()
 
             val firstAnime = animes.first()
 
@@ -352,7 +347,6 @@ class AnimeController(
 
             ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
             episodeRepository.saveAll(episodes.map { it.copy(anime = savedAnime) })
-            mangaRepository.saveAll(mangas.map { it.copy(anime = savedAnime) })
 
             // Delete animes
             animeRepository.deleteAll(animes)
