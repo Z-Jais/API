@@ -32,7 +32,7 @@ class AnimeController(
             getByPage()
 
             getWatchlistWithPage(animeRepository) {
-                tags = listOf("Anime", "Watchlist")
+                tags = listOf("Anime")
                 summary = "Get watchlist animes"
                 description = "Get watchlist animes"
                 request {
@@ -58,7 +58,7 @@ class AnimeController(
             }
 
             getAttachment {
-                tags = listOf("Anime", "Attachment")
+                tags = listOf("Anime")
                 summary = "Get anime attachment"
                 description = "Get anime attachment"
                 request {

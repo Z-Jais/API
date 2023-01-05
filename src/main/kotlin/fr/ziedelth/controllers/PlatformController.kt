@@ -18,7 +18,7 @@ class PlatformController(private val platformRepository: PlatformRepository) : I
             getAll()
 
             getAttachment {
-                tags = listOf("Platform", "Attachment")
+                tags = listOf("Platform")
                 summary = "Get platform attachment"
                 description = "Get platform attachment"
                 request {

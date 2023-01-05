@@ -80,7 +80,7 @@ class EpisodeController(
             }
 
             getWatchlistWithPage(episodeRepository) {
-                tags = listOf("Episode", "Watchlist")
+                tags = listOf("Episode")
                 summary = "Get watchlist episodes"
                 description = "Get watchlist episodes"
                 request {
@@ -106,7 +106,7 @@ class EpisodeController(
             }
 
             getAttachment {
-                tags = listOf("Episode", "Attachment")
+                tags = listOf("Episode")
                 summary = "Get episode attachment"
                 description = "Get episode attachment"
                 request {
