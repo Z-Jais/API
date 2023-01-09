@@ -4,8 +4,7 @@ import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.utils.Notifications
 import fr.ziedelth.utils.plugins.events.EventHandler
 import fr.ziedelth.utils.plugins.events.Listener
-import java.util.Calendar
-import java.util.UUID
+import java.util.*
 
 class EpisodesRelease : Listener {
     private var lastDaySend = 0

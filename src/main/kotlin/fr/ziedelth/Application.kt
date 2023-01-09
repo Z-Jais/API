@@ -40,11 +40,6 @@ fun main() {
         val episodes = session.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java).list()
         episodes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
         println("Episodes : ${episodes.size}")
-
-        // Get all mangas from database
-        val mangas = session.createQuery("SELECT uuid, cover FROM Manga", Tuple::class.java).list()
-        mangas.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
-        println("Mangas : ${mangas.size}")
     } catch (e: Exception) {
         e.printStackTrace()
     } finally {
