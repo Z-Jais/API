@@ -1,6 +1,7 @@
 package fr.ziedelth.repositories
 
 import org.hibernate.Session
+import org.hibernate.jpa.AvailableHints
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
@@ -17,23 +18,28 @@ open class AbstractRepository<T>(val session: Session) {
         val query = session.createQuery("SELECT uuid FROM $entityName WHERE $field = :$field", UUID::class.java)
         query.maxResults = 1
         query.setParameter(field, value)
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
         return query.uniqueResult() != null
     }
 
     fun findAll(uuids: List<UUID>): List<T> {
         return session.createQuery("FROM $entityName WHERE uuid IN :uuids", entityClass)
             .setParameter("uuids", uuids)
+            .setHint(AvailableHints.HINT_READ_ONLY, true)
             .resultList
     }
 
     fun getAll(): MutableList<T> {
-        return session.createQuery("FROM $entityName", entityClass).list()
+        return session.createQuery("FROM $entityName", entityClass)
+            .setHint(AvailableHints.HINT_READ_ONLY, true)
+            .resultList
     }
 
     fun getAllBy(field: String, value: Any?): MutableList<T> {
         val query = session.createQuery("FROM $entityName WHERE $field = :value", entityClass)
         query.setParameter("value", value)
-        return query.list()
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
+        return query.resultList
     }
 
     fun save(entity: T): T {
@@ -97,6 +103,7 @@ open class AbstractRepository<T>(val session: Session) {
         pair.forEach { query.setParameter(it.first, it.second) }
         query.firstResult = (limit * page) - limit
         query.maxResults = limit
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
         return query.list()
     }
 }

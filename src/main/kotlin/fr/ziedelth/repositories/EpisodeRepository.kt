@@ -2,6 +2,7 @@ package fr.ziedelth.repositories
 
 import fr.ziedelth.entities.Episode
 import org.hibernate.Session
+import org.hibernate.jpa.AvailableHints
 import java.util.*
 
 class EpisodeRepository(session: Session) : AbstractRepository<Episode>(session), IPageRepository<Episode> {
@@ -43,6 +44,7 @@ class EpisodeRepository(session: Session) : AbstractRepository<Episode>(session)
         query.setParameter("season", episode.season)
         query.setParameter("episodeType", episode.episodeType?.uuid)
         query.setParameter("langType", episode.langType?.uuid)
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
         return query.uniqueResult() ?: 0
     }
 }

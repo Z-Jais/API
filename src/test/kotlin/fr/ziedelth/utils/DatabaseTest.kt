@@ -44,8 +44,6 @@ object DatabaseTest {
 
         try {
             session.createQuery("DELETE FROM Episode").executeUpdate()
-            session.createQuery("DELETE FROM Manga").executeUpdate()
-            session.createQuery("DELETE FROM News").executeUpdate()
             session.createQuery("DELETE FROM EpisodeType").executeUpdate()
             session.createQuery("DELETE FROM LangType").executeUpdate()
             session.createQuery("DELETE FROM Genre").executeUpdate()

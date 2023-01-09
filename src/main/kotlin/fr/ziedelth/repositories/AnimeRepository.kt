@@ -2,6 +2,7 @@ package fr.ziedelth.repositories
 
 import fr.ziedelth.entities.Anime
 import org.hibernate.Session
+import org.hibernate.jpa.AvailableHints
 import java.util.*
 
 class AnimeRepository(session: Session) : AbstractRepository<Anime>(session), IPageRepository<Anime> {
@@ -13,6 +14,7 @@ class AnimeRepository(session: Session) : AbstractRepository<Anime>(session), IP
         query.maxResults = 1
         query.setParameter("tag", tag)
         query.setParameter("hash", hash)
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
         return query.uniqueResult()
     }
 
@@ -24,6 +26,7 @@ class AnimeRepository(session: Session) : AbstractRepository<Anime>(session), IP
         query.maxResults = 1
         query.setParameter("tag", tag)
         query.setParameter("name", name.lowercase())
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
         return query.uniqueResult()
     }
 
@@ -34,6 +37,7 @@ class AnimeRepository(session: Session) : AbstractRepository<Anime>(session), IP
         )
         query.setParameter("tag", tag)
         query.setParameter("name", name.lowercase())
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
         return query.list()
     }
 
@@ -63,6 +67,7 @@ class AnimeRepository(session: Session) : AbstractRepository<Anime>(session), IP
         )
         query.setParameter("tag", tag)
         query.setParameter("day", day)
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
         return query.list() ?: emptyList()
     }
 
