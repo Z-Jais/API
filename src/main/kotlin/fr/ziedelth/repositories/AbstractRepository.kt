@@ -1,59 +1,48 @@
 package fr.ziedelth.repositories
 
-import fr.ziedelth.utils.Database
 import org.hibernate.Session
+import org.hibernate.jpa.AvailableHints
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
-open class AbstractRepository<T>(val getSession: () -> Session = { Database.getSession() }) {
+open class AbstractRepository<T>(val session: Session) {
     private val entityClass: Class<T> =
         (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     private val entityName: String = entityClass.simpleName
 
     fun find(uuid: UUID): T? {
-        val session = getSession.invoke()
-        val entity = session.find(entityClass, uuid)
-        session.close()
-        return entity
+        return session.find(entityClass, uuid)
     }
 
     fun exists(field: String, value: Any?): Boolean {
-        val session = getSession.invoke()
         val query = session.createQuery("SELECT uuid FROM $entityName WHERE $field = :$field", UUID::class.java)
         query.maxResults = 1
         query.setParameter(field, value)
-        val uuid = query.uniqueResult()
-        session.close()
-        return uuid != null
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
+        return query.uniqueResult() != null
     }
 
     fun findAll(uuids: List<UUID>): List<T> {
-        val session = getSession.invoke()
-        val entities = session.createQuery("FROM $entityName WHERE uuid IN :uuids", entityClass)
+        return session.createQuery("FROM $entityName WHERE uuid IN :uuids", entityClass)
             .setParameter("uuids", uuids)
+            .setHint(AvailableHints.HINT_READ_ONLY, true)
             .resultList
-        session.close()
-        return entities
     }
 
     fun getAll(): MutableList<T> {
-        val session = getSession.invoke()
-        val list = session.createQuery("FROM $entityName", entityClass).list()
-        session.close()
-        return list
+        return session.createQuery("FROM $entityName", entityClass)
+            .setHint(AvailableHints.HINT_READ_ONLY, true)
+            .resultList
     }
 
     fun getAllBy(field: String, value: Any?): MutableList<T> {
-        val session = getSession.invoke()
         val query = session.createQuery("FROM $entityName WHERE $field = :value", entityClass)
         query.setParameter("value", value)
-        val list = query.list()
-        session.close()
-        return list
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
+        return query.resultList
     }
 
     fun save(entity: T): T {
-        val session = getSession.invoke()
         val transaction = session.beginTransaction()
 
         try {
@@ -64,13 +53,10 @@ open class AbstractRepository<T>(val getSession: () -> Session = { Database.getS
         } catch (e: Exception) {
             transaction.rollback()
             throw e
-        } finally {
-            session.close()
         }
     }
 
     fun saveAll(entities: List<T>): List<T> {
-        val session = getSession.invoke()
         val transaction = session.beginTransaction()
 
         try {
@@ -85,13 +71,10 @@ open class AbstractRepository<T>(val getSession: () -> Session = { Database.getS
         } catch (e: Exception) {
             transaction.rollback()
             throw e
-        } finally {
-            session.close()
         }
     }
 
     fun delete(entity: T) {
-        val session = getSession.invoke()
         val transaction = session.beginTransaction()
 
         try {
@@ -100,13 +83,10 @@ open class AbstractRepository<T>(val getSession: () -> Session = { Database.getS
         } catch (e: Exception) {
             transaction.rollback()
             throw e
-        } finally {
-            session.close()
         }
     }
 
     fun deleteAll(entities: List<T>) {
-        val session = getSession.invoke()
         val transaction = session.beginTransaction()
 
         try {
@@ -115,19 +95,15 @@ open class AbstractRepository<T>(val getSession: () -> Session = { Database.getS
         } catch (e: Exception) {
             transaction.rollback()
             throw e
-        } finally {
-            session.close()
         }
     }
 
     fun getByPage(page: Int, limit: Int, queryRaw: String, vararg pair: Pair<String, Any>): List<T> {
-        val session = getSession.invoke()
         val query = session.createQuery(queryRaw, entityClass)
         pair.forEach { query.setParameter(it.first, it.second) }
         query.firstResult = (limit * page) - limit
         query.maxResults = limit
-        val list = query.list()
-        session.close()
-        return list
+        query.setHint(AvailableHints.HINT_READ_ONLY, true)
+        return query.list()
     }
 }

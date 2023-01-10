@@ -28,11 +28,4 @@ fun Application.configureHTTP() {
         gson {
         }
     }
-
-//    install(WebSockets) {
-//        pingPeriod = Duration.ofSeconds(15)
-//        timeout = Duration.ofSeconds(15)
-//        maxFrameSize = Long.MAX_VALUE
-//        masking = false
-//    }
 }

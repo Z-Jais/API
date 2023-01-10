@@ -4,17 +4,18 @@ import fr.ziedelth.controllers.*
 import fr.ziedelth.repositories.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import org.hibernate.Session
 
-fun Application.configureRouting() {
+fun Application.configureRouting(session: Session) {
     routing {
-        val countryRepository = CountryRepository()
-        val platformRepository = PlatformRepository()
-        val simulcastRepository = SimulcastRepository()
-        val genreRepository = GenreRepository()
-        val animeRepository = AnimeRepository()
-        val episodeTypeRepository = EpisodeTypeRepository()
-        val langTypeRepository = LangTypeRepository()
-        val episodeRepository = EpisodeRepository()
+        val countryRepository = CountryRepository(session)
+        val platformRepository = PlatformRepository(session)
+        val simulcastRepository = SimulcastRepository(session)
+        val genreRepository = GenreRepository(session)
+        val animeRepository = AnimeRepository(session)
+        val episodeTypeRepository = EpisodeTypeRepository(session)
+        val langTypeRepository = LangTypeRepository(session)
+        val episodeRepository = EpisodeRepository(session)
 
         CountryController(countryRepository).getRoutes(this)
         PlatformController(platformRepository).getRoutes(this)
