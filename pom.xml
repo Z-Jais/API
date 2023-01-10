@@ -24,6 +24,7 @@
             **/fr/ziedelth/listeners/**,
             **/fr/ziedelth/plugins/**,
             **/fr/ziedelth/utils/**,
+            **/fr/ziedelth/entities/**,
             **/fr/ziedelth/Application.kt
         </sonar.coverage.exclusions>
     </properties>
