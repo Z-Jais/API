@@ -1,6 +1,5 @@
 package fr.ziedelth
 
-import io.ktor.server.application.Application
 import fr.ziedelth.listeners.ListenerManager
 import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
@@ -8,6 +7,7 @@ import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.Notifications
 import fr.ziedelth.utils.plugins.PluginManager
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import jakarta.persistence.Tuple
@@ -80,6 +80,6 @@ fun Application.myApplicationModule() {
     println("Configure server...")
     configureHTTP()
     println("Configure routing...")
-    configureRouting()
+    configureRouting(Database.getSession())
     println("Server configured and ready")
 }
