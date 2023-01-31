@@ -3,12 +3,11 @@ package fr.ziedelth.utils
 import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.net.URL
+import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.Executors
-import javax.imageio.ImageIO
 import kotlin.math.max
 
 object ImageCache {
@@ -48,13 +47,12 @@ object ImageCache {
         }
     }
 
-    private fun BufferedImage.toByteArray(): ByteArray {
-        val baos = ByteArrayOutputStream()
-        ImageIO.write(this, "jpg", baos)
-        baos.flush()
-        val bytes = baos.toByteArray()
-        baos.close()
-        return bytes
+    private fun saveImage(string: String?): InputStream {
+        val inputStream = URL(string).openStream()
+        val tmpFile = Files.createTempFile(UUID.randomUUID().toString(), ".jpg").toFile()
+        val outputStream = tmpFile.outputStream()
+        outputStream.use { inputStream.copyTo(it) }
+        return tmpFile.inputStream()
     }
 
     fun cachingNetworkImage(uuid: UUID, url: String) {
@@ -62,8 +60,7 @@ object ImageCache {
 
         newFixedThreadPool.submit {
             try {
-                val urlImage = ImageIO.read(URL(url))
-                val bytes = urlImage.toByteArray()
+                val bytes = saveImage(url).readBytes()
                 cache[uuid] = Image(bytes)
 
                 val webp = encodeToWebP(bytes)
