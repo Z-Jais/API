@@ -11,7 +11,7 @@ class EpisodesRelease : Listener {
     private var lastSend = mutableListOf<UUID>()
 
     @EventHandler
-    fun onEpisodesRelease(event: EpisodesReleaseEvent) {
+    suspend fun onEpisodesRelease(event: EpisodesReleaseEvent) {
         val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
 
         if (currentDay != lastDaySend) {
@@ -24,6 +24,7 @@ class EpisodesRelease : Listener {
         lastSend.addAll(animes.map { it!!.uuid })
         val animeNames = animes.mapNotNull { it?.name }.sortedBy { it.lowercase() }
         println("Sending notification for ${animes.size} animes: ${animeNames.joinToString(", ")}")
+
         Notifications.send(body = animeNames.joinToString(", "))
     }
 }

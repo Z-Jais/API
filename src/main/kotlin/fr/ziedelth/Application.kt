@@ -6,7 +6,6 @@ import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
-import fr.ziedelth.utils.Notifications
 import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -14,7 +13,13 @@ import jakarta.persistence.Tuple
 import nu.pattern.OpenCV
 import java.util.*
 
-fun main() {
+fun main(args: Array<String>) {
+    val isDebug = args.isNotEmpty() && args[0] == "debug"
+
+    if (isDebug) {
+        println("DEBUG MODE")
+    }
+
     println("Loading OpenCV...")
     OpenCV.loadShared()
     println("OpenCV loaded")
@@ -59,12 +64,6 @@ fun main() {
                 if (line == "reload") {
                     PluginManager.reload()
                     ListenerManager()
-                } else if (line.startsWith("send")) {
-                    val content = line.removePrefix("send").trim()
-
-                    if (content.isNotEmpty()) {
-                        Notifications.send(body = content)
-                    }
                 }
             }
         }.start()
@@ -73,7 +72,7 @@ fun main() {
     }
 
     println("Starting server...")
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::myApplicationModule).start(wait = true)
+    embeddedServer(Netty, port = if (isDebug) 37100 else 8080, host = "0.0.0.0", module = Application::myApplicationModule).start(wait = true)
 }
 
 fun Application.myApplicationModule() {

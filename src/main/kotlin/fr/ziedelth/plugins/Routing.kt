@@ -2,8 +2,10 @@ package fr.ziedelth.plugins
 
 import fr.ziedelth.controllers.*
 import fr.ziedelth.repositories.*
+import fr.ziedelth.utils.Notifications
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
 
 fun Application.configureRouting() {
     routing {
@@ -31,5 +33,22 @@ fun Application.configureRouting() {
             langTypeRepository,
             episodeRepository
         ).getRoutes(this)
+
+        webSocket {
+            val connection = Notifications.addConnection(this)
+            println("New connection: ${connection.id} (${Notifications.connections.size})")
+
+            try {
+                while (true) {
+                    val message = incoming.receive()
+                    println(message)
+                }
+            } catch (e: Exception) {
+//                e.printStackTrace()
+            } finally {
+                Notifications.removeConnection(connection)
+                println("Connection closed: ${connection.id} (${Notifications.connections.size})")
+            }
+        }
     }
 }
