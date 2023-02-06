@@ -34,6 +34,7 @@ object PluginManager {
             listener::class.java.methods.filter { it.isAnnotationPresent(EventHandler::class.java) && event::class.java == it.parameters[0]?.type }
                 .forEach { method ->
                     println("Calling event ${event::class.java.simpleName} on ${listener::class.java.name}")
+                    println(method.parameters.map { it.type }.joinToString(" -> "))
 
                     try {
                         method.invoke(listener, event)

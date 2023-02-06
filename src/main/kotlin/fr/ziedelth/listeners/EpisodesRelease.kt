@@ -11,7 +11,7 @@ class EpisodesRelease : Listener {
     private var lastSend = mutableListOf<UUID>()
 
     @EventHandler
-    suspend fun onEpisodesRelease(event: EpisodesReleaseEvent) {
+    fun onEpisodesRelease(event: EpisodesReleaseEvent) {
         val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
 
         if (currentDay != lastDaySend) {

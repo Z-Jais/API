@@ -10,6 +10,7 @@ import com.google.firebase.messaging.Message
 import com.google.gson.Gson
 import fr.ziedelth.entities.Notification
 import io.ktor.websocket.*
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileInputStream
 import java.util.*
@@ -17,9 +18,14 @@ import java.util.*
 object Notifications {
     class Connection(val session: DefaultWebSocketSession) {
         val id: UUID = UUID.randomUUID()
+
+        suspend fun send(string: String) {
+            session.send(Frame.Text(string))
+        }
     }
 
     val connections: MutableSet<Connection> = Collections.synchronizedSet(LinkedHashSet())
+    private var initialized = false
 
     init {
         println("Initializing Firebase")
@@ -29,25 +35,30 @@ object Notifications {
             FirebaseApp.initializeApp(
                 FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(FileInputStream(file))).build()
             )
+
+            initialized = true
         }
 
         println("Firebase initialized")
     }
 
-    suspend fun send(title: String? = null, body: String? = null) {
-        val json = Gson().toJson(Notification(title, body))
+    fun send(title: String? = null, body: String? = null) {
+        if (initialized) {
+            FirebaseMessaging.getInstance().send(
+                Message.builder().setAndroidConfig(
+                    AndroidConfig.builder().setNotification(
+                        AndroidNotification.builder()
+                            .setTitle(title)
+                            .setBody(body).build()
+                    ).build()
+                ).setTopic("all").build()
+            )
+        }
 
-        FirebaseMessaging.getInstance().send(
-            Message.builder().setAndroidConfig(
-                AndroidConfig.builder().setNotification(
-                    AndroidNotification.builder()
-                        .setTitle(title)
-                        .setBody(body).build()
-                ).build()
-            ).setTopic("all").build()
-        )
-
-        connections.forEach { it.session.send(Frame.Text(json)) }
+        runBlocking {
+            val json = Gson().toJson(Notification(title, body))
+            connections.forEach { it.send(json) }
+        }
     }
 
     fun addConnection(session: DefaultWebSocketSession): Connection {
