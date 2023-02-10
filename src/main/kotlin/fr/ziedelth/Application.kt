@@ -1,12 +1,12 @@
 package fr.ziedelth
 
-import io.ktor.server.application.Application
 import fr.ziedelth.listeners.ListenerManager
 import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.plugins.PluginManager
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import jakarta.persistence.Tuple
@@ -33,18 +33,20 @@ fun main(args: Array<String>) {
         // Get all platforms from database
         val platforms =
             session.createQuery("SELECT uuid, image FROM Platform WHERE image LIKE 'http%'", Tuple::class.java).list()
-        platforms.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
         println("Platforms : ${platforms.size}")
-
         // Get all animes from database
         val animes = session.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java).list()
-        animes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
         println("Animes : ${animes.size}")
 
         // Get all episodes from database
         val episodes = session.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java).list()
-        episodes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
         println("Episodes : ${episodes.size}")
+
+        if (!isDebug) {
+            platforms.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
+            animes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
+            episodes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
+        }
     } catch (e: Exception) {
         e.printStackTrace()
     } finally {
