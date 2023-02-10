@@ -5,13 +5,16 @@ import fr.ziedelth.utils.Database
 import org.hibernate.Session
 import java.util.*
 
+private const val ORDER =
+    "ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name"
+
 class EpisodeRepository(session: () -> Session = { Database.getSession() }) : AbstractRepository<Episode>(session),
     IPageRepository<Episode> {
     override fun getByPage(tag: String, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
             page,
             limit,
-            "FROM Episode WHERE anime.country.tag = :tag ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
+            "FROM Episode WHERE anime.country.tag = :tag $ORDER",
             "tag" to tag
         )
     }
@@ -29,8 +32,37 @@ class EpisodeRepository(session: () -> Session = { Database.getSession() }) : Ab
         return super.getByPage(
             page,
             limit,
-            "FROM Episode WHERE anime.uuid IN :list ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name",
+            "FROM Episode WHERE anime.uuid IN :list $ORDER",
             "list" to list
+        )
+    }
+
+    fun getByPageWithListFilter(
+        animes: List<UUID>,
+        episodes: List<UUID>,
+        episodeTypes: List<UUID>,
+        langTypes: List<UUID>,
+        page: Int,
+        limit: Int
+    ): List<Episode> {
+        if (episodes.isEmpty())
+            return super.getByPage(
+                page,
+                limit,
+                "FROM Episode WHERE anime.uuid IN :animes AND episodeType.uuid IN :episodeTypes AND langType.uuid IN :langTypes $ORDER",
+                "animes" to animes,
+                "episodeTypes" to episodeTypes,
+                "langTypes" to langTypes
+            )
+
+        return super.getByPage(
+            page,
+            limit,
+            "FROM Episode WHERE uuid NOT IN :episodes AND anime.uuid IN :animes AND episodeType.uuid IN :episodeTypes AND langType.uuid IN :langTypes $ORDER",
+            "animes" to animes,
+            "episodes" to episodes,
+            "episodeTypes" to episodeTypes,
+            "langTypes" to langTypes
         )
     }
 

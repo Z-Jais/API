@@ -1,10 +1,13 @@
 package fr.ziedelth.controllers
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.repositories.*
+import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.http.*
@@ -12,6 +15,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.util.*
 
 class EpisodeController(
     private val platformRepository: PlatformRepository,
@@ -26,8 +30,38 @@ class EpisodeController(
             getWithPage(episodeRepository)
             getAnimeWithPage(episodeRepository)
             getWatchlistWithPage(episodeRepository)
+            getWatchlistFilter()
             getAttachment()
             create()
+        }
+    }
+
+    private fun Route.getWatchlistFilter() {
+        post("/watchlist_filter/page/{page}/limit/{limit}") {
+            try {
+                val watchlist = call.receive<String>()
+                val (page, limit) = getPageAndLimit()
+                println("POST $prefix/watchlist_filter/page/$page/limit/$limit")
+                val dataFromGzip = Gson().fromJson(Decoder.fromGzip(watchlist), JsonObject::class.java)
+
+                val animes = dataFromGzip.getAsJsonArray("animes").map { UUID.fromString(it.asString) }
+                val episodes = dataFromGzip.getAsJsonArray("episodes").map { UUID.fromString(it.asString) }
+                val episodeTypes = dataFromGzip.getAsJsonArray("episodeTypes").map { UUID.fromString(it.asString) }
+                val langTypes = dataFromGzip.getAsJsonArray("langTypes").map { UUID.fromString(it.asString) }
+
+                call.respond(
+                    episodeRepository.getByPageWithListFilter(
+                        animes,
+                        episodes,
+                        episodeTypes,
+                        langTypes,
+                        page,
+                        limit
+                    )
+                )
+            } catch (e: Exception) {
+                printError(call, e)
+            }
         }
     }
 
