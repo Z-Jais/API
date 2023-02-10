@@ -41,7 +41,7 @@ class EpisodeController(
             try {
                 val watchlist = call.receive<String>()
                 val (page, limit) = getPageAndLimit()
-                println("POST $prefix/watchlist/page/$page/limit/$limit")
+                println("POST $prefix/watchlist_filter/page/$page/limit/$limit")
                 val dataFromGzip = Gson().fromJson(Decoder.fromGzip(watchlist), JsonObject::class.java)
 
                 val animes = dataFromGzip.getAsJsonArray("animes").map { UUID.fromString(it.asString) }

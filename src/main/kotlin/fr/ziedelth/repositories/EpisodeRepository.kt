@@ -45,10 +45,20 @@ class EpisodeRepository(session: () -> Session = { Database.getSession() }) : Ab
         page: Int,
         limit: Int
     ): List<Episode> {
+        if (episodes.isEmpty())
+            return super.getByPage(
+                page,
+                limit,
+                "FROM Episode WHERE anime.uuid IN :animes AND episodeType.uuid IN :episodeTypes AND langType.uuid IN :langTypes $ORDER",
+                "animes" to animes,
+                "episodeTypes" to episodeTypes,
+                "langTypes" to langTypes
+            )
+
         return super.getByPage(
             page,
             limit,
-            "FROM Episode WHERE anime.uuid IN :animes AND uuid NOT IN :episodes AND episodeType.uuid IN :episodeTypes AND langType.uuid IN :langTypes $ORDER",
+            "FROM Episode WHERE uuid NOT IN :episodes AND anime.uuid IN :animes AND episodeType.uuid IN :episodeTypes AND langType.uuid IN :langTypes $ORDER",
             "animes" to animes,
             "episodes" to episodes,
             "episodeTypes" to episodeTypes,
