@@ -13,7 +13,7 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.version>1.8.10</kotlin.version>
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
-        <logback_version>1.4.5</logback_version>
+        <logback_version>1.4.6</logback_version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <main.class>fr.ziedelth.ApplicationKt</main.class>
