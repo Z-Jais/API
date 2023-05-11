@@ -2,21 +2,22 @@ package fr.ziedelth.plugins
 
 import fr.ziedelth.controllers.*
 import fr.ziedelth.repositories.*
+import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.Notifications
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 
-fun Application.configureRouting() {
+fun Application.configureRouting(database: Database) {
     routing {
-        val countryRepository = CountryRepository()
-        val platformRepository = PlatformRepository()
-        val simulcastRepository = SimulcastRepository()
-        val genreRepository = GenreRepository()
-        val animeRepository = AnimeRepository()
-        val episodeTypeRepository = EpisodeTypeRepository()
-        val langTypeRepository = LangTypeRepository()
-        val episodeRepository = EpisodeRepository()
+        val countryRepository = CountryRepository(database)
+        val platformRepository = PlatformRepository(database)
+        val simulcastRepository = SimulcastRepository(database)
+        val genreRepository = GenreRepository(database)
+        val animeRepository = AnimeRepository(database)
+        val episodeTypeRepository = EpisodeTypeRepository(database)
+        val langTypeRepository = LangTypeRepository(database)
+        val episodeRepository = EpisodeRepository(database)
 
         CountryController(countryRepository).getRoutes(this)
         PlatformController(platformRepository).getRoutes(this)
@@ -44,7 +45,7 @@ fun Application.configureRouting() {
                     println(message)
                 }
             } catch (e: Exception) {
-//                e.printStackTrace()
+                e.printStackTrace()
             } finally {
                 Notifications.removeConnection(connection)
                 println("Connection closed: ${connection.id} (${Notifications.connections.size})")

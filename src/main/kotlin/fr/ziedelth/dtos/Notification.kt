@@ -1,4 +1,4 @@
-package fr.ziedelth.entities
+package fr.ziedelth.dtos
 
 data class Notification(
     val title: String?,

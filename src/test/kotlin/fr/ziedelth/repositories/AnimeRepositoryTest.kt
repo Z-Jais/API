@@ -8,6 +8,7 @@ import fr.ziedelth.plugins.countryRepository
 import fr.ziedelth.plugins.simulcastRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.expect
 
@@ -164,10 +165,13 @@ internal class AnimeRepositoryTest : AbstractAPITest() {
         expect(1) { page2.size }
     }
 
-//    @Test
-//    fun getDiary() {
-//        val country = countryRepository.getAll().first()
-//        val diary = animeRepository.getDiary(country.tag!!, Calendar.getInstance().get(Calendar.DAY_OF_WEEK))
-//        expect(3) { diary.size }
-//    }
+    @Test
+    fun getDiary() {
+        val country = countryRepository.getAll().first()
+        val weekDay = OffsetDateTime.now().dayOfWeek.value
+        val yesterday = OffsetDateTime.now().minusDays(1).dayOfWeek.value
+
+        expect(1) { animeRepository.getDiary(country.tag!!, weekDay).size }
+        expect(1) { animeRepository.getDiary(country.tag!!, yesterday).size }
+    }
 }

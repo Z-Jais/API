@@ -1,10 +1,13 @@
 package fr.ziedelth.controllers
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.repositories.EpisodeRepository
+import fr.ziedelth.utils.Decoder
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.RequestCache
 import io.ktor.http.*
@@ -26,6 +29,7 @@ class AnimeController(
             getByPage()
             getWatchlistWithPage(animeRepository)
             getAttachment()
+            getMissing()
             create()
             merge()
             diary()
@@ -66,6 +70,35 @@ class AnimeController(
                 }
 
                 call.respond(RequestCache.get(uuidRequest, country, page, limit, simulcast)!!.value!!)
+            } catch (e: Exception) {
+                printError(call, e)
+            }
+        }
+    }
+
+    private fun Route.getMissing() {
+        post("/missing/page/{page}/limit/{limit}") {
+            try {
+                val watchlist = call.receive<String>()
+                val (page, limit) = getPageAndLimit()
+                println("POST $prefix/missing/page/$page/limit/$limit")
+                val dataFromGzip = Gson().fromJson(Decoder.fromGzip(watchlist), JsonObject::class.java)
+
+                val animes = dataFromGzip.getAsJsonArray("animes").map { UUID.fromString(it.asString) }
+                val episodes = dataFromGzip.getAsJsonArray("episodes").map { UUID.fromString(it.asString) }
+                val episodeTypes = dataFromGzip.getAsJsonArray("episodeTypes").map { UUID.fromString(it.asString) }
+                val langTypes = dataFromGzip.getAsJsonArray("langTypes").map { UUID.fromString(it.asString) }
+
+                call.respond(
+                    animeRepository.getMissingAnimes(
+                        animes,
+                        episodes,
+                        episodeTypes,
+                        langTypes,
+                        page,
+                        limit
+                    )
+                )
             } catch (e: Exception) {
                 printError(call, e)
             }
@@ -188,7 +221,12 @@ class AnimeController(
             val country = call.parameters["country"]!!
             val day = call.parameters["day"]!!.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
             println("GET $prefix/diary/country/$country/day/$day")
-            call.respond(animeRepository.getDiary(country, day))
+
+            try {
+                call.respond(animeRepository.getDiary(country, day))
+            } catch (e: Exception) {
+                printError(call, e)
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package fr.ziedelth.controllers
 import com.google.gson.Gson
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.*
+import fr.ziedelth.entities.Platform
 import fr.ziedelth.plugins.*
 import fr.ziedelth.utils.Encoder
 import io.ktor.client.plugins.contentnegotiation.*

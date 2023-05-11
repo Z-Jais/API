@@ -18,9 +18,7 @@ object ImageCache {
 
             other as Image
 
-            if (!bytes.contentEquals(other.bytes)) return false
-
-            return true
+            return bytes.contentEquals(other.bytes)
         }
 
         override fun hashCode(): Int {

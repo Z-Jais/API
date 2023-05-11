@@ -8,7 +8,7 @@ import com.google.firebase.messaging.AndroidNotification
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
 import com.google.gson.Gson
-import fr.ziedelth.entities.Notification
+import fr.ziedelth.dtos.Notification
 import io.ktor.websocket.*
 import kotlinx.coroutines.runBlocking
 import java.io.File
