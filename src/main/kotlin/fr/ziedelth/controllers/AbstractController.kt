@@ -19,7 +19,8 @@ const val UNKNOWN_MESSAGE_ERROR = "Unknown error"
 const val MISSING_PARAMETERS_MESSAGE_ERROR = "Missing parameters"
 
 open class IController<T : Serializable>(val prefix: String) {
-    val entityName: String = ((javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<*>).simpleName
+    val entityName: String =
+        ((javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<*>).simpleName
     val uuidRequest: UUID = UUID.randomUUID()
 
     fun PipelineContext<Unit, ApplicationCall>.getPageAndLimit(): Pair<Int, Int> {

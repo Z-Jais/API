@@ -12,7 +12,7 @@ class EpisodesRelease : Listener {
 
     @EventHandler
     fun onEpisodesRelease(event: EpisodesReleaseEvent) {
-        val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+        val currentDay = Calendar.getInstance()[Calendar.DAY_OF_YEAR]
 
         if (currentDay != lastDaySend) {
             lastDaySend = currentDay

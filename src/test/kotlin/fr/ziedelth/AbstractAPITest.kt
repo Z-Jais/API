@@ -2,9 +2,10 @@ package fr.ziedelth
 
 import fr.ziedelth.entities.*
 import fr.ziedelth.plugins.*
-import fr.ziedelth.utils.DatabaseTest
+import fr.ziedelth.utils.toISO8601
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import java.util.*
 
 internal abstract class AbstractAPITest {
     @BeforeEach
@@ -72,7 +73,10 @@ internal abstract class AbstractAPITest {
         langTypeRepository.saveAll(listOf(langType1, langType2))
         val langTypes = langTypeRepository.getAll()
 
-        animes.forEach {
+        animes.forEachIndexed { index, anime ->
+            val releaseDate = Calendar.getInstance()
+            releaseDate.add(Calendar.DAY_OF_YEAR, -index)
+
             val episodes = (1..10).map { episode ->
                 val platform = platforms.random()
                 val episodeType = episodeTypes.first()
@@ -80,10 +84,11 @@ internal abstract class AbstractAPITest {
 
                 Episode(
                     platform = platform,
-                    anime = it,
+                    anime = anime,
                     episodeType = episodeType,
                     langType = langType,
                     hash = "EP-$episode-${platform.name}-${episodeType.name}-${langType.name}-${Math.random()}",
+                    releaseDate = releaseDate.toISO8601(),
                     season = 1,
                     number = episode,
                     url = "hello",
@@ -97,6 +102,6 @@ internal abstract class AbstractAPITest {
 
     @AfterEach
     fun tearDown() {
-        DatabaseTest.clean()
+        databaseTest.clean()
     }
 }
