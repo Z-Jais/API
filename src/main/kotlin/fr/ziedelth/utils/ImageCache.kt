@@ -29,6 +29,7 @@ object ImageCache {
     private val cache = mutableMapOf<UUID, Image>()
     private val newFixedThreadPool =
         Executors.newFixedThreadPool(max(1, Runtime.getRuntime().availableProcessors() - 1))
+    var totalSize = 0
 
     fun contains(uuid: UUID) = cache.containsKey(uuid)
     fun get(uuid: UUID) = cache[uuid]
@@ -41,7 +42,7 @@ object ImageCache {
         if (Imgcodecs.imencode(".webp", matImage, output, parameters)) {
             return output.toArray()
         } else {
-            throw IllegalStateException("Failed to encode the image as webp")
+            error("Failed to encode the image as webp")
         }
     }
 
@@ -59,13 +60,31 @@ object ImageCache {
         newFixedThreadPool.submit {
             try {
                 val bytes = saveImage(url).readBytes()
-                cache[uuid] = Image(bytes)
-
                 val webp = encodeToWebP(bytes)
+
                 cache[uuid] = Image(webp)
             } catch (e: Exception) {
                 println("Failed to load image $url : ${e.message}")
+                totalSize--
             }
         }
+    }
+
+    fun startPrintProgressThread() {
+        val thread = Thread {
+            val marginError = 5 // In percent
+            val totalSize = totalSize * (1 - marginError / 100.0)
+            var isRunning = true
+
+            while (isRunning) {
+                isRunning = cache.size < totalSize
+                println("Progress : ${cache.size}/${this.totalSize} (${totalSize.toInt()} with $marginError% margin error)")
+                if (!isRunning) println("Done")
+                Thread.sleep(5000)
+            }
+        }
+
+        thread.isDaemon = true
+        thread.start()
     }
 }

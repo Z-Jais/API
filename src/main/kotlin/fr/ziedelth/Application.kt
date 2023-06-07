@@ -49,6 +49,8 @@ fun main(args: Array<String>) {
                 platforms.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
                 animes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
                 episodes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
+                ImageCache.totalSize = platforms.size + animes.size + episodes.size
+                ImageCache.startPrintProgressThread()
             }
         }
     } catch (e: Exception) {
