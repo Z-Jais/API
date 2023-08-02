@@ -9,7 +9,7 @@
     <description>api</description>
 
     <properties>
-        <ktor_version>2.3.2</ktor_version>
+        <ktor_version>2.3.3</ktor_version>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.version>1.9.0</kotlin.version>
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
