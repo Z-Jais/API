@@ -58,14 +58,19 @@ object ImageCache {
         if (contains(uuid)) return
 
         newFixedThreadPool.submit {
-            try {
-                val bytes = saveImage(url).readBytes()
-                val webp = encodeToWebP(bytes)
+            var bytes: ByteArray? = null
 
+            try {
+                bytes = saveImage(url).readBytes()
+                val webp = encodeToWebP(bytes)
                 cache[uuid] = Image(webp)
             } catch (e: Exception) {
-                println("Failed to load image $url : ${e.message}")
-                totalSize--
+                if (bytes != null) {
+                    cache[uuid] = Image(bytes)
+                } else {
+                    println("Failed to load image $url : ${e.message}")
+                    this.totalSize--
+                }
             }
         }
     }
@@ -73,10 +78,11 @@ object ImageCache {
     fun startPrintProgressThread() {
         val thread = Thread {
             val marginError = 5 // In percent
-            val totalSize = totalSize * (1 - marginError / 100.0)
+            var totalSize: Double
             var isRunning = true
 
             while (isRunning) {
+                totalSize = this.totalSize * (1 - marginError / 100.0)
                 isRunning = cache.size < totalSize
                 println("Progress : ${cache.size}/${this.totalSize} (${totalSize.toInt()} with $marginError% margin error)")
                 if (!isRunning) println("Done")
