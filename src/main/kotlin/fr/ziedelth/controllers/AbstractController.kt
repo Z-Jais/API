@@ -27,13 +27,8 @@ open class IController<T : Serializable>(val prefix: String) {
         val page = call.parameters["page"]!!.toIntOrNull() ?: throw IllegalArgumentException("Page is not valid")
         val limit = call.parameters["limit"]!!.toIntOrNull() ?: throw IllegalArgumentException("Limit is not valid")
 
-        if (page < 1 || limit < 1) {
-            throw IllegalArgumentException("Page or limit is not valid")
-        }
-
-        if (limit > 30) {
-            throw IllegalArgumentException("Limit is too high")
-        }
+        require(!(page < 1 || limit < 1)) { "Page or limit is not valid" }
+        require(limit <= 30) { "Limit is too high" }
 
         return Pair(page, limit)
     }
@@ -113,7 +108,7 @@ open class IController<T : Serializable>(val prefix: String) {
 
             val image = ImageCache.get(uuid)!!
             println("Attachment $uuid found (${image.bytes.size} bytes)")
-            call.respondBytes(image.bytes, ContentType("image", "webp"))
+            call.respondBytes(image.bytes, ContentType("image", image.type))
         }
     }
 }
