@@ -111,9 +111,11 @@ object ImageCache {
                 totalSize = combinedImages.size
                 startPrintProgressThread()
 
-                combinedImages.parallelStream().forEach {
-                    cachingNetworkImage(it[0] as UUID, it[1] as String)
-                }
+                Thread {
+                    combinedImages.parallelStream().forEach {
+                        cachingNetworkImage(it[0] as UUID, it[1] as String)
+                    }
+                }.start()
             }
         } catch (e: Exception) {
             e.printStackTrace()
