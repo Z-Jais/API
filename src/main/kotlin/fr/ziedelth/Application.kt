@@ -5,11 +5,11 @@ import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.RequestCache
 import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import jakarta.persistence.Tuple
 import nu.pattern.OpenCV
 import java.util.*
 
@@ -29,33 +29,7 @@ fun main(args: Array<String>) {
     println("Connecting to database...")
     database = Database()
     println("Database connected")
-
-    try {
-        database.inTransaction { session ->
-            // Get all platforms from database
-            val platforms =
-                session.createQuery("SELECT uuid, image FROM Platform WHERE image LIKE 'http%'", Tuple::class.java)
-                    .list()
-            println("Platforms : ${platforms.size}")
-            // Get all animes from database
-            val animes = session.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java).list()
-            println("Animes : ${animes.size}")
-
-            // Get all episodes from database
-            val episodes = session.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java).list()
-            println("Episodes : ${episodes.size}")
-
-            if (loadImage) {
-                platforms.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
-                animes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
-                episodes.forEach { ImageCache.cachingNetworkImage(it[0] as UUID, it[1] as String) }
-                ImageCache.totalSize = platforms.size + animes.size + episodes.size
-                ImageCache.startPrintProgressThread()
-            }
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
+    if (loadImage) ImageCache.invalidCache(database)
 
     try {
         PluginManager.loadPlugins()
@@ -70,6 +44,9 @@ fun main(args: Array<String>) {
                 if (line == "reload") {
                     PluginManager.reload()
                     ListenerManager()
+                } else if (line == "invalid-cache") {
+                    ImageCache.invalidCache(database)
+                    RequestCache.clear()
                 }
             }
         }.start()

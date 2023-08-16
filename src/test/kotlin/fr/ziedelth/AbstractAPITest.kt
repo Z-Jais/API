@@ -3,7 +3,9 @@ package fr.ziedelth
 import fr.ziedelth.entities.*
 import fr.ziedelth.plugins.*
 import fr.ziedelth.utils.toISO8601
+import nu.pattern.OpenCV
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import java.util.*
 
@@ -103,5 +105,14 @@ internal abstract class AbstractAPITest {
     @AfterEach
     fun tearDown() {
         databaseTest.clean()
+    }
+
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setUp() {
+            println("Loading OpenCV...")
+            OpenCV.loadShared()
+        }
     }
 }
