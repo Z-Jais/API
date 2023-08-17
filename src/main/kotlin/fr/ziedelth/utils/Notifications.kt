@@ -42,7 +42,7 @@ object Notifications {
         println("Firebase initialized")
     }
 
-    fun send(title: String? = null, body: String? = null) {
+    fun send(title: String? = null, body: String? = null, topic: String = "all") {
         if (initialized) {
             FirebaseMessaging.getInstance().send(
                 Message.builder().setAndroidConfig(
@@ -51,12 +51,12 @@ object Notifications {
                             .setTitle(title)
                             .setBody(body).build()
                     ).build()
-                ).setTopic("all").build()
+                ).setTopic(topic).build()
             )
         }
 
         runBlocking {
-            val json = Gson().toJson(Notification(title, body))
+            val json = Gson().toJson(Notification(title, body, topic))
             connections.forEach { it.send(json) }
         }
     }

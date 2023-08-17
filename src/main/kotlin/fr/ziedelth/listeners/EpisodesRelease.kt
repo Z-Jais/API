@@ -19,12 +19,20 @@ class EpisodesRelease : Listener {
             lastSend.clear()
         }
 
-        val animes = event.episodes.map { it.anime }.distinctBy { it!!.uuid }.filter { !lastSend.contains(it!!.uuid) }
+        val animes =
+            event.episodes.mapNotNull { it.anime }.distinctBy { it.uuid }.filter { !lastSend.contains(it.uuid) }
         if (animes.isEmpty()) return
-        lastSend.addAll(animes.map { it!!.uuid })
-        val animeNames = animes.mapNotNull { it?.name }.sortedBy { it.lowercase() }
+        lastSend.addAll(animes.map { it.uuid })
+        val animeNames = animes.mapNotNull { it.name }.sortedBy { it.lowercase() }
         println("Sending notification for ${animes.size} animes: ${animeNames.joinToString(", ")}")
 
         Notifications.send(body = animeNames.joinToString(", "))
+        animes.forEach {
+            Notifications.send(
+                title = it.name,
+                body = "Un nouvel épisode est sorti !",
+                topic = it.uuid.toString()
+            )
+        }
     }
 }
