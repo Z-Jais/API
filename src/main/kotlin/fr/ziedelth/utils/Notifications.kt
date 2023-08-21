@@ -15,7 +15,7 @@ object Notifications {
 
     init {
         println("Initializing Firebase")
-        val file = File("firebase_key.json")
+        val file = File("data/firebase_key.json")
 
         if (file.exists()) {
             FirebaseApp.initializeApp(
@@ -29,6 +29,11 @@ object Notifications {
     }
 
     fun send(title: String? = null, body: String? = null, topic: String = "all") {
+        with(System.getenv("SEND_NOTIFICATIONS")) {
+            println("SEND_NOTIFICATIONS: $this")
+            if (this.isNullOrBlank() || this == "false") return
+        }
+
         if (initialized) {
             FirebaseMessaging.getInstance().send(
                 Message.builder().setAndroidConfig(
