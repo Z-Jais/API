@@ -38,13 +38,17 @@ fun main(args: Array<String>) {
             val scanner = Scanner(System.`in`)
 
             while (true) {
-                val line = scanner.nextLine()
+                try {
+                    val line = scanner.nextLine()
 
-                if (line == "reload") {
-                    PluginManager.reload()
-                    ListenerManager()
-                } else if (line == "invalid-cache") {
-                    ImageCache.invalidCache(database)
+                    if (line == "reload") {
+                        PluginManager.reload()
+                        ListenerManager()
+                    } else if (line == "invalid-cache") {
+                        ImageCache.invalidCache(database)
+                    }
+                } catch (_: Exception) {
+                    Thread.sleep(1000)
                 }
             }
         }.start()

@@ -23,8 +23,27 @@ open class Database {
 
             Configuration().let { configuration ->
                 getEntities().forEach { configuration.addAnnotatedClass(it) }
-
                 configuration.configure(file)
+
+                val url: String? = System.getenv("DATABASE_URL")
+                val username: String? = System.getenv("DATABASE_USERNAME")
+                val password: String? = System.getenv("DATABASE_PASSWORD")
+
+                if (url?.isNotBlank() == true) {
+                    println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_URL")
+                    configuration.setProperty("hibernate.connection.url", url)
+                }
+
+                if (username?.isNotBlank() == true) {
+                    println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_USERNAME")
+                    configuration.setProperty("hibernate.connection.username", username)
+                }
+
+                if (password?.isNotBlank() == true) {
+                    println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
+                    configuration.setProperty("hibernate.connection.password", password)
+                }
+
                 sessionFactory = configuration.buildSessionFactory(
                     StandardServiceRegistryBuilder().applySettings(configuration.properties).build()
                 )
@@ -35,7 +54,7 @@ open class Database {
         }
     }
 
-    constructor() : this(File("hibernate.cfg.xml"))
+    constructor() : this(File("data/hibernate.cfg.xml"))
 
     protected fun getEntities(): MutableSet<Class<out Serializable>> =
         Reflections("fr.ziedelth.entities").getSubTypesOf(Serializable::class.java)

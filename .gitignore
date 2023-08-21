@@ -35,7 +35,6 @@ out/
 ### VS Code ###
 .vscode/
 /target/
-/hibernate.cfg.xml
 /test.http
-/firebase_key.json
-/plugins/
+**/firebase_key.json
+**/plugins/

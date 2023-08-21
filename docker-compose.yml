@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  jais-db:
+    image: postgres:16-alpine
+    restart: always
+    container_name: jais-db
+    environment:
+      POSTGRES_PASSWORD: "mysecretpassword"
+      POSTGRES_USER: postgres
+      POSTGRES_DB: jais
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+    volumes:
+      - ./tmp_data.sql:/docker-entrypoint-initdb.d/dummy_dump.sql
+  jais-api:
+    image: localhost:5000/jais-api:latest
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    container_name: jais-api
+    depends_on:
+      jais-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://jais-db:5432/jais
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: "mysecretpassword"
+      SEND_NOTIFICATIONS: "false"
+    volumes:
+      - jais-api-data:/app/data
+  jais-scraper:
+    image: localhost:5000/jais-scraper:latest
+    restart: on-failure
+    container_name: jais-scraper
+    depends_on:
+      jais-api:
+        condition: service_started
+    environment:
+      API_URL: http://jais-api:8080/
+    volumes:
+      - jais-scraper-data:/app/data
+  jais-website:
+    image: localhost:5000/jais-website:latest
+    ports:
+      - "8081:80"
+    restart: on-failure
+    container_name: jais-website
+    depends_on:
+      jais-api:
+        condition: service_started
+    volumes:
+      - jais-website-data:/usr/local/apache2/htdocs/attachments/
+
+volumes:
+  jais-api-data:
+    name: jais-api-data
+  jais-scraper-data:
+    name: jais-scraper-data
+  jais-website-data:
+    name: jais-website-data
