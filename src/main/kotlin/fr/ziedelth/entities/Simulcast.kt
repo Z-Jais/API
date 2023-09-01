@@ -7,7 +7,7 @@ import java.io.Serializable
 import java.util.*
 
 @Entity
-@Table(name = "simulcast", uniqueConstraints = [UniqueConstraint(columnNames = arrayOf("season", "year"))])
+@Table(name = "simulcast", uniqueConstraints = [UniqueConstraint(columnNames = arrayOf("season", "\"year\""))])
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class Simulcast(
