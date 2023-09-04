@@ -107,9 +107,11 @@ class EpisodeController(
 
                 call.respond(HttpStatusCode.Created, savedEpisodes)
 
-                Thread {
-                    PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
-                }.start()
+                if (savedEpisodes.size <= 5) {
+                    Thread {
+                        PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
+                    }.start()
+                }
             } catch (e: Exception) {
                 printError(call, e)
             }
