@@ -80,4 +80,12 @@ class EpisodeRepository(database: Database) : AbstractRepository<Episode>(databa
             query.uniqueResult() ?: 0
         }
     }
+
+    fun getTotalDurationSeen(episodes: List<UUID>): Long {
+        return database.inTransaction {
+            it.createQuery("SELECT SUM(duration) FROM Episode WHERE uuid IN :uuids AND duration > 0", Long::class.java)
+                .setParameter("uuids", episodes)
+                .uniqueResult() ?: 0L
+        }
+    }
 }
