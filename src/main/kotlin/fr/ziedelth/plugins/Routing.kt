@@ -34,6 +34,7 @@ fun Application.configureRouting(database: Database) {
             langTypeRepository,
             episodeRepository
         ).getRoutes(this)
+        AyaneController().getRoutes(this)
 
         webSocket {
             val connection = Notifications.addConnection(this)
