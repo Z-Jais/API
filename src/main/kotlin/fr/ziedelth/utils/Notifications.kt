@@ -7,24 +7,10 @@ import com.google.firebase.messaging.AndroidConfig
 import com.google.firebase.messaging.AndroidNotification
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
-import com.google.gson.Gson
-import fr.ziedelth.dtos.Notification
-import io.ktor.websocket.*
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileInputStream
-import java.util.*
 
 object Notifications {
-    class Connection(val session: DefaultWebSocketSession) {
-        val id: UUID = UUID.randomUUID()
-
-        suspend fun send(string: String) {
-            session.send(Frame.Text(string))
-        }
-    }
-
-    val connections: MutableSet<Connection> = Collections.synchronizedSet(LinkedHashSet())
     private var initialized = false
 
     init {
@@ -54,20 +40,5 @@ object Notifications {
                 ).setTopic(topic).build()
             )
         }
-
-        runBlocking {
-            val json = Gson().toJson(Notification(title, body, topic))
-            connections.forEach { it.send(json) }
-        }
-    }
-
-    fun addConnection(session: DefaultWebSocketSession): Connection {
-        val connection = Connection(session)
-        connections += connection
-        return connection
-    }
-
-    fun removeConnection(connection: Connection) {
-        connections -= connection
     }
 }

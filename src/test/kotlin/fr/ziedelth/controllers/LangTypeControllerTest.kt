@@ -1,9 +1,9 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.LangType
 import fr.ziedelth.plugins.*
+import fr.ziedelth.utils.Constant
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -26,7 +26,7 @@ internal class LangTypeControllerTest : AbstractAPITest() {
 
             val response = client.get("/langtypes")
             expect(HttpStatusCode.OK) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Array<LangType>::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<LangType>::class.java)
             expect(2) { json.size }
         }
     }
@@ -51,7 +51,7 @@ internal class LangTypeControllerTest : AbstractAPITest() {
             }
 
             expect(HttpStatusCode.Created) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), LangType::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), LangType::class.java)
             checkNotNull(json.uuid)
         }
     }

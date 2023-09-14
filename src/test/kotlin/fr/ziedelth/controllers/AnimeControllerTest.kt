@@ -1,12 +1,11 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Country
 import fr.ziedelth.plugins.*
-import fr.ziedelth.utils.Encoder
+import fr.ziedelth.utils.Constant
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -28,7 +27,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
             }
 
             val response = client.get("/animes/country/fr/search/hash/hello")
-            val json = Gson().fromJson(response.bodyAsText(), JsonObject::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), JsonObject::class.java)
             val uuid = json.get("uuid").asString
 
             expect(HttpStatusCode.OK) { response.status }
@@ -47,7 +46,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
             }
 
             val response = client.get("/animes/country/fr/search/name/Naruto")
-            val json = Gson().fromJson(response.bodyAsText(), Array<Anime>::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Anime>::class.java)
             val anime = json.firstOrNull()
 
             expect(HttpStatusCode.OK) { response.status }
@@ -73,7 +72,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
 
             val responseNotCached =
                 client.get("/animes/country/${country.tag}/simulcast/${simulcast.uuid}/page/1/limit/12")
-            val jsonNotCached = Gson().fromJson(responseNotCached.bodyAsText(), Array<Anime>::class.java)
+            val jsonNotCached = Constant.gson.fromJson(responseNotCached.bodyAsText(), Array<Anime>::class.java)
 
             expect(HttpStatusCode.OK) { responseNotCached.status }
             expect(3) { jsonNotCached.size }
@@ -82,7 +81,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
 
             val responseCached =
                 client.get("/animes/country/${country.tag}/simulcast/${simulcast.uuid}/page/1/limit/12")
-            val jsonCached = Gson().fromJson(responseCached.bodyAsText(), Array<Anime>::class.java)
+            val jsonCached = Constant.gson.fromJson(responseCached.bodyAsText(), Array<Anime>::class.java)
 
             expect(HttpStatusCode.OK) { responseCached.status }
             expect(3) { jsonCached.size }
@@ -110,47 +109,6 @@ internal class AnimeControllerTest : AbstractAPITest() {
     }
 
     @Test
-    fun getWatchlistByPage() {
-        testApplication {
-            application {
-                configureHTTP()
-                configureRoutingTest()
-            }
-
-            val anime = animeRepository.getAll().first()
-            val bodyRequest = Encoder.toGzip("[\"${anime.uuid}\"]")
-
-            val response = client.post("/animes/watchlist/page/1/limit/12") {
-                setBody(bodyRequest)
-            }
-
-            val json = Gson().fromJson(response.bodyAsText(), Array<Anime>::class.java)
-
-            expect(HttpStatusCode.OK) { response.status }
-            expect(1) { json.size }
-        }
-    }
-
-    @Test
-    fun getWatchlistByPageError() {
-        testApplication {
-            application {
-                configureHTTP()
-                configureRoutingTest()
-            }
-
-            val anime = animeRepository.getAll().first()
-            val bodyRequest = Encoder.toGzip("[\"${anime.uuid}\"]")
-
-            val responseError = client.post("/animes/watchlist/page/ae/limit/12") {
-                setBody(bodyRequest)
-            }
-
-            expect(HttpStatusCode.InternalServerError) { responseError.status }
-        }
-    }
-
-    @Test
     fun create() {
         testApplication {
             val client = createClient {
@@ -172,7 +130,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
             }
 
             expect(HttpStatusCode.Created) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Anime::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Anime::class.java)
             checkNotNull(json.uuid)
         }
     }
@@ -270,6 +228,35 @@ internal class AnimeControllerTest : AbstractAPITest() {
                     setBody(emptyList<String>())
                 }.status
             }
+        }
+    }
+
+    @Test
+    fun getDiary() {
+        testApplication {
+            application {
+                configureHTTP()
+                configureRoutingTest()
+            }
+
+            val country = countryRepository.getAll().first()
+            val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
+
+            // NOT CACHED
+
+            val responseNotCached = client.get("/animes/diary/country/${country.tag}/day/$currentDay")
+            val jsonNotCached = Constant.gson.fromJson(responseNotCached.bodyAsText(), Array<Anime>::class.java)
+
+            expect(HttpStatusCode.OK) { responseNotCached.status }
+            expect(1) { jsonNotCached.size }
+
+            // CACHED
+
+            val responseCached = client.get("/animes/diary/country/${country.tag}/day/$currentDay")
+            val jsonCached = Constant.gson.fromJson(responseCached.bodyAsText(), Array<Anime>::class.java)
+
+            expect(HttpStatusCode.OK) { responseCached.status }
+            expect(1) { jsonCached.size }
         }
     }
 }

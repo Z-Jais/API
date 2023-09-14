@@ -5,7 +5,6 @@ import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
-import fr.ziedelth.utils.RequestCache
 import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -46,7 +45,6 @@ fun main(args: Array<String>) {
                     ListenerManager()
                 } else if (line == "invalid-cache") {
                     ImageCache.invalidCache(database)
-                    RequestCache.clear()
                 }
             }
         }.start()

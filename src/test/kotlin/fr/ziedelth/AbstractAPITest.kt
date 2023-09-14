@@ -94,7 +94,7 @@ internal abstract class AbstractAPITest {
                     season = 1,
                     number = episode,
                     url = "hello",
-                    image = "hello",
+                    image = "https://jais.ziedelth.fr/attachments/banner_640x360.png",
                     duration = 1440
                 )
             }

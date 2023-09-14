@@ -1,9 +1,9 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.EpisodeType
 import fr.ziedelth.plugins.*
+import fr.ziedelth.utils.Constant
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -26,7 +26,7 @@ internal class EpisodeTypeControllerTest : AbstractAPITest() {
 
             val response = client.get("/episodetypes")
             expect(HttpStatusCode.OK) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Array<EpisodeType>::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<EpisodeType>::class.java)
             expect(3) { json.size }
         }
     }
@@ -51,7 +51,7 @@ internal class EpisodeTypeControllerTest : AbstractAPITest() {
             }
 
             expect(HttpStatusCode.Created) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), EpisodeType::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), EpisodeType::class.java)
             checkNotNull(json.uuid)
         }
     }

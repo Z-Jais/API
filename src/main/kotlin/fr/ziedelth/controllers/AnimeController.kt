@@ -1,15 +1,11 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
-import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.repositories.CountryRepository
-import fr.ziedelth.repositories.EpisodeRepository
-import fr.ziedelth.utils.Decoder
+import fr.ziedelth.services.AnimeService
+import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.utils.ImageCache
-import fr.ziedelth.utils.RequestCache
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -19,15 +15,14 @@ import java.util.*
 
 class AnimeController(
     private val countryRepository: CountryRepository,
-    private val animeRepository: AnimeRepository,
-    private val episodeRepository: EpisodeRepository
+    private val service: AnimeService,
+    private val episodeService: EpisodeService
 ) :
     IController<Anime>("/animes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
             search()
             getByPage()
-            getWatchlistWithPage(animeRepository)
             getAttachment()
             getMissing()
             create()
@@ -42,7 +37,7 @@ class AnimeController(
                 val country = call.parameters["country"]!!
                 val hash = call.parameters["hash"]!!
                 println("GET $prefix/country/$country/search/hash/$hash")
-                val anime = animeRepository.findByHash(country, hash)
+                val anime = service.repository.findByHash(country, hash)
                 call.respond(if (anime != null) mapOf("uuid" to anime) else HttpStatusCode.NotFound)
             }
 
@@ -50,7 +45,7 @@ class AnimeController(
                 val country = call.parameters["country"]!!
                 val name = call.parameters["name"]!!
                 println("GET $prefix/country/$country/search/name/$name")
-                call.respond(animeRepository.findByName(country, name))
+                call.respond(service.repository.findByName(country, name))
             }
         }
     }
@@ -62,14 +57,7 @@ class AnimeController(
                 val simulcast = call.parameters["simulcast"]!!
                 val (page, limit) = getPageAndLimit()
                 println("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
-                val request = RequestCache.get(uuidRequest, country, page, limit, simulcast)
-
-                if (request == null || request.isExpired()) {
-                    val list = animeRepository.getByPage(country, UUID.fromString(simulcast), page, limit)
-                    request?.update(list) ?: RequestCache.put(uuidRequest, country, page, limit, simulcast, list)
-                }
-
-                call.respond(RequestCache.get(uuidRequest, country, page, limit, simulcast)!!.value!!)
+                call.respond(service.getByPage(country, UUID.fromString(simulcast), page, limit))
             } catch (e: Exception) {
                 printError(call, e)
             }
@@ -82,23 +70,8 @@ class AnimeController(
                 val watchlist = call.receive<String>()
                 val (page, limit) = getPageAndLimit()
                 println("POST $prefix/missing/page/$page/limit/$limit")
-                val dataFromGzip = Gson().fromJson(Decoder.fromGzip(watchlist), JsonObject::class.java)
-
-                val animes = dataFromGzip.getAsJsonArray("animes").map { UUID.fromString(it.asString) }
-                val episodes = dataFromGzip.getAsJsonArray("episodes").map { UUID.fromString(it.asString) }
-                val episodeTypes = dataFromGzip.getAsJsonArray("episodeTypes").map { UUID.fromString(it.asString) }
-                val langTypes = dataFromGzip.getAsJsonArray("langTypes").map { UUID.fromString(it.asString) }
-
-                call.respond(
-                    animeRepository.getMissingAnimes(
-                        animes,
-                        episodes,
-                        episodeTypes,
-                        langTypes,
-                        page,
-                        limit
-                    )
-                )
+                val filterData = decode(watchlist)
+                call.respond(service.repository.getMissingAnimes(filterData, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
             }
@@ -128,7 +101,7 @@ class AnimeController(
                     return@post
                 }
 
-                if (animeRepository.findOneByName(
+                if (service.repository.findOneByName(
                         anime.country!!.tag!!,
                         anime.name!!
                     )?.country?.uuid == anime.country!!.uuid
@@ -140,15 +113,17 @@ class AnimeController(
 
                 val hash = anime.hash()
 
-                if (animeRepository.findByHash(anime.country!!.tag!!, hash) != null) {
+                if (service.repository.findByHash(anime.country!!.tag!!, hash) != null) {
                     println("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
                 anime.hashes.add(hash)
-                val savedAnime = animeRepository.save(anime)
+                val savedAnime = service.repository.save(anime)
                 ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
+
+                service.invalidateAll()
                 call.respond(HttpStatusCode.Created, savedAnime)
             } catch (e: Exception) {
                 printError(call, e)
@@ -162,7 +137,7 @@ class AnimeController(
             val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
             println("PUT $prefix/merge")
             // Get anime
-            val animes = uuids.mapNotNull { animeRepository.find(it) }
+            val animes = uuids.mapNotNull { service.repository.find(it) }
 
             if (animes.isEmpty()) {
                 println("Anime not found")
@@ -187,13 +162,13 @@ class AnimeController(
             val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
             // Get all episodes
             val episodes =
-                animes.map { episodeRepository.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
+                animes.map { episodeService.repository.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
                     .toMutableSet()
 
             val firstAnime = animes.first()
 
-            val savedAnime = animeRepository.find(
-                animeRepository.save(
+            val savedAnime = service.repository.find(
+                service.repository.save(
                     Anime(
                         country = countries.first(),
                         name = "${animes.first().name} (${animes.size})",
@@ -208,10 +183,13 @@ class AnimeController(
             )!!
 
             ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
-            episodeRepository.saveAll(episodes.map { it.copy(anime = savedAnime) })
+            episodeService.repository.saveAll(episodes.map { it.copy(anime = savedAnime) })
 
             // Delete animes
-            animeRepository.deleteAll(animes)
+            service.repository.deleteAll(animes)
+
+            service.invalidateAll()
+            episodeService.invalidateAll()
             call.respond(HttpStatusCode.OK, savedAnime)
         }
     }
@@ -220,17 +198,10 @@ class AnimeController(
         get("/diary/country/{country}/day/{day}") {
             val country = call.parameters["country"]!!
             var day = call.parameters["day"]!!.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
-
             if (day == 0) day = 7
             if (day > 7) day = 1
-
             println("GET $prefix/diary/country/$country/day/$day")
-
-            try {
-                call.respond(animeRepository.getDiary(country, day))
-            } catch (e: Exception) {
-                printError(call, e)
-            }
+            call.respond(service.getDiary(country, day))
         }
     }
 }

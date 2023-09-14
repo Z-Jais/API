@@ -1,5 +1,6 @@
 package fr.ziedelth.entities
 
+import fr.ziedelth.utils.Constant
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -21,8 +22,7 @@ class Simulcast(
 ) : Serializable {
     companion object {
         fun getSimulcast(year: Int, month: Int): Simulcast {
-            val seasons = arrayOf("WINTER", "SPRING", "SUMMER", "AUTUMN")
-            val season = seasons[(month - 1) / 3]
+            val season = Constant.seasons[(month - 1) / 3]
             return Simulcast(season = season, year = year)
         }
     }
