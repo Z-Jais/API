@@ -1,11 +1,10 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.*
 import fr.ziedelth.entities.Platform
 import fr.ziedelth.plugins.*
-import fr.ziedelth.utils.Encoder
+import fr.ziedelth.utils.Constant
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -32,7 +31,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val responseNotCached =
                 client.get("/episodes/country/${country.tag}/page/1/limit/12")
-            val jsonNotCached = Gson().fromJson(responseNotCached.bodyAsText(), Array<Episode>::class.java)
+            val jsonNotCached = Constant.gson.fromJson(responseNotCached.bodyAsText(), Array<Episode>::class.java)
 
             expect(HttpStatusCode.OK) { responseNotCached.status }
             expect(12) { jsonNotCached.size }
@@ -41,7 +40,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val responseCached =
                 client.get("/episodes/country/${country.tag}/page/1/limit/12")
-            val jsonCached = Gson().fromJson(responseCached.bodyAsText(), Array<Episode>::class.java)
+            val jsonCached = Constant.gson.fromJson(responseCached.bodyAsText(), Array<Episode>::class.java)
 
             expect(HttpStatusCode.OK) { responseCached.status }
             expect(12) { jsonCached.size }
@@ -80,7 +79,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val response =
                 client.get("/episodes/anime/${anime.uuid}/page/1/limit/12")
-            val json = Gson().fromJson(response.bodyAsText(), Array<Episode>::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
 
             expect(HttpStatusCode.OK) { response.status }
             expect(10) { json.size }
@@ -101,47 +100,6 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val responseError =
                 client.get("/episodes/anime/${anime.uuid}/page/ae/limit/12")
-
-            expect(HttpStatusCode.InternalServerError) { responseError.status }
-        }
-    }
-
-    @Test
-    fun getWatchlistByPage() {
-        testApplication {
-            application {
-                configureHTTP()
-                configureRoutingTest()
-            }
-
-            val anime = animeRepository.getAll().first()
-            val bodyRequest = Encoder.toGzip("[\"${anime.uuid}\"]")
-
-            val response = client.post("/episodes/watchlist/page/1/limit/12") {
-                setBody(bodyRequest)
-            }
-
-            val json = Gson().fromJson(response.bodyAsText(), Array<Episode>::class.java)
-
-            expect(HttpStatusCode.OK) { response.status }
-            expect(10) { json.size }
-        }
-    }
-
-    @Test
-    fun getWatchlistByPageError() {
-        testApplication {
-            application {
-                configureHTTP()
-                configureRoutingTest()
-            }
-
-            val anime = animeRepository.getAll().first()
-            val bodyRequest = Encoder.toGzip("[\"${anime.uuid}\"]")
-
-            val responseError = client.post("/episodes/watchlist/page/ae/limit/12") {
-                setBody(bodyRequest)
-            }
 
             expect(HttpStatusCode.InternalServerError) { responseError.status }
         }
@@ -208,7 +166,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             }
 
             expect(HttpStatusCode.Created) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Array<Episode>::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
             expect(3) { json.size }
             expect(3) { json[2].number }
         }

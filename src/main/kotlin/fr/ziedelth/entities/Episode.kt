@@ -28,7 +28,14 @@ class Episode(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
-    platform: Platform? = null,
+    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @JoinColumn(
+        name = "platform_uuid",
+        nullable = false,
+        foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (platform_uuid) REFERENCES platform(uuid) ON DELETE CASCADE")
+    )
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    var platform: Platform? = null,
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @JoinColumn(
         name = "anime_uuid",
@@ -69,7 +76,7 @@ class Episode(
     val image: String? = null,
     @Column(nullable = false)
     val duration: Long = -1
-) : Platformeable(platform), Serializable {
+) : Serializable {
     fun isNotValid(): Boolean =
         platform.isNullOrNotValid() || anime.isNullOrNotValid() || episodeType.isNullOrNotValid() || langType.isNullOrNotValid() || hash.isNullOrBlank() || (
                 releaseDate.isBlank() || !releaseDate.matches(DATE_FORMAT_REGEX)

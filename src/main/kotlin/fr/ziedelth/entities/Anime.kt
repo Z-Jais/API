@@ -21,7 +21,7 @@ fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
 )
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-data class Anime(
+class Anime(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),

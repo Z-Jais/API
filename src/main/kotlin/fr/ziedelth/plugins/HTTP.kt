@@ -6,8 +6,6 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.websocket.*
-import java.time.Duration
 
 fun Application.configureHTTP() {
     install(Compression) {
@@ -29,12 +27,5 @@ fun Application.configureHTTP() {
     install(ContentNegotiation) {
         gson {
         }
-    }
-
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(15)
-        timeout = Duration.ofSeconds(15)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
     }
 }

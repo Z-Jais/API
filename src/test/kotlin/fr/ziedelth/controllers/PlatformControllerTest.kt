@@ -1,9 +1,9 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.Platform
 import fr.ziedelth.plugins.*
+import fr.ziedelth.utils.Constant
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -26,7 +26,7 @@ internal class PlatformControllerTest : AbstractAPITest() {
 
             val response = client.get("/platforms")
             expect(HttpStatusCode.OK) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Array<Platform>::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Platform>::class.java)
             expect(3) { json.size }
         }
     }
@@ -51,7 +51,7 @@ internal class PlatformControllerTest : AbstractAPITest() {
             }
 
             expect(HttpStatusCode.Created) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Platform::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Platform::class.java)
             checkNotNull(json.uuid)
         }
     }

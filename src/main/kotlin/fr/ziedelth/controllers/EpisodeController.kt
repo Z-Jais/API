@@ -1,13 +1,15 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.events.EpisodesReleaseEvent
-import fr.ziedelth.repositories.*
-import fr.ziedelth.utils.Decoder
+import fr.ziedelth.repositories.EpisodeTypeRepository
+import fr.ziedelth.repositories.LangTypeRepository
+import fr.ziedelth.repositories.PlatformRepository
+import fr.ziedelth.services.AnimeService
+import fr.ziedelth.services.EpisodeService
+import fr.ziedelth.services.SimulcastService
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.http.*
@@ -15,59 +17,86 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import java.util.*
 
 class EpisodeController(
     private val platformRepository: PlatformRepository,
-    private val animeRepository: AnimeRepository,
-    private val simulcastRepository: SimulcastRepository,
+    private val animeService: AnimeService,
+    private val simulcastService: SimulcastService,
     private val episodeTypeRepository: EpisodeTypeRepository,
     private val langTypeRepository: LangTypeRepository,
-    private val episodeRepository: EpisodeRepository,
+    private val service: EpisodeService
 ) : IController<Episode>("/episodes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
-            getWithPage(episodeRepository)
-            getAnimeWithPage(episodeRepository)
-            getWatchlistWithPage(episodeRepository)
+            getWithPage()
+            getAnimeWithPage()
+            getWatchlist()
             getWatchlistFilter()
             getAttachment()
             create()
         }
     }
 
-    private fun Route.getWatchlistFilter() {
-        post("/watchlist_filter/page/{page}/limit/{limit}") {
+    private fun Route.getWithPage() {
+        get("/country/{country}/page/{page}/limit/{limit}") {
             try {
-                val watchlist = call.receive<String>()
+                val country = call.parameters["country"]!!
                 val (page, limit) = getPageAndLimit()
-                println("POST $prefix/watchlist_filter/page/$page/limit/$limit")
-                val dataFromGzip = Gson().fromJson(Decoder.fromGzip(watchlist), JsonObject::class.java)
-
-                val animes = dataFromGzip.getAsJsonArray("animes").map { UUID.fromString(it.asString) }
-                val episodes = dataFromGzip.getAsJsonArray("episodes").map { UUID.fromString(it.asString) }
-                val episodeTypes = dataFromGzip.getAsJsonArray("episodeTypes").map { UUID.fromString(it.asString) }
-                val langTypes = dataFromGzip.getAsJsonArray("langTypes").map { UUID.fromString(it.asString) }
-
-                call.respond(
-                    episodeRepository.getByPageWithListFilter(
-                        animes,
-                        episodes,
-                        episodeTypes,
-                        langTypes,
-                        page,
-                        limit
-                    )
-                )
+                println("GET $prefix/country/$country/page/$page/limit/$limit")
+                call.respond(service.getByPage(country, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
             }
         }
     }
 
+    private fun Route.getAnimeWithPage() {
+        get("/anime/{uuid}/page/{page}/limit/{limit}") {
+            try {
+                val animeUuid = call.parameters["uuid"]!!
+                val (page, limit) = getPageAndLimit()
+                println("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
+                call.respond(service.getByPageWithAnime(UUID.fromString(animeUuid), page, limit))
+            } catch (e: Exception) {
+                printError(call, e)
+            }
+        }
+    }
+
+    private suspend fun filterWatchlistByPageAndLimit(
+        pipelineContext: PipelineContext<Unit, ApplicationCall>,
+        episodeController: EpisodeController
+    ) {
+        try {
+            val watchlist = pipelineContext.call.receive<String>()
+            val (page, limit) = pipelineContext.getPageAndLimit()
+            println("POST $prefix/watchlist_filter/page/$page/limit/$limit")
+            val filterData = decode(watchlist)
+
+            pipelineContext.call.respond(service.repository.getByPageWithListFilter(filterData, page, limit))
+        } catch (e: Exception) {
+            episodeController.printError(pipelineContext.call, e)
+        }
+    }
+
+    private fun Route.getWatchlist() {
+        post("/watchlist/page/{page}/limit/{limit}") {
+            filterWatchlistByPageAndLimit(this, this@EpisodeController)
+        }
+    }
+
+    @Deprecated(message = "Use /watchlist as replace")
+    private fun Route.getWatchlistFilter() {
+        post("/watchlist_filter/page/{page}/limit/{limit}") {
+            filterWatchlistByPageAndLimit(this, this@EpisodeController)
+        }
+    }
+
     private fun merge(episode: Episode) {
         episode.platform = platformRepository.find(episode.platform!!.uuid) ?: throw Exception("Platform not found")
-        episode.anime = animeRepository.find(episode.anime!!.uuid) ?: throw Exception("Anime not found")
+        episode.anime = animeService.repository.find(episode.anime!!.uuid) ?: throw Exception("Anime not found")
         episode.episodeType =
             episodeTypeRepository.find(episode.episodeType!!.uuid) ?: throw Exception("EpisodeType not found")
         episode.langType = langTypeRepository.find(episode.langType!!.uuid) ?: throw Exception("LangType not found")
@@ -77,13 +106,13 @@ class EpisodeController(
         }
 
         if (episode.number == -1) {
-            episode.number = episodeRepository.getLastNumber(episode) + 1
+            episode.number = service.repository.getLastNumber(episode) + 1
         }
 
         val tmpSimulcast =
             Simulcast.getSimulcast(episode.releaseDate.split("-")[0].toInt(), episode.releaseDate.split("-")[1].toInt())
         val simulcast =
-            simulcastRepository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
+            simulcastService.repository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
 
         if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
             episode.anime!!.simulcasts.add(simulcast)
@@ -95,16 +124,19 @@ class EpisodeController(
             println("POST $prefix/multiple")
 
             try {
-                val episodes = call.receive<List<Episode>>().filter { !episodeRepository.exists("hash", it.hash!!) }
+                val episodes = call.receive<List<Episode>>().filter { !service.repository.exists("hash", it.hash!!) }
                 val savedEpisodes = mutableListOf<Episode>()
 
                 episodes.forEach {
                     merge(it)
-                    val savedEpisode = episodeRepository.save(it)
+                    val savedEpisode = service.repository.save(it)
                     savedEpisodes.add(savedEpisode)
                     ImageCache.cachingNetworkImage(savedEpisode.uuid, savedEpisode.image!!)
                 }
 
+                service.invalidateAll()
+                animeService.invalidateAll()
+                simulcastService.invalidateAll()
                 call.respond(HttpStatusCode.Created, savedEpisodes)
 
                 if (savedEpisodes.size <= 5) {

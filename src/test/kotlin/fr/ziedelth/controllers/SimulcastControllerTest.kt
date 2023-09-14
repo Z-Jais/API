@@ -1,9 +1,9 @@
 package fr.ziedelth.controllers
 
-import com.google.gson.Gson
 import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.plugins.*
+import fr.ziedelth.utils.Constant
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -28,7 +28,7 @@ internal class SimulcastControllerTest : AbstractAPITest() {
 
             val response = client.get("/simulcasts/country/${country.tag}")
             expect(HttpStatusCode.OK) { response.status }
-            val json = Gson().fromJson(response.bodyAsText(), Array<Simulcast>::class.java)
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Simulcast>::class.java)
             expect(1) { json.size }
         }
     }

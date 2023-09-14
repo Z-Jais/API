@@ -1,5 +1,6 @@
 package fr.ziedelth.repositories
 
+import fr.ziedelth.controllers.IController
 import fr.ziedelth.dtos.MissingAnime
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Episode
@@ -92,15 +93,12 @@ class AnimeRepository(database: Database) : AbstractRepository<Anime>(database),
     }
 
     fun getMissingAnimes(
-        animes: List<UUID>,
-        episodes: List<UUID>,
-        episodeTypes: List<UUID>,
-        langTypes: List<UUID>,
+        filterData: IController.FilterData,
         page: Int,
         limit: Int
     ): List<MissingAnime> {
         val whereString = """WHERE e.anime = a AND
-                        ${if (episodes.isEmpty()) "" else "e.uuid NOT IN :episodeUuids AND"}
+                        ${if (filterData.episodes.isEmpty()) "" else "e.uuid NOT IN :episodeUuids AND"}
                         e.episodeType.uuid IN :episodeTypeUuids AND
                         e.langType.uuid IN :langTypeUuids"""
 
@@ -135,10 +133,10 @@ class AnimeRepository(database: Database) : AbstractRepository<Anime>(database),
                     $whereString
                 ) DESC
             """.trimIndent(),
-            "animeUuids" to animes,
-            if (episodes.isEmpty()) null else "episodeUuids" to episodes,
-            "episodeTypeUuids" to episodeTypes,
-            "langTypeUuids" to langTypes,
+            "animeUuids" to filterData.animes,
+            if (filterData.episodes.isEmpty()) null else "episodeUuids" to filterData.episodes,
+            "episodeTypeUuids" to filterData.episodeTypes,
+            "langTypeUuids" to filterData.langTypes,
         )
     }
 

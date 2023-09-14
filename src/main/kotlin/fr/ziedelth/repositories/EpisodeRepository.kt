@@ -1,5 +1,6 @@
 package fr.ziedelth.repositories
 
+import fr.ziedelth.controllers.IController
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.utils.Database
 import java.util.*
@@ -37,31 +38,28 @@ class EpisodeRepository(database: Database) : AbstractRepository<Episode>(databa
     }
 
     fun getByPageWithListFilter(
-        animes: List<UUID>,
-        episodes: List<UUID>,
-        episodeTypes: List<UUID>,
-        langTypes: List<UUID>,
+        filterData: IController.FilterData,
         page: Int,
         limit: Int
     ): List<Episode> {
-        if (episodes.isEmpty())
+        if (filterData.episodes.isEmpty())
             return super.getByPage(
                 page,
                 limit,
                 "FROM Episode WHERE anime.uuid IN :animes AND episodeType.uuid IN :episodeTypes AND langType.uuid IN :langTypes $ORDER",
-                "animes" to animes,
-                "episodeTypes" to episodeTypes,
-                "langTypes" to langTypes
+                "animes" to filterData.animes,
+                "episodeTypes" to filterData.episodeTypes,
+                "langTypes" to filterData.langTypes
             )
 
         return super.getByPage(
             page,
             limit,
             "FROM Episode WHERE uuid NOT IN :episodes AND anime.uuid IN :animes AND episodeType.uuid IN :episodeTypes AND langType.uuid IN :langTypes $ORDER",
-            "animes" to animes,
-            "episodes" to episodes,
-            "episodeTypes" to episodeTypes,
-            "langTypes" to langTypes
+            "animes" to filterData.animes,
+            "episodes" to filterData.episodes,
+            "episodeTypes" to filterData.episodeTypes,
+            "langTypes" to filterData.langTypes
         )
     }
 
