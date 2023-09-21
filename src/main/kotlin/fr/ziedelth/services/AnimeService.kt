@@ -4,8 +4,10 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import fr.ziedelth.caches.DayCountryCacheKey
 import fr.ziedelth.caches.PaginationSimulcastCountryCacheKey
+import fr.ziedelth.caches.SearchCountryCacheKey
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.repositories.AnimeRepository
+import fr.ziedelth.utils.unaccent
 import java.util.*
 
 class AnimeService(val repository: AnimeRepository) {
@@ -25,10 +27,19 @@ class AnimeService(val repository: AnimeRepository) {
             }
         })
 
+    private val searchCountryCache = CacheBuilder.newBuilder()
+        .build(object : CacheLoader<SearchCountryCacheKey, List<Anime>>() {
+            override fun load(key: SearchCountryCacheKey): List<Anime> {
+                println("Updating anime day search cache")
+                return repository.findByName(key.tag, key.search)
+            }
+        })
+
     fun invalidateAll() {
         println("Invalidate all anime cache")
         paginationSimulcastCountryCache.invalidateAll()
         dayCountryCache.invalidateAll()
+        searchCountryCache.invalidateAll()
     }
 
     fun getByPage(tag: String, simulcast: UUID, page: Int, limit: Int): List<Anime> =
@@ -36,4 +47,7 @@ class AnimeService(val repository: AnimeRepository) {
 
     fun getDiary(tag: String, day: Int): List<Anime> =
         dayCountryCache.getUnchecked(DayCountryCacheKey(day, tag))
+
+    fun findByName(tag: String, search: String): List<Anime> =
+        searchCountryCache.getUnchecked(SearchCountryCacheKey(search.unaccent().lowercase(), tag))
 }
