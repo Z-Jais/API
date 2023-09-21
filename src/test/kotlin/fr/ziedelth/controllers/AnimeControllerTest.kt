@@ -37,25 +37,26 @@ internal class AnimeControllerTest : AbstractAPITest() {
         }
     }
 
-    @Test
-    fun searchByName() {
-        testApplication {
-            application {
-                configureHTTP()
-                configureRoutingTest()
-            }
-
-            val response = client.get("/animes/country/fr/search/name/Naruto")
-            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Anime>::class.java)
-            val anime = json.firstOrNull()
-
-            expect(HttpStatusCode.OK) { response.status }
-
-            expect(1) { json.size }
-            checkNotNull(anime?.uuid)
-            expect("Naruto") { anime?.name }
-        }
-    }
+//    @Test
+//    fun searchByName() {
+//        testApplication {
+//            application {
+//                configureHTTP()
+//                configureRoutingTest()
+//            }
+//
+//            val response = client.get("/animes/country/fr/search/name/Naruto")
+//            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Anime>::class.java)
+//            val anime = json.firstOrNull()
+//
+//            expect(HttpStatusCode.OK) { response.status }
+//
+//            expect(1) { json.size }
+//            checkNotNull(anime?.uuid)
+//            expect("Naruto") { anime?.name }
+//        }
+//    }
+//    SPECIFIC TO POSTGRES
 
     @Test
     fun getByPage() {

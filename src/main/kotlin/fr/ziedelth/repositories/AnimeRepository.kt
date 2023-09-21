@@ -5,6 +5,7 @@ import fr.ziedelth.dtos.MissingAnime
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.utils.Database
+import fr.ziedelth.utils.unaccent
 import java.time.DayOfWeek
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -38,14 +39,15 @@ class AnimeRepository(database: Database) : AbstractRepository<Anime>(database),
         }
     }
 
+    // CREATE EXTENSION unaccent
     fun findByName(tag: String, name: String): List<Anime> {
         return database.inTransaction {
             val query = it.createQuery(
-                "SELECT DISTINCT anime FROM Episode e WHERE e.anime.country.tag = :tag AND LOWER(e.anime.name) LIKE CONCAT('%', :name, '%') ORDER BY e.anime.name",
+                "SELECT DISTINCT anime FROM Episode e WHERE e.anime.country.tag = :tag AND LOWER(FUNCTION('unaccent', 'unaccent', e.anime.name)) LIKE CONCAT('%', :name, '%') ORDER BY e.anime.name",
                 Anime::class.java
             )
             query.setParameter("tag", tag)
-            query.setParameter("name", name.lowercase())
+            query.setParameter("name", name.unaccent().lowercase())
             database.fullInitialize(query.list())
         }
     }

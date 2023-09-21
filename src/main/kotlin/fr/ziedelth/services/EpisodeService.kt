@@ -31,6 +31,9 @@ class EpisodeService(val repository: EpisodeRepository) {
         paginationAnimeCache.invalidateAll()
     }
 
-    fun getByPage(tag: String, page: Int, limit: Int): List<Episode> = paginationCountryCache.getUnchecked(PaginationCountryCacheKey(page, limit, tag))
-    fun getByPageWithAnime(anime: UUID, page: Int, limit: Int): List<Episode> = paginationAnimeCache.getUnchecked(PaginationAnimeCacheKey(page, limit, anime))
+    fun getByPage(tag: String, page: Int, limit: Int): List<Episode> =
+        paginationCountryCache.getUnchecked(PaginationCountryCacheKey(page, limit, tag))
+
+    fun getByPageWithAnime(anime: UUID, page: Int, limit: Int): List<Episode> =
+        paginationAnimeCache.getUnchecked(PaginationAnimeCacheKey(page, limit, anime))
 }

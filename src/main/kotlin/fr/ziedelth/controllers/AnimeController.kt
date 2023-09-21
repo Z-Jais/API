@@ -45,7 +45,12 @@ class AnimeController(
                 val country = call.parameters["country"]!!
                 val name = call.parameters["name"]!!
                 println("GET $prefix/country/$country/search/name/$name")
-                call.respond(service.repository.findByName(country, name))
+
+                try {
+                    call.respond(service.findByName(country, name))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -162,7 +167,8 @@ class AnimeController(
             val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
             // Get all episodes
             val episodes =
-                animes.map { episodeService.repository.getAllBy("anime.uuid", it.uuid) }.flatten().distinctBy { it.uuid }
+                animes.map { episodeService.repository.getAllBy("anime.uuid", it.uuid) }.flatten()
+                    .distinctBy { it.uuid }
                     .toMutableSet()
 
             val firstAnime = animes.first()
