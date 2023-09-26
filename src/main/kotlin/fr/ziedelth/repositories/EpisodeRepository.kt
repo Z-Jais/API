@@ -23,7 +23,7 @@ class EpisodeRepository(database: Database) : AbstractRepository<Episode>(databa
         return super.getByPage(
             page,
             limit,
-            "FROM Episode WHERE anime.uuid = :uuid ORDER BY season DESC, number DESC, episodeType.name, langType.name",
+            "FROM Episode WHERE anime.uuid = :uuid $ORDER",
             "uuid" to uuid
         )
     }

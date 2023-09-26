@@ -67,12 +67,13 @@ class EpisodeController(
 
     private suspend fun filterWatchlistByPageAndLimit(
         pipelineContext: PipelineContext<Unit, ApplicationCall>,
-        episodeController: EpisodeController
+        episodeController: EpisodeController,
+        routePrefix: String,
     ) {
         try {
             val watchlist = pipelineContext.call.receive<String>()
             val (page, limit) = pipelineContext.getPageAndLimit()
-            println("POST $prefix/watchlist_filter/page/$page/limit/$limit")
+            println("POST $prefix/${routePrefix}/page/$page/limit/$limit")
             val filterData = decode(watchlist)
 
             pipelineContext.call.respond(service.repository.getByPageWithListFilter(filterData, page, limit))
@@ -83,14 +84,14 @@ class EpisodeController(
 
     private fun Route.getWatchlist() {
         post("/watchlist/page/{page}/limit/{limit}") {
-            filterWatchlistByPageAndLimit(this, this@EpisodeController)
+            filterWatchlistByPageAndLimit(this, this@EpisodeController, "watchlist")
         }
     }
 
     @Deprecated(message = "Use /watchlist as replace")
     private fun Route.getWatchlistFilter() {
         post("/watchlist_filter/page/{page}/limit/{limit}") {
-            filterWatchlistByPageAndLimit(this, this@EpisodeController)
+            filterWatchlistByPageAndLimit(this, this@EpisodeController, "watchlist_filter")
         }
     }
 
@@ -125,6 +126,12 @@ class EpisodeController(
 
             try {
                 val episodes = call.receive<List<Episode>>().filter { !service.repository.exists("hash", it.hash!!) }
+
+                if (episodes.isEmpty()) {
+                    call.respond(HttpStatusCode.NoContent, "All requested episodes already exists!")
+                    return@post
+                }
+
                 val savedEpisodes = mutableListOf<Episode>()
 
                 episodes.forEach {

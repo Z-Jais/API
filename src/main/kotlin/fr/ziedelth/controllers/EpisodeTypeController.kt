@@ -2,14 +2,14 @@ package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.EpisodeType
 import fr.ziedelth.entities.isNullOrNotValid
-import fr.ziedelth.repositories.EpisodeTypeRepository
+import fr.ziedelth.services.EpisodeTypeService
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class EpisodeTypeController(private val episodeTypeRepository: EpisodeTypeRepository) :
+class EpisodeTypeController(private val service: EpisodeTypeService) :
     IController<EpisodeType>("/episodetypes") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
@@ -21,7 +21,7 @@ class EpisodeTypeController(private val episodeTypeRepository: EpisodeTypeReposi
     fun Route.getAll() {
         get {
             println("GET $prefix")
-            call.respond(episodeTypeRepository.getAll())
+            call.respond(service.getAll())
         }
     }
 
@@ -37,12 +37,13 @@ class EpisodeTypeController(private val episodeTypeRepository: EpisodeTypeReposi
                     return@post
                 }
 
-                if (episodeTypeRepository.exists("name", episodeType.name)) {
+                if (service.repository.exists("name", episodeType.name)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                call.respond(HttpStatusCode.Created, episodeTypeRepository.save(episodeType))
+                call.respond(HttpStatusCode.Created, service.repository.save(episodeType))
+                service.invalidateAll()
             } catch (e: Exception) {
                 printError(call, e)
             }

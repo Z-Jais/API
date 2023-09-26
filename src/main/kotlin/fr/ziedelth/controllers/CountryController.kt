@@ -2,14 +2,14 @@ package fr.ziedelth.controllers
 
 import fr.ziedelth.entities.Country
 import fr.ziedelth.entities.isNullOrNotValid
-import fr.ziedelth.repositories.CountryRepository
+import fr.ziedelth.services.CountryService
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class CountryController(private val countryRepository: CountryRepository) : IController<Country>("/countries") {
+class CountryController(private val service: CountryService) : IController<Country>("/countries") {
     fun getRoutes(routing: Routing) {
         routing.route(prefix) {
             getAll()
@@ -20,7 +20,7 @@ class CountryController(private val countryRepository: CountryRepository) : ICon
     fun Route.getAll() {
         get {
             println("GET $prefix")
-            call.respond(countryRepository.getAll())
+            call.respond(service.getAll())
         }
     }
 
@@ -36,17 +36,18 @@ class CountryController(private val countryRepository: CountryRepository) : ICon
                     return@post
                 }
 
-                if (countryRepository.exists("tag", country.tag)) {
+                if (service.repository.exists("tag", country.tag)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                if (countryRepository.exists("name", country.name)) {
+                if (service.repository.exists("name", country.name)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                call.respond(HttpStatusCode.Created, countryRepository.save(country))
+                call.respond(HttpStatusCode.Created, service.repository.save(country))
+                service.invalidateAll()
             } catch (e: Exception) {
                 printError(call, e)
             }
