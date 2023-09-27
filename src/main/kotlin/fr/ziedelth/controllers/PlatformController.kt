@@ -1,31 +1,31 @@
 package fr.ziedelth.controllers
 
+import com.google.inject.Inject
 import fr.ziedelth.entities.Platform
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.PlatformRepository
+import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class PlatformController(private val platformRepository: PlatformRepository) : IController<Platform>("/platforms") {
-    fun getRoutes(routing: Routing) {
-        routing.route(prefix) {
-            getAll()
-            getAttachment()
-            create()
-        }
-    }
+class PlatformController : AttachmentController<Platform>("/platforms") {
+    @Inject
+    private lateinit var platformRepository: PlatformRepository
 
-    fun Route.getAll() {
+    @APIRoute
+    private fun Route.getAll() {
         get {
             println("GET $prefix")
             call.respond(platformRepository.getAll())
         }
     }
 
-    private fun Route.create() {
+    @APIRoute
+    private fun Route.save() {
         post {
             println("POST $prefix")
 
@@ -43,6 +43,7 @@ class PlatformController(private val platformRepository: PlatformRepository) : I
                 }
 
                 call.respond(HttpStatusCode.Created, platformRepository.save(platform))
+                ImageCache.cache(platform.uuid, platform.image!!)
             } catch (e: Exception) {
                 printError(call, e)
             }

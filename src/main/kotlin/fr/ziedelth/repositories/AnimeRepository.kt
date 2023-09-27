@@ -1,17 +1,16 @@
 package fr.ziedelth.repositories
 
-import fr.ziedelth.controllers.IController
+import fr.ziedelth.controllers.AbstractController
 import fr.ziedelth.dtos.MissingAnime
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Episode
-import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.unaccent
 import java.time.DayOfWeek
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class AnimeRepository(database: Database) : AbstractRepository<Anime>(database),
+class AnimeRepository : AbstractRepository<Anime>(),
     IPageRepository<Anime> {
     fun findByHash(tag: String, hash: String): UUID? {
         return database.inTransaction {
@@ -95,7 +94,7 @@ class AnimeRepository(database: Database) : AbstractRepository<Anime>(database),
     }
 
     fun getMissingAnimes(
-        filterData: IController.FilterData,
+        filterData: AbstractController.FilterData,
         page: Int,
         limit: Int
     ): List<MissingAnime> {

@@ -2,13 +2,17 @@ package fr.ziedelth.services
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.google.inject.Inject
 import fr.ziedelth.caches.PaginationAnimeCacheKey
 import fr.ziedelth.caches.PaginationCountryCacheKey
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.repositories.EpisodeRepository
 import java.util.*
 
-class EpisodeService(val repository: EpisodeRepository) {
+class EpisodeService : AbstractService() {
+    @Inject
+    private lateinit var repository: EpisodeRepository
+
     private val paginationCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<PaginationCountryCacheKey, List<Episode>>() {
             override fun load(key: PaginationCountryCacheKey): List<Episode> {
