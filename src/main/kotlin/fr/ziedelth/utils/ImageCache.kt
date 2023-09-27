@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.util.*
 
 object ImageCache {
-    data class Image(val bytes: ByteArray, val type: String) {
+    data class Image(val url: String, val bytes: ByteArray = byteArrayOf(), val type: String = "jpg") {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -25,11 +25,35 @@ object ImageCache {
         }
     }
 
-    private val cache = mutableMapOf<UUID, Image>()
-    private var totalSize = 0
+    private val cache = mutableMapOf<UUID, Pair<Image, Boolean>>()
 
     fun contains(uuid: UUID) = cache.containsKey(uuid)
-    fun get(uuid: UUID) = cache[uuid]
+
+    fun get(uuid: UUID): Image? {
+        val pair = cache[uuid] ?: return null
+
+        if (pair.second) {
+            return pair.first
+        }
+
+        println("Encoding image to WebP")
+        val url = pair.first.url
+        var bytes: ByteArray? = null
+
+        try {
+            bytes = saveImage(url).readBytes()
+            val webp = encodeToWebP(bytes)
+            cache[uuid] = Image(url, webp, "webp") to true
+        } catch (e: Exception) {
+            if (bytes != null) {
+                cache[uuid] = Image(url, bytes, "jpg") to true
+            } else {
+                println("Failed to load image $url : ${e.message}")
+            }
+        }
+
+        return cache[uuid]?.first
+    }
 
     private fun encodeToWebP(image: ByteArray): ByteArray {
         val matImage = Imgcodecs.imdecode(MatOfByte(*image), Imgcodecs.IMREAD_UNCHANGED)
@@ -51,46 +75,12 @@ object ImageCache {
         return tmpFile.inputStream()
     }
 
-    fun cachingNetworkImage(uuid: UUID, url: String) {
-        if (contains(uuid)) return
-        var bytes: ByteArray? = null
-
-        try {
-            bytes = saveImage(url).readBytes()
-            val webp = encodeToWebP(bytes)
-            cache[uuid] = Image(webp, "webp")
-        } catch (e: Exception) {
-            if (bytes != null) {
-                cache[uuid] = Image(bytes, "jpg")
-            } else {
-                println("Failed to load image $url : ${e.message}")
-                this.totalSize--
-            }
-        }
-    }
-
-    private fun startPrintProgressThread() {
-        val thread = Thread {
-            val marginError = 5 // In percent
-            var totalSize: Double
-            var isRunning = true
-
-            while (isRunning) {
-                totalSize = this.totalSize * (1 - marginError / 100.0)
-                isRunning = cache.size < totalSize
-                println("Progress : ${cache.size}/${this.totalSize} (${totalSize.toInt()} with $marginError% margin error)")
-                if (!isRunning) println("Done")
-                Thread.sleep(5000)
-            }
-        }
-
-        thread.isDaemon = true
-        thread.start()
+    fun cache(uuid: UUID, url: String) {
+        cache[uuid] = Image(url) to false
     }
 
     fun invalidCache(database: Database) {
         cache.clear()
-        totalSize = 0
 
         try {
             database.inTransaction { session ->
@@ -108,14 +98,12 @@ object ImageCache {
                 println("Episodes : ${episodes.size}")
 
                 val combinedImages = platforms + animes + episodes
-                totalSize = combinedImages.size
-                startPrintProgressThread()
 
-                Thread {
-                    combinedImages.parallelStream().forEach {
-                        cachingNetworkImage(it[0] as UUID, it[1] as String)
-                    }
-                }.start()
+                combinedImages.parallelStream().forEach {
+                    val uuid = it[0] as UUID
+                    val url = it[1] as String
+                    cache(uuid, url)
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()

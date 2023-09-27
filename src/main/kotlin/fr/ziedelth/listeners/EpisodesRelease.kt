@@ -12,7 +12,7 @@ class EpisodesRelease : Listener {
     private var lastDaySend = 0
     private var lastSend = mutableListOf<UUID>()
 
-    fun toString(triple: Triple<EpisodeType, Int ,LangType>): String {
+    fun toString(triple: Triple<EpisodeType, Int, LangType>): String {
         val etName = when (triple.first.name) {
             "EPISODE" -> "Épisode"
             "SPECIAL" -> "Spécial"
@@ -38,7 +38,8 @@ class EpisodesRelease : Listener {
             lastSend.clear()
         }
 
-        val animes = event.episodes.map { it.anime to toString(Triple(it.episodeType!!, it.number!!, it.langType!!)) }.distinctBy { it.first?.uuid }.filter { !lastSend.contains(it.first?.uuid) }
+        val animes = event.episodes.map { it.anime to toString(Triple(it.episodeType!!, it.number!!, it.langType!!)) }
+            .distinctBy { it.first?.uuid }.filter { !lastSend.contains(it.first?.uuid) }
         if (animes.isEmpty()) return
         lastSend.addAll(animes.map { it.first!!.uuid })
 

@@ -1,30 +1,30 @@
 package fr.ziedelth.controllers
 
+import com.google.inject.Inject
 import fr.ziedelth.entities.Genre
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.GenreRepository
+import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class GenreController(private val genreRepository: GenreRepository) : IController<Genre>("/genres") {
-    fun getRoutes(routing: Routing) {
-        routing.route(prefix) {
-            getAll()
-            create()
-        }
-    }
+class GenreController : AbstractController<Genre>("/genres") {
+    @Inject
+    private lateinit var genreRepository: GenreRepository
 
-    fun Route.getAll() {
+    @APIRoute
+    private fun Route.getAll() {
         get {
             println("GET $prefix")
             call.respond(genreRepository.getAll())
         }
     }
 
-    private fun Route.create() {
+    @APIRoute
+    private fun Route.save() {
         post {
             println("POST $prefix")
 

@@ -2,9 +2,8 @@ package fr.ziedelth.repositories
 
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.utils.Constant
-import fr.ziedelth.utils.Database
 
-class SimulcastRepository(database: Database) : AbstractRepository<Simulcast>(database) {
+class SimulcastRepository : AbstractRepository<Simulcast>() {
     fun getAll(tag: String?): List<Simulcast> {
         val list = database.inTransaction {
             val query = it.createQuery("SELECT simulcasts FROM Anime WHERE country.tag = :tag", Simulcast::class.java)

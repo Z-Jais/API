@@ -1,30 +1,34 @@
 package fr.ziedelth.controllers
 
+import com.google.inject.Inject
 import fr.ziedelth.entities.LangType
 import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.repositories.LangTypeRepository
 import fr.ziedelth.services.LangTypeService
+import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class LangTypeController(private val service: LangTypeService) : IController<LangType>("/langtypes") {
-    fun getRoutes(routing: Routing) {
-        routing.route(prefix) {
-            getAll()
-            create()
-        }
-    }
+class LangTypeController : AbstractController<LangType>("/langtypes") {
+    @Inject
+    private lateinit var langTypeRepository: LangTypeRepository
 
-    fun Route.getAll() {
+    @Inject
+    private lateinit var langTypeService: LangTypeService
+
+    @APIRoute
+    private fun Route.getAll() {
         get {
             println("GET $prefix")
-            call.respond(service.getAll())
+            call.respond(langTypeService.getAll())
         }
     }
 
-    private fun Route.create() {
+    @APIRoute
+    private fun Route.save() {
         post {
             println("POST $prefix")
 
@@ -36,13 +40,13 @@ class LangTypeController(private val service: LangTypeService) : IController<Lan
                     return@post
                 }
 
-                if (service.repository.exists("name", langType.name)) {
+                if (langTypeRepository.exists("name", langType.name)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                call.respond(HttpStatusCode.Created, service.repository.save(langType))
-                service.invalidateAll()
+                call.respond(HttpStatusCode.Created, langTypeRepository.save(langType))
+                langTypeService.invalidateAll()
             } catch (e: Exception) {
                 printError(call, e)
             }
