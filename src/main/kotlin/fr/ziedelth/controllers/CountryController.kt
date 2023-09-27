@@ -1,30 +1,34 @@
 package fr.ziedelth.controllers
 
+import com.google.inject.Inject
 import fr.ziedelth.entities.Country
 import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.services.CountryService
+import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class CountryController(private val service: CountryService) : IController<Country>("/countries") {
-    fun getRoutes(routing: Routing) {
-        routing.route(prefix) {
-            getAll()
-            create()
-        }
-    }
+class CountryController : AbstractController<Country>("/countries") {
+    @Inject
+    private lateinit var countryRepository: CountryRepository
 
-    fun Route.getAll() {
+    @Inject
+    private lateinit var countryService: CountryService
+
+    @APIRoute
+    private fun Route.getAll() {
         get {
             println("GET $prefix")
-            call.respond(service.getAll())
+            call.respond(countryService.getAll())
         }
     }
 
-    private fun Route.create() {
+    @APIRoute
+    private fun Route.save() {
         post {
             println("POST $prefix")
 
@@ -36,18 +40,18 @@ class CountryController(private val service: CountryService) : IController<Count
                     return@post
                 }
 
-                if (service.repository.exists("tag", country.tag)) {
+                if (countryRepository.exists("tag", country.tag)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                if (service.repository.exists("name", country.name)) {
+                if (countryRepository.exists("name", country.name)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                call.respond(HttpStatusCode.Created, service.repository.save(country))
-                service.invalidateAll()
+                call.respond(HttpStatusCode.Created, countryRepository.save(country))
+                countryService.invalidateAll()
             } catch (e: Exception) {
                 printError(call, e)
             }

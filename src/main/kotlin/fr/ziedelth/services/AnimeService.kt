@@ -2,6 +2,7 @@ package fr.ziedelth.services
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.google.inject.Inject
 import fr.ziedelth.caches.DayCountryCacheKey
 import fr.ziedelth.caches.PaginationSimulcastCountryCacheKey
 import fr.ziedelth.caches.SearchCountryCacheKey
@@ -10,7 +11,10 @@ import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.utils.unaccent
 import java.util.*
 
-class AnimeService(val repository: AnimeRepository) {
+class AnimeService : AbstractService() {
+    @Inject
+    private lateinit var repository: AnimeRepository
+
     private val paginationSimulcastCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<PaginationSimulcastCountryCacheKey, List<Anime>>() {
             override fun load(key: PaginationSimulcastCountryCacheKey): List<Anime> {

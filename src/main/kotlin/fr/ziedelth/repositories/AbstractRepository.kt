@@ -1,10 +1,14 @@
 package fr.ziedelth.repositories
 
+import com.google.inject.Inject
 import fr.ziedelth.utils.Database
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
-open class AbstractRepository<T>(val database: Database) {
+open class AbstractRepository<T> {
+    @Inject
+    protected lateinit var database: Database
+
     private val entityClass: Class<T> =
         (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
     private val entityName: String = entityClass.simpleName

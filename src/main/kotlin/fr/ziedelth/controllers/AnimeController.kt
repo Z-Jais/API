@@ -1,11 +1,15 @@
 package fr.ziedelth.controllers
 
+import com.google.inject.Inject
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.repositories.CountryRepository
+import fr.ziedelth.repositories.EpisodeRepository
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -13,77 +17,80 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.*
 
-class AnimeController(
-    private val countryRepository: CountryRepository,
-    private val service: AnimeService,
-    private val episodeService: EpisodeService
-) :
-    IController<Anime>("/animes") {
-    fun getRoutes(routing: Routing) {
-        routing.route(prefix) {
-            search()
-            getByPage()
-            getAttachment()
-            getMissing()
-            create()
-            merge()
-            diary()
+class AnimeController : AttachmentController<Anime>("/animes") {
+    @Inject
+    private lateinit var countryRepository: CountryRepository
+
+    @Inject
+    private lateinit var episodeRepository: EpisodeRepository
+
+    @Inject
+    private lateinit var episodeService: EpisodeService
+
+    @Inject
+    private lateinit var animeRepository: AnimeRepository
+
+    @Inject
+    private lateinit var animeService: AnimeService
+
+    @APIRoute
+    private fun Route.searchByCountryAndHash() {
+        get("/country/{country}/search/hash/{hash}") {
+            val country = call.parameters["country"]!!
+            val hash = call.parameters["hash"]!!
+            println("GET $prefix/country/$country/search/hash/$hash")
+            val anime = animeRepository.findByHash(country, hash)
+            call.respond(if (anime != null) mapOf("uuid" to anime) else HttpStatusCode.NotFound)
         }
     }
 
-    private fun Route.search() {
-        route("/country/{country}/search") {
-            get("/hash/{hash}") {
-                val country = call.parameters["country"]!!
-                val hash = call.parameters["hash"]!!
-                println("GET $prefix/country/$country/search/hash/$hash")
-                val anime = service.repository.findByHash(country, hash)
-                call.respond(if (anime != null) mapOf("uuid" to anime) else HttpStatusCode.NotFound)
-            }
+    @APIRoute
+    private fun Route.searchByCountryAndName() {
+        get("/country/{country}/search/name/{name}") {
+            val country = call.parameters["country"]!!
+            val name = call.parameters["name"]!!
+            println("GET $prefix/country/$country/search/name/$name")
 
-            get("/name/{name}") {
-                val country = call.parameters["country"]!!
-                val name = call.parameters["name"]!!
-                println("GET $prefix/country/$country/search/name/$name")
-
-                try {
-                    call.respond(service.findByName(country, name))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+            try {
+                call.respond(animeService.findByName(country, name))
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
-    private fun Route.getByPage() {
+    @APIRoute
+    private fun Route.paginationByCountryAndSimulcast() {
         get("/country/{country}/simulcast/{simulcast}/page/{page}/limit/{limit}") {
             try {
                 val country = call.parameters["country"]!!
                 val simulcast = call.parameters["simulcast"]!!
                 val (page, limit) = getPageAndLimit()
                 println("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
-                call.respond(service.getByPage(country, UUID.fromString(simulcast), page, limit))
+                call.respond(animeService.getByPage(country, UUID.fromString(simulcast), page, limit))
             } catch (e: Exception) {
                 printError(call, e)
             }
         }
     }
 
-    private fun Route.getMissing() {
+    @APIRoute
+    private fun Route.paginationMissing() {
         post("/missing/page/{page}/limit/{limit}") {
             try {
                 val watchlist = call.receive<String>()
                 val (page, limit) = getPageAndLimit()
                 println("POST $prefix/missing/page/$page/limit/$limit")
                 val filterData = decode(watchlist)
-                call.respond(service.repository.getMissingAnimes(filterData, page, limit))
+                call.respond(animeRepository.getMissingAnimes(filterData, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
             }
         }
     }
 
-    private fun Route.create() {
+    @APIRoute
+    private fun Route.save() {
         post {
             println("POST $prefix")
 
@@ -106,7 +113,7 @@ class AnimeController(
                     return@post
                 }
 
-                if (service.repository.findOneByName(
+                if (animeRepository.findOneByName(
                         anime.country!!.tag!!,
                         anime.name!!
                     )?.country?.uuid == anime.country!!.uuid
@@ -118,17 +125,17 @@ class AnimeController(
 
                 val hash = anime.hash()
 
-                if (service.repository.findByHash(anime.country!!.tag!!, hash) != null) {
+                if (animeRepository.findByHash(anime.country!!.tag!!, hash) != null) {
                     println("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
                 anime.hashes.add(hash)
-                val savedAnime = service.repository.save(anime)
-                ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
+                val savedAnime = animeRepository.save(anime)
+                ImageCache.cache(savedAnime.uuid, savedAnime.image!!)
 
-                service.invalidateAll()
+                animeService.invalidateAll()
                 call.respond(HttpStatusCode.Created, savedAnime)
             } catch (e: Exception) {
                 printError(call, e)
@@ -136,13 +143,14 @@ class AnimeController(
         }
     }
 
+    @APIRoute
     private fun Route.merge() {
         put("/merge") {
             // Get list of uuids
             val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
             println("PUT $prefix/merge")
             // Get anime
-            val animes = uuids.mapNotNull { service.repository.find(it) }
+            val animes = uuids.mapNotNull { animeRepository.find(it) }
 
             if (animes.isEmpty()) {
                 println("Anime not found")
@@ -167,14 +175,14 @@ class AnimeController(
             val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
             // Get all episodes
             val episodes =
-                animes.map { episodeService.repository.getAllBy("anime.uuid", it.uuid) }.flatten()
+                animes.map { episodeRepository.getAllBy("anime.uuid", it.uuid) }.flatten()
                     .distinctBy { it.uuid }
                     .toMutableSet()
 
             val firstAnime = animes.first()
 
-            val savedAnime = service.repository.find(
-                service.repository.save(
+            val savedAnime = animeRepository.find(
+                animeRepository.save(
                     Anime(
                         country = countries.first(),
                         name = "${animes.first().name} (${animes.size})",
@@ -188,26 +196,27 @@ class AnimeController(
                 ).uuid
             )!!
 
-            ImageCache.cachingNetworkImage(savedAnime.uuid, savedAnime.image!!)
-            episodeService.repository.saveAll(episodes.map { it.copy(anime = savedAnime) })
+            ImageCache.cache(savedAnime.uuid, savedAnime.image!!)
+            episodeRepository.saveAll(episodes.map { it.copy(anime = savedAnime) })
 
             // Delete animes
-            service.repository.deleteAll(animes)
+            animeRepository.deleteAll(animes)
 
-            service.invalidateAll()
+            animeService.invalidateAll()
             episodeService.invalidateAll()
             call.respond(HttpStatusCode.OK, savedAnime)
         }
     }
 
-    private fun Route.diary() {
+    @APIRoute
+    private fun Route.diaryByCountryAndDay() {
         get("/diary/country/{country}/day/{day}") {
             val country = call.parameters["country"]!!
             var day = call.parameters["day"]!!.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
             if (day == 0) day = 7
             if (day > 7) day = 1
             println("GET $prefix/diary/country/$country/day/$day")
-            call.respond(service.getDiary(country, day))
+            call.respond(animeService.getDiary(country, day))
         }
     }
 }

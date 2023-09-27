@@ -1,14 +1,13 @@
 package fr.ziedelth.repositories
 
-import fr.ziedelth.controllers.IController
+import fr.ziedelth.controllers.AbstractController
 import fr.ziedelth.entities.Episode
-import fr.ziedelth.utils.Database
 import java.util.*
 
 private const val ORDER =
     "ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name"
 
-class EpisodeRepository(database: Database) : AbstractRepository<Episode>(database),
+class EpisodeRepository : AbstractRepository<Episode>(),
     IPageRepository<Episode> {
     override fun getByPage(tag: String, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
@@ -38,7 +37,7 @@ class EpisodeRepository(database: Database) : AbstractRepository<Episode>(databa
     }
 
     fun getByPageWithListFilter(
-        filterData: IController.FilterData,
+        filterData: AbstractController.FilterData,
         page: Int,
         limit: Int
     ): List<Episode> {

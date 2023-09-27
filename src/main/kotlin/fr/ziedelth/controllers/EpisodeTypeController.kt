@@ -1,31 +1,34 @@
 package fr.ziedelth.controllers
 
+import com.google.inject.Inject
 import fr.ziedelth.entities.EpisodeType
 import fr.ziedelth.entities.isNullOrNotValid
+import fr.ziedelth.repositories.EpisodeTypeRepository
 import fr.ziedelth.services.EpisodeTypeService
+import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class EpisodeTypeController(private val service: EpisodeTypeService) :
-    IController<EpisodeType>("/episodetypes") {
-    fun getRoutes(routing: Routing) {
-        routing.route(prefix) {
-            getAll()
-            create()
-        }
-    }
+class EpisodeTypeController : AbstractController<EpisodeType>("/episodetypes") {
+    @Inject
+    private lateinit var episodeTypeRepository: EpisodeTypeRepository
 
-    fun Route.getAll() {
+    @Inject
+    private lateinit var episodeTypeService: EpisodeTypeService
+
+    @APIRoute
+    private fun Route.getAll() {
         get {
             println("GET $prefix")
-            call.respond(service.getAll())
+            call.respond(episodeTypeService.getAll())
         }
     }
 
-    private fun Route.create() {
+    @APIRoute
+    private fun Route.save() {
         post {
             println("POST $prefix")
 
@@ -37,13 +40,13 @@ class EpisodeTypeController(private val service: EpisodeTypeService) :
                     return@post
                 }
 
-                if (service.repository.exists("name", episodeType.name)) {
+                if (episodeTypeRepository.exists("name", episodeType.name)) {
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
 
-                call.respond(HttpStatusCode.Created, service.repository.save(episodeType))
-                service.invalidateAll()
+                call.respond(HttpStatusCode.Created, episodeTypeRepository.save(episodeType))
+                episodeTypeService.invalidateAll()
             } catch (e: Exception) {
                 printError(call, e)
             }
