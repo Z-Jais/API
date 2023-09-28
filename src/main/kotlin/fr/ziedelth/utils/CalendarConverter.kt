@@ -14,4 +14,13 @@ object CalendarConverter {
         this.utcFormatter.timeZone = timeZone
         return this.utcFormatter.format(Date.from(iso8601calendar?.toInstant()))
     }
+
+    fun toUTCCalendar(iso8601String: String): Calendar {
+        this.utcFormatter.timeZone = timeZone
+        val calendar = Calendar.getInstance()
+        val date = this.utcFormatter.parse(iso8601String)
+        calendar.time = date
+        calendar.timeZone = timeZone
+        return calendar
+    }
 }

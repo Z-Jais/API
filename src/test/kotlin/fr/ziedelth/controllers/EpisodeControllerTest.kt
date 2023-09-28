@@ -4,7 +4,9 @@ import fr.ziedelth.AbstractAPITest
 import fr.ziedelth.entities.*
 import fr.ziedelth.entities.Platform
 import fr.ziedelth.plugins.*
+import fr.ziedelth.utils.CalendarConverter
 import fr.ziedelth.utils.Constant
+import fr.ziedelth.utils.toISO8601
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -169,6 +171,86 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
             expect(3) { json.size }
             expect(3) { json[2].number }
+        }
+    }
+
+    @Test
+    fun saveForNextSimulcast() {
+        testApplication {
+            val client = createClient {
+                install(ContentNegotiation) {
+                    gson()
+                }
+            }
+
+            application {
+                configureHTTP()
+                configureRoutingTest()
+            }
+
+            val platform = platformRepository.getAll().first()
+            val anime = animeRepository.getAll()
+            val episodeType = episodeTypeRepository.getAll().last()
+            val langType = langTypeRepository.getAll().first()
+
+            val date = "2023-09-28T00:00:00Z"
+
+            val response = client.post("/episodes/multiple") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    listOf(
+                        Episode(
+                            anime = anime.first(),
+                            releaseDate = date,
+                            platform = platform,
+                            episodeType = episodeType,
+                            langType = langType,
+                            number = 1,
+                            season = 1,
+                            url = "https://www.google.com",
+                            image = "https://www.google.com",
+                            hash = "hash",
+                        ),
+                        Episode(
+                            anime = anime.last(),
+                            releaseDate = date,
+                            platform = platform,
+                            episodeType = episodeType,
+                            langType = langType,
+                            number = 12,
+                            season = 1,
+                            url = "https://www.google.com",
+                            image = "https://www.google.com",
+                            hash = "hash-2",
+                        ),
+                    )
+                )
+            }
+
+            val tmpSimulcast = Simulcast.getSimulcastFrom(date)
+            expect("SUMMER") { tmpSimulcast.season }
+            expect(2023) { tmpSimulcast.year }
+
+            val nextDate = CalendarConverter.toUTCCalendar(date)
+            nextDate.add(Calendar.DAY_OF_YEAR, 10)
+            val tmpNextSimulcast = Simulcast.getSimulcastFrom(nextDate.toISO8601())
+            expect("AUTUMN") { tmpNextSimulcast.season }
+            expect(2023) { tmpNextSimulcast.year }
+
+            expect(HttpStatusCode.Created) { response.status }
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
+            expect(2) { json.size }
+
+            val simulcasts = json[0].anime?.simulcasts?.toMutableList()?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+            println(simulcasts)
+
+            expect(tmpNextSimulcast.season) { simulcasts?.last()?.season }
+            expect(tmpNextSimulcast.year) { simulcasts?.last()?.year }
+
+            val simulcasts2 = json[1].anime?.simulcasts?.toMutableList()?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+            println(simulcasts2)
+            expect(tmpSimulcast.season) { simulcasts2?.last()?.season }
+            expect(tmpSimulcast.year) { simulcasts2?.last()?.year }
         }
     }
 
