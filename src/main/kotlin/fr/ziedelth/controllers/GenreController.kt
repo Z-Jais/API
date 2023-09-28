@@ -27,6 +27,7 @@ class GenreController : AbstractController<Genre>("/genres") {
     private fun Route.save() {
         post {
             println("POST $prefix")
+            if (isUnauthorized()) return@post
 
             try {
                 val genre = call.receive<Genre>()
