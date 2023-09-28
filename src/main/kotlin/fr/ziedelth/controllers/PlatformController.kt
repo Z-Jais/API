@@ -28,6 +28,7 @@ class PlatformController : AttachmentController<Platform>("/platforms") {
     private fun Route.save() {
         post {
             println("POST $prefix")
+            if (isUnauthorized()) return@post
 
             try {
                 val platform = call.receive<Platform>()

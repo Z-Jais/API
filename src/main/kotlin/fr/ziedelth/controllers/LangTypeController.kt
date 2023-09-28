@@ -31,6 +31,7 @@ class LangTypeController : AbstractController<LangType>("/langtypes") {
     private fun Route.save() {
         post {
             println("POST $prefix")
+            if (isUnauthorized()) return@post
 
             try {
                 val langType = call.receive<LangType>()

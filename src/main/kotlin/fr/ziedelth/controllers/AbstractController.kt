@@ -28,7 +28,12 @@ open class AbstractController<T : Serializable>(open val prefix: String) {
     fun decode(watchlist: String): FilterData =
         Constant.gson.fromJson(Decoder.fromGzip(watchlist), FilterData::class.java)
 
-    fun PipelineContext<Unit, ApplicationCall>.getPageAndLimit(): Pair<Int, Int> {
+    suspend fun printError(call: ApplicationCall, e: Exception) {
+        e.printStackTrace()
+        call.respond(HttpStatusCode.InternalServerError, e.message ?: UNKNOWN_MESSAGE_ERROR)
+    }
+
+    protected fun PipelineContext<Unit, ApplicationCall>.getPageAndLimit(): Pair<Int, Int> {
         val page = call.parameters["page"]!!.toIntOrNull() ?: throw IllegalArgumentException("Page is not valid")
         val limit = call.parameters["limit"]!!.toIntOrNull() ?: throw IllegalArgumentException("Limit is not valid")
 
@@ -38,8 +43,17 @@ open class AbstractController<T : Serializable>(open val prefix: String) {
         return Pair(page, limit)
     }
 
-    suspend fun printError(call: ApplicationCall, e: Exception) {
-        e.printStackTrace()
-        call.respond(HttpStatusCode.InternalServerError, e.message ?: UNKNOWN_MESSAGE_ERROR)
+    protected suspend fun PipelineContext<Unit, ApplicationCall>.isUnauthorized(): Boolean {
+        if (!Constant.secureKey.isNullOrBlank()) {
+            val authorization = call.request.headers[HttpHeaders.Authorization]
+
+            if (Constant.secureKey != authorization) {
+                println("Unauthorized request")
+                call.respond(HttpStatusCode.Unauthorized, "Secure key not equals")
+                return true
+            }
+        }
+
+        return false
     }
 }

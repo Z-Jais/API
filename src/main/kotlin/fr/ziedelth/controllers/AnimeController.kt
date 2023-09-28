@@ -93,6 +93,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     private fun Route.save() {
         post {
             println("POST $prefix")
+            if (isUnauthorized()) return@post
 
             try {
                 val anime = call.receive<Anime>()
@@ -146,6 +147,8 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     @APIRoute
     private fun Route.merge() {
         put("/merge") {
+            if (isUnauthorized()) return@put
+
             // Get list of uuids
             val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
             println("PUT $prefix/merge")
