@@ -7,4 +7,6 @@ object Constant {
 
     // Sort by year and season started by "Winter", "Spring", "Summer", "Autumn"
     val seasons = listOf("WINTER", "SPRING", "SUMMER", "AUTUMN")
+
+    val secureKey: String? = System.getenv("SECURE_KEY")
 }

@@ -149,6 +149,7 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
     private fun Route.saveMultiple() {
         post("/multiple") {
             println("POST $prefix/multiple")
+            if (isUnauthorized()) return@post
 
             try {
                 val episodes = call.receive<List<Episode>>().filter { !episodeRepository.exists("hash", it.hash!!) }
