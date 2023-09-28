@@ -9,9 +9,11 @@ import fr.ziedelth.repositories.*
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.services.SimulcastService
+import fr.ziedelth.utils.CalendarConverter
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.routes.APIRoute
+import fr.ziedelth.utils.toISO8601
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -123,13 +125,23 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             episode.number = episodeRepository.getLastNumber(episode) + 1
         }
 
-        val tmpSimulcast =
-            Simulcast.getSimulcast(episode.releaseDate.split("-")[0].toInt(), episode.releaseDate.split("-")[1].toInt())
-        val simulcast =
-            simulcastRepository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
+        val releaseDatePlus10Days = CalendarConverter.toUTCCalendar(episode.releaseDate)
+        releaseDatePlus10Days.add(Calendar.DAY_OF_YEAR, 10)
+        val tmpSimulcast = Simulcast.getSimulcastFrom(episode.releaseDate)
+        val tmpNextSimulcast = Simulcast.getSimulcastFrom(releaseDatePlus10Days.toISO8601())
 
-        if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
-            episode.anime!!.simulcasts.add(simulcast)
+        if (episode.number == 1 && tmpSimulcast != tmpNextSimulcast) {
+            val simulcast = simulcastRepository.findBySeasonAndYear(tmpNextSimulcast.season!!, tmpNextSimulcast.year!!) ?: tmpNextSimulcast
+
+            if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
+                episode.anime!!.simulcasts.add(simulcast)
+            }
+        } else {
+            val simulcast = simulcastRepository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
+
+            if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
+                episode.anime!!.simulcasts.add(simulcast)
+            }
         }
     }
 

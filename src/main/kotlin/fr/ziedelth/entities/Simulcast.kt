@@ -1,6 +1,8 @@
 package fr.ziedelth.entities
 
+import fr.ziedelth.utils.CalendarConverter
 import fr.ziedelth.utils.Constant
+import fr.ziedelth.utils.toISO8601
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -25,5 +27,16 @@ class Simulcast(
             val season = Constant.seasons[(month - 1) / 3]
             return Simulcast(season = season, year = year)
         }
+
+        fun getSimulcastFrom(date: String): Simulcast {
+            val calendar = CalendarConverter.toUTCCalendar(date)
+            val iso8601 = calendar.toISO8601()
+            val split = iso8601.split("-")
+            return getSimulcast(split[0].toInt(), split[1].toInt())
+        }
+    }
+
+    override fun toString(): String {
+        return "Simulcast(uuid=$uuid, season=$season, year=$year)"
     }
 }
