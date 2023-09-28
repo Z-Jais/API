@@ -40,7 +40,7 @@ class Anime(
     @Column(nullable = false, columnDefinition = "TEXT")
     val image: String? = null,
     @Column(nullable = true, columnDefinition = "TEXT")
-    val description: String? = null,
+    var description: String? = null,
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
         name = "anime_hash",

@@ -145,6 +145,34 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     }
 
     @APIRoute
+    private fun Route.update() {
+        put {
+            println("PUT $prefix")
+            if (isUnauthorized()) return@put
+
+            try {
+                val anime = call.receive<Anime>()
+                var savedAnime = animeRepository.find(anime.uuid)
+
+                if (savedAnime == null) {
+                    call.respond(HttpStatusCode.NotFound, "Anime not found")
+                    return@put
+                }
+
+                if (!anime.description.isNullOrBlank()) {
+                    savedAnime.description = anime.description
+                }
+
+                savedAnime = animeRepository.save(savedAnime)
+                animeService.invalidateAll()
+                call.respond(HttpStatusCode.OK, savedAnime)
+            } catch (e: Exception) {
+                printError(call, e)
+            }
+        }
+    }
+
+    @APIRoute
     private fun Route.merge() {
         put("/merge") {
             if (isUnauthorized()) return@put
