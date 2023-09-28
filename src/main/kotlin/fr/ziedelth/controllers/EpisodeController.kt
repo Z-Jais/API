@@ -131,13 +131,15 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
         val tmpNextSimulcast = Simulcast.getSimulcastFrom(releaseDatePlus10Days.toISO8601())
 
         if (episode.number == 1 && tmpSimulcast != tmpNextSimulcast) {
-            val simulcast = simulcastRepository.findBySeasonAndYear(tmpNextSimulcast.season!!, tmpNextSimulcast.year!!) ?: tmpNextSimulcast
+            val simulcast = simulcastRepository.findBySeasonAndYear(tmpNextSimulcast.season!!, tmpNextSimulcast.year!!)
+                ?: tmpNextSimulcast
 
             if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
                 episode.anime!!.simulcasts.add(simulcast)
             }
         } else {
-            val simulcast = simulcastRepository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
+            val simulcast =
+                simulcastRepository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
 
             if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
                 episode.anime!!.simulcasts.add(simulcast)

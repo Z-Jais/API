@@ -241,13 +241,15 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
             expect(2) { json.size }
 
-            val simulcasts = json[0].anime?.simulcasts?.toMutableList()?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+            val simulcasts = json[0].anime?.simulcasts?.toMutableList()
+                ?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
             println(simulcasts)
 
             expect(tmpNextSimulcast.season) { simulcasts?.last()?.season }
             expect(tmpNextSimulcast.year) { simulcasts?.last()?.year }
 
-            val simulcasts2 = json[1].anime?.simulcasts?.toMutableList()?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+            val simulcasts2 = json[1].anime?.simulcasts?.toMutableList()
+                ?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
             println(simulcasts2)
             expect(tmpSimulcast.season) { simulcasts2?.last()?.season }
             expect(tmpSimulcast.year) { simulcasts2?.last()?.year }
