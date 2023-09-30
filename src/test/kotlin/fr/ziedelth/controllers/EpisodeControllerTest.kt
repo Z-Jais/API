@@ -126,6 +126,8 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val episodeType = episodeTypeRepository.getAll().last()
             val langType = langTypeRepository.getAll().first()
 
+            val date = "2023-09-10T00:00:00Z"
+
             val response = client.post("/episodes/multiple") {
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -133,6 +135,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                         Episode(
                             anime = anime,
                             platform = platform,
+                            releaseDate = date,
                             episodeType = episodeType,
                             langType = langType,
                             number = 1,
@@ -144,6 +147,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                         Episode(
                             anime = anime,
                             platform = platform,
+                            releaseDate = date,
                             episodeType = episodeType,
                             langType = langType,
                             number = 2,
@@ -155,6 +159,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                         Episode(
                             anime = anime,
                             platform = platform,
+                            releaseDate = date,
                             episodeType = episodeType,
                             langType = langType,
                             number = -1,
@@ -232,10 +237,16 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             expect(2023) { tmpSimulcast.year }
 
             val nextDate = CalendarConverter.toUTCCalendar(date)
-            nextDate.add(Calendar.DAY_OF_YEAR, 10)
+            nextDate.add(Calendar.DAY_OF_YEAR, 15)
             val tmpNextSimulcast = Simulcast.getSimulcastFrom(nextDate.toISO8601())
             expect("AUTUMN") { tmpNextSimulcast.season }
             expect(2023) { tmpNextSimulcast.year }
+
+            val previousDate = CalendarConverter.toUTCCalendar(date)
+            previousDate.add(Calendar.DAY_OF_YEAR, -15)
+            val tmpPreviousSimulcast = Simulcast.getSimulcastFrom(nextDate.toISO8601())
+            expect("AUTUMN") { tmpPreviousSimulcast.season }
+            expect(2023) { tmpPreviousSimulcast.year }
 
             expect(HttpStatusCode.Created) { response.status }
             val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
@@ -253,6 +264,88 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             println(simulcasts2)
             expect(tmpSimulcast.season) { simulcasts2?.last()?.season }
             expect(tmpSimulcast.year) { simulcasts2?.last()?.year }
+        }
+    }
+
+    @Test
+    fun saveForPreviousSimulcast() {
+        testApplication {
+            val client = createClient {
+                install(ContentNegotiation) {
+                    gson()
+                }
+            }
+
+            application {
+                configureHTTP()
+                configureRoutingTest()
+            }
+
+            val platform = platformRepository.getAll().first()
+            val anime = animeRepository.getAll()
+            val episodeType = episodeTypeRepository.getAll().last()
+            val langType = langTypeRepository.getAll().first()
+
+            val date = "2023-10-10T00:00:00Z"
+
+            val response = client.post("/episodes/multiple") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    listOf(
+                        Episode(
+                            anime = anime.first(),
+                            releaseDate = date,
+                            platform = platform,
+                            episodeType = episodeType,
+                            langType = langType,
+                            number = 1,
+                            season = 1,
+                            url = "https://www.google.com",
+                            image = "https://www.google.com",
+                            hash = "hash",
+                        ),
+                        Episode(
+                            anime = anime.last(),
+                            releaseDate = date,
+                            platform = platform,
+                            episodeType = episodeType,
+                            langType = langType,
+                            number = 12,
+                            season = 1,
+                            url = "https://www.google.com",
+                            image = "https://www.google.com",
+                            hash = "hash-2",
+                        ),
+                    )
+                )
+            }
+
+            val tmpSimulcast = Simulcast.getSimulcastFrom(date)
+            expect("AUTUMN") { tmpSimulcast.season }
+            expect(2023) { tmpSimulcast.year }
+
+            val previousDate = CalendarConverter.toUTCCalendar(date)
+            previousDate.add(Calendar.DAY_OF_YEAR, -15)
+            val tmpPreviousSimulcast = Simulcast.getSimulcastFrom(previousDate.toISO8601())
+            expect("SUMMER") { tmpPreviousSimulcast.season }
+            expect(2023) { tmpPreviousSimulcast.year }
+
+            expect(HttpStatusCode.Created) { response.status }
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
+            expect(2) { json.size }
+
+            val simulcasts = json[0].anime?.simulcasts?.toMutableList()
+                ?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+            println(simulcasts)
+
+            expect(tmpSimulcast.season) { simulcasts?.last()?.season }
+            expect(tmpSimulcast.year) { simulcasts?.last()?.year }
+
+            val simulcasts2 = json[1].anime?.simulcasts?.toMutableList()
+                ?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+            println(simulcasts2)
+            expect(tmpPreviousSimulcast.season) { simulcasts2?.last()?.season }
+            expect(tmpPreviousSimulcast.year) { simulcasts2?.last()?.year }
         }
     }
 
