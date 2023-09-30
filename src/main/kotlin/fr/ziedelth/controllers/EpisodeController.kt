@@ -125,21 +125,37 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             episode.number = episodeRepository.getLastNumber(episode) + 1
         }
 
-        val releaseDatePlus10Days = CalendarConverter.toUTCCalendar(episode.releaseDate)
-        releaseDatePlus10Days.add(Calendar.DAY_OF_YEAR, 10)
-        val tmpSimulcast = Simulcast.getSimulcastFrom(episode.releaseDate)
-        val tmpNextSimulcast = Simulcast.getSimulcastFrom(releaseDatePlus10Days.toISO8601())
+        val releaseDatePlus15Days = CalendarConverter.toUTCCalendar(episode.releaseDate)
+        releaseDatePlus15Days.add(Calendar.DAY_OF_YEAR, 15)
+        val releaseDateMinus15Days = CalendarConverter.toUTCCalendar(episode.releaseDate)
+        releaseDateMinus15Days.add(Calendar.DAY_OF_YEAR, -15)
+        val tmpPreviousSimulcast = Simulcast.getSimulcastFrom(releaseDateMinus15Days.toISO8601())
+        val tmpCurrentSimulcast = Simulcast.getSimulcastFrom(episode.releaseDate)
+        val tmpNextSimulcast = Simulcast.getSimulcastFrom(releaseDatePlus15Days.toISO8601())
 
-        if (episode.number == 1 && tmpSimulcast != tmpNextSimulcast) {
+        println(tmpPreviousSimulcast)
+        println(tmpCurrentSimulcast)
+        println(tmpNextSimulcast)
+
+        if (episode.number!! <= 1 && !tmpCurrentSimulcast.equalsWithoutUUID(tmpNextSimulcast)) {
             val simulcast = simulcastRepository.findBySeasonAndYear(tmpNextSimulcast.season!!, tmpNextSimulcast.year!!)
                 ?: tmpNextSimulcast
 
             if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
                 episode.anime!!.simulcasts.add(simulcast)
             }
+        } else if (episode.number!! > 1 && !tmpCurrentSimulcast.equalsWithoutUUID(tmpPreviousSimulcast)) {
+            val simulcast =
+                simulcastRepository.findBySeasonAndYear(tmpPreviousSimulcast.season!!, tmpPreviousSimulcast.year!!)
+                    ?: tmpPreviousSimulcast
+
+            if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
+                episode.anime!!.simulcasts.add(simulcast)
+            }
         } else {
             val simulcast =
-                simulcastRepository.findBySeasonAndYear(tmpSimulcast.season!!, tmpSimulcast.year!!) ?: tmpSimulcast
+                simulcastRepository.findBySeasonAndYear(tmpCurrentSimulcast.season!!, tmpCurrentSimulcast.year!!)
+                    ?: tmpCurrentSimulcast
 
             if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
                 episode.anime!!.simulcasts.add(simulcast)

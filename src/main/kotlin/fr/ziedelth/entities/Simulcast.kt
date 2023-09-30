@@ -39,4 +39,16 @@ class Simulcast(
     override fun toString(): String {
         return "Simulcast(uuid=$uuid, season=$season, year=$year)"
     }
+
+    fun equalsWithoutUUID(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Simulcast
+
+        if (season != other.season) return false
+        if (year != other.year) return false
+
+        return true
+    }
 }
