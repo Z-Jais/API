@@ -282,7 +282,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             }
 
             val platform = platformRepository.getAll().first()
-            val anime = animeRepository.getAll()
+            val animes = animeRepository.getAll()
             val episodeType = episodeTypeRepository.getAll().last()
             val langType = langTypeRepository.getAll().first()
 
@@ -293,7 +293,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                 setBody(
                     listOf(
                         Episode(
-                            anime = anime.first(),
+                            anime = animes.first(),
                             releaseDate = date,
                             platform = platform,
                             episodeType = episodeType,
@@ -305,7 +305,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                             hash = "hash",
                         ),
                         Episode(
-                            anime = anime.last(),
+                            anime = animes.last(),
                             releaseDate = date,
                             platform = platform,
                             episodeType = episodeType,
@@ -315,6 +315,18 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                             url = "https://www.google.com",
                             image = "https://www.google.com",
                             hash = "hash-2",
+                        ),
+                        Episode(
+                            anime = animes[1],
+                            releaseDate = date,
+                            platform = platform,
+                            episodeType = episodeType,
+                            langType = langType,
+                            number = 2,
+                            season = 1,
+                            url = "https://www.google.com",
+                            image = "https://www.google.com",
+                            hash = "hash-3",
                         ),
                     )
                 )
@@ -332,7 +344,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             expect(HttpStatusCode.Created) { response.status }
             val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
-            expect(2) { json.size }
+            expect(3) { json.size }
 
             val simulcasts = json[0].anime?.simulcasts?.toMutableList()
                 ?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
@@ -344,8 +356,14 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val simulcasts2 = json[1].anime?.simulcasts?.toMutableList()
                 ?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
             println(simulcasts2)
-            expect(tmpPreviousSimulcast.season) { simulcasts2?.last()?.season }
-            expect(tmpPreviousSimulcast.year) { simulcasts2?.last()?.year }
+            expect(tmpSimulcast.season) { simulcasts2?.last()?.season }
+            expect(tmpSimulcast.year) { simulcasts2?.last()?.year }
+
+            val simulcasts3 = json[2].anime?.simulcasts?.toMutableList()
+                ?.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+            println(simulcasts3)
+            expect(tmpPreviousSimulcast.season) { simulcasts3?.last()?.season }
+            expect(tmpPreviousSimulcast.year) { simulcasts3?.last()?.year }
         }
     }
 

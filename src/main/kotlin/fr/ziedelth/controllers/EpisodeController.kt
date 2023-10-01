@@ -133,9 +133,8 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
         val tmpCurrentSimulcast = Simulcast.getSimulcastFrom(episode.releaseDate)
         val tmpNextSimulcast = Simulcast.getSimulcastFrom(releaseDatePlus15Days.toISO8601())
 
-        println(tmpPreviousSimulcast)
-        println(tmpCurrentSimulcast)
-        println(tmpNextSimulcast)
+        val isAnimeReleaseDateBeforeMinus15Days = CalendarConverter.toUTCLocalDateTime(episode.anime!!.releaseDate)
+            .isBefore(CalendarConverter.calendarToLocalDateTime(releaseDateMinus15Days))
 
         if (episode.number!! <= 1 && !tmpCurrentSimulcast.equalsWithoutUUID(tmpNextSimulcast)) {
             val simulcast = simulcastRepository.findBySeasonAndYear(tmpNextSimulcast.season!!, tmpNextSimulcast.year!!)
@@ -144,7 +143,10 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             if (episode.anime!!.simulcasts.isEmpty() || episode.anime!!.simulcasts.none { it.uuid == simulcast.uuid }) {
                 episode.anime!!.simulcasts.add(simulcast)
             }
-        } else if (episode.number!! > 1 && !tmpCurrentSimulcast.equalsWithoutUUID(tmpPreviousSimulcast)) {
+        } else if (episode.number!! > 1 && isAnimeReleaseDateBeforeMinus15Days && !tmpCurrentSimulcast.equalsWithoutUUID(
+                tmpPreviousSimulcast
+            )
+        ) {
             val simulcast =
                 simulcastRepository.findBySeasonAndYear(tmpPreviousSimulcast.season!!, tmpPreviousSimulcast.year!!)
                     ?: tmpPreviousSimulcast
