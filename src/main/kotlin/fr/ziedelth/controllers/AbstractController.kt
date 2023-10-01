@@ -15,18 +15,21 @@ const val MISSING_PARAMETERS_MESSAGE_ERROR = "Missing parameters"
 
 open class AbstractController<T : Serializable>(open val prefix: String) {
     data class FilterData(
-        val animes: List<UUID> = listOf(),
-        val episodes: List<UUID> = listOf(),
-        val episodeTypes: List<UUID> = listOf(),
-        val langTypes: List<UUID> = listOf(),
+        val animes: List<UUID> = listOf(), // Animes in watchlist
+        val episodes: List<UUID> = listOf(), // Episodes seen
+        val episodeTypes: List<UUID> = listOf(), // Episode types wanted to see
+        val langTypes: List<UUID> = listOf(), // Lang types wanted to see
     )
 
     val entityName: String =
         ((javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<*>).simpleName
     val uuidRequest: UUID = UUID.randomUUID()
 
-    fun decode(watchlist: String): FilterData =
-        Constant.gson.fromJson(Decoder.fromGzip(watchlist), FilterData::class.java)
+    fun decode(watchlist: String): FilterData {
+        val filterData = Constant.gson.fromJson(Decoder.fromGzip(watchlist), FilterData::class.java)
+        println("$watchlist - Episodes: ${filterData.episodes.size} - Animes: ${filterData.animes.size}")
+        return filterData
+    }
 
     suspend fun printError(call: ApplicationCall, e: Exception) {
         e.printStackTrace()
