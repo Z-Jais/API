@@ -1,6 +1,9 @@
 package fr.ziedelth.utils
 
+import io.ktor.server.util.*
+import io.ktor.util.*
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.*
 
 val DATE_FORMAT_REGEX = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\$".toRegex()
@@ -22,5 +25,15 @@ object CalendarConverter {
         calendar.time = date
         calendar.timeZone = timeZone
         return calendar
+    }
+
+    @OptIn(InternalAPI::class)
+    fun toUTCLocalDateTime(iso8601String: String): LocalDateTime {
+        this.utcFormatter.timeZone = timeZone
+        return this.utcFormatter.parse(iso8601String).toLocalDateTime()
+    }
+
+    fun calendarToLocalDateTime(calendar: Calendar): LocalDateTime {
+        return toUTCLocalDateTime(calendar.toISO8601())
     }
 }

@@ -41,6 +41,7 @@ internal abstract class AbstractAPITest {
             country = countries.first(),
             name = "One Piece",
             image = "hello",
+            releaseDate = "2020-01-01T00:00:00Z",
             hashes = mutableSetOf("hello"),
             simulcasts = mutableSetOf(simulcasts.first()),
             genres = mutableSetOf(genres.first(), genres.last()),
@@ -49,6 +50,7 @@ internal abstract class AbstractAPITest {
             country = countries.first(),
             name = "Naruto",
             image = "hello",
+            releaseDate = "2020-01-01T00:00:00Z",
             hashes = mutableSetOf("hello2"),
             simulcasts = mutableSetOf(simulcasts.first()),
             genres = mutableSetOf(genres.first(), genres.last()),
@@ -61,7 +63,16 @@ internal abstract class AbstractAPITest {
             simulcasts = mutableSetOf(simulcasts.first()),
             genres = mutableSetOf(genres.first(), genres.last()),
         )
-        animeRepository.saveAll(listOf(anime1, anime2, anime3))
+        val anime4 = Anime(
+            country = countries.first(),
+            name = "Frieren",
+            image = "hello",
+            hashes = mutableSetOf("hello3"),
+            simulcasts = mutableSetOf(simulcasts.first()),
+            releaseDate = "2023-09-29T15:00:00Z",
+            genres = mutableSetOf(genres.first(), genres.last()),
+        )
+        animeRepository.saveAll(listOf(anime1, anime2, anime3, anime4))
         val animes = animeRepository.getAll()
 
         val episodeType1 = EpisodeType(name = "Episode")

@@ -76,7 +76,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
             val jsonNotCached = Constant.gson.fromJson(responseNotCached.bodyAsText(), Array<Anime>::class.java)
 
             expect(HttpStatusCode.OK) { responseNotCached.status }
-            expect(3) { jsonNotCached.size }
+            expect(4) { jsonNotCached.size }
 
             // CACHED
 
@@ -85,7 +85,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
             val jsonCached = Constant.gson.fromJson(responseCached.bodyAsText(), Array<Anime>::class.java)
 
             expect(HttpStatusCode.OK) { responseCached.status }
-            expect(3) { jsonCached.size }
+            expect(4) { jsonCached.size }
         }
     }
 
