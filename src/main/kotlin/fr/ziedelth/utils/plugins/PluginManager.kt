@@ -7,7 +7,8 @@ import org.pf4j.DefaultPluginManager
 import java.io.File
 
 object PluginManager {
-    private var defaultPluginManager = DefaultPluginManager(File("data/plugins").toPath())
+    val pluginsDirectory = File("data/plugins")
+    private var defaultPluginManager = DefaultPluginManager(pluginsDirectory.toPath())
     val listeners = mutableListOf<Listener>()
 
     fun loadPlugins() {
@@ -23,7 +24,7 @@ object PluginManager {
         defaultPluginManager.stopPlugins()
         defaultPluginManager.unloadPlugins()
         listeners.clear()
-        defaultPluginManager = DefaultPluginManager(File("data/plugins").toPath())
+        defaultPluginManager = DefaultPluginManager(pluginsDirectory.toPath())
         loadPlugins()
     }
 
