@@ -173,6 +173,29 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     }
 
     @APIRoute
+    private fun Route.deleteAnime() {
+        delete("/{uuid}") {
+            try {
+                val uuid = UUID.fromString(call.parameters["uuid"]!!)
+                println("DELETE $prefix/$uuid")
+                if (isUnauthorized()) return@delete
+                val savedAnime = animeRepository.find(uuid)
+
+                if (savedAnime == null) {
+                    call.respond(HttpStatusCode.NotFound, "Anime not found")
+                    return@delete
+                }
+
+                animeRepository.delete(savedAnime)
+                animeService.invalidateAll()
+                call.respond(HttpStatusCode.NoContent)
+            } catch (e: Exception) {
+                printError(call, e)
+            }
+        }
+    }
+
+    @APIRoute
     private fun Route.merge() {
         put("/merge") {
             if (isUnauthorized()) return@put
