@@ -165,6 +165,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
 
                 savedAnime = animeRepository.save(savedAnime)
                 animeService.invalidateAll()
+                episodeService.invalidateAll()
                 call.respond(HttpStatusCode.OK, savedAnime)
             } catch (e: Exception) {
                 printError(call, e)
@@ -188,6 +189,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
 
                 animeRepository.delete(savedAnime)
                 animeService.invalidateAll()
+                episodeService.invalidateAll()
                 call.respond(HttpStatusCode.NoContent)
             } catch (e: Exception) {
                 printError(call, e)
