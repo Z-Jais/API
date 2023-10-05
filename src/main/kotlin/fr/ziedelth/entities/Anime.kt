@@ -34,7 +34,7 @@ class Anime(
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
     var country: Country? = null,
     @Column(nullable = false)
-    val name: String? = null,
+    var name: String? = null,
     @Column(nullable = false)
     val releaseDate: String = Calendar.getInstance().toISO8601(),
     @Column(nullable = false, columnDefinition = "TEXT")
