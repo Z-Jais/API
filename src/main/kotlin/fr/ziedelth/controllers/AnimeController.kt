@@ -6,6 +6,7 @@ import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.AnimeRepository
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.repositories.EpisodeRepository
+import fr.ziedelth.repositories.SimulcastRepository
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.utils.ImageCache
@@ -32,6 +33,9 @@ class AnimeController : AttachmentController<Anime>("/animes") {
 
     @Inject
     private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var simulcastRepository: SimulcastRepository
 
     @APIRoute
     private fun Route.searchByCountryAndHash() {
@@ -159,8 +163,24 @@ class AnimeController : AttachmentController<Anime>("/animes") {
                     return@put
                 }
 
+                if (!anime.name.isNullOrBlank()) {
+                    if (animeRepository.findOneByName(savedAnime.country!!.tag!!, anime.name!!) != null) {
+                        call.respond(HttpStatusCode.Conflict, "Another anime with the name exist!")
+                        return@put
+                    }
+
+                    savedAnime.name = anime.name
+                }
+
                 if (!anime.description.isNullOrBlank()) {
                     savedAnime.description = anime.description
+                }
+
+                if (anime.simulcasts.isNotEmpty()) {
+                    val savedSimulcasts = anime.simulcasts.mapNotNull { simulcastRepository.find(it.uuid) }
+
+                    savedAnime.simulcasts.clear()
+                    savedAnime.simulcasts.addAll(savedSimulcasts)
                 }
 
                 savedAnime = animeRepository.save(savedAnime)
