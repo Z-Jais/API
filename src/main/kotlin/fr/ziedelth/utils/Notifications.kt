@@ -30,7 +30,6 @@ object Notifications {
 
     fun send(title: String? = null, body: String? = null, topic: String = "all") {
         with(System.getenv("SEND_NOTIFICATIONS")) {
-            println("SEND_NOTIFICATIONS: $this")
             if (this.isNullOrBlank() || this == "false") return
         }
 

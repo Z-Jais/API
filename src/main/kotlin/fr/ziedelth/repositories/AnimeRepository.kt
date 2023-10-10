@@ -61,15 +61,6 @@ class AnimeRepository : AbstractRepository<Anime>(),
         )
     }
 
-    override fun getByPageWithList(list: List<UUID>, page: Int, limit: Int): List<Anime> {
-        return super.getByPage(
-            page,
-            limit,
-            "FROM Anime WHERE uuid IN :list ORDER BY name",
-            "list" to list
-        )
-    }
-
     fun getDiary(tag: String, day: Int): List<Anime> {
         return database.inTransaction { session ->
             val query = session.createQuery(

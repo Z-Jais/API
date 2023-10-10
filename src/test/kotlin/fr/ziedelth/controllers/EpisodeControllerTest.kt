@@ -108,6 +108,42 @@ internal class EpisodeControllerTest : AbstractAPITest() {
     }
 
     @Test
+    fun paginationWatchlistWithEpisodes() {
+        testApplication {
+            application {
+                configureHTTP()
+                configureRoutingTest()
+            }
+
+            val filterData = getFilterDataEncoded()
+
+            val response = client.post("/episodes/watchlist/page/1/limit/12") { setBody(filterData) }
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
+
+            expect(HttpStatusCode.OK) { response.status }
+            expect(9) { json.size }
+        }
+    }
+
+    @Test
+    fun paginationWatchlistWithoutEpisodes() {
+        testApplication {
+            application {
+                configureHTTP()
+                configureRoutingTest()
+            }
+
+            val filterData = getFilterDataEncoded(false)
+
+            val response = client.post("/episodes/watchlist/page/1/limit/12") { setBody(filterData) }
+            val json = Constant.gson.fromJson(response.bodyAsText(), Array<Episode>::class.java)
+
+            expect(HttpStatusCode.OK) { response.status }
+            expect(10) { json.size }
+        }
+    }
+
+    @Test
     fun save() {
         testApplication {
             val client = createClient {

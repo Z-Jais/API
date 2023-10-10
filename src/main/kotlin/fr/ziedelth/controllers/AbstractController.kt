@@ -6,6 +6,8 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.util.pipeline.*
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 import java.util.*
@@ -46,17 +48,17 @@ open class AbstractController<T : Serializable>(open val prefix: String) {
         return Pair(page, limit)
     }
 
-    protected suspend fun PipelineContext<Unit, ApplicationCall>.isUnauthorized(): Boolean {
+    protected fun PipelineContext<Unit, ApplicationCall>.isUnauthorized(): Deferred<Boolean> = async {
         if (!Constant.secureKey.isNullOrBlank()) {
             val authorization = call.request.headers[HttpHeaders.Authorization]
 
             if (Constant.secureKey != authorization) {
                 println("Unauthorized request")
                 call.respond(HttpStatusCode.Unauthorized, "Secure key not equals")
-                return true
+                return@async true
             }
         }
 
-        return false
+        return@async false
     }
 }

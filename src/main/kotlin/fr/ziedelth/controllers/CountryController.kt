@@ -31,7 +31,7 @@ class CountryController : AbstractController<Country>("/countries") {
     private fun Route.save() {
         post {
             println("POST $prefix")
-            if (isUnauthorized()) return@post
+            if (isUnauthorized().await()) return@post
 
             try {
                 val country = call.receive<Country>()

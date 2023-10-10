@@ -9,8 +9,7 @@ open class AbstractRepository<T> {
     @Inject
     protected lateinit var database: Database
 
-    private val entityClass: Class<T> =
-        (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T>
+    private val entityClass: Class<T> = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<T> // NOSONAR
     private val entityName: String = entityClass.simpleName
 
     fun find(uuid: UUID): T? {

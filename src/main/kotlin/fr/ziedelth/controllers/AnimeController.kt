@@ -18,6 +18,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.*
 
+private const val ANIME_NOT_FOUND_ERROR = "Anime not found"
+
 class AnimeController : AttachmentController<Anime>("/animes") {
     @Inject
     private lateinit var countryRepository: CountryRepository
@@ -97,7 +99,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     private fun Route.save() {
         post {
             println("POST $prefix")
-            if (isUnauthorized()) return@post
+            if (isUnauthorized().await()) return@post
 
             try {
                 val anime = call.receive<Anime>()
@@ -152,14 +154,14 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     private fun Route.update() {
         put {
             println("PUT $prefix")
-            if (isUnauthorized()) return@put
+            if (isUnauthorized().await()) return@put
 
             try {
                 val anime = call.receive<Anime>()
                 var savedAnime = animeRepository.find(anime.uuid)
 
                 if (savedAnime == null) {
-                    call.respond(HttpStatusCode.NotFound, "Anime not found")
+                    call.respond(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
                     return@put
                 }
 
@@ -199,11 +201,11 @@ class AnimeController : AttachmentController<Anime>("/animes") {
             try {
                 val uuid = UUID.fromString(call.parameters["uuid"]!!)
                 println("DELETE $prefix/$uuid")
-                if (isUnauthorized()) return@delete
+                if (isUnauthorized().await()) return@delete
                 val savedAnime = animeRepository.find(uuid)
 
                 if (savedAnime == null) {
-                    call.respond(HttpStatusCode.NotFound, "Anime not found")
+                    call.respond(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
                     return@delete
                 }
 
@@ -220,7 +222,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     @APIRoute
     private fun Route.merge() {
         put("/merge") {
-            if (isUnauthorized()) return@put
+            if (isUnauthorized().await()) return@put
 
             // Get list of uuids
             val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
@@ -229,8 +231,8 @@ class AnimeController : AttachmentController<Anime>("/animes") {
             val animes = uuids.mapNotNull { animeRepository.find(it) }
 
             if (animes.isEmpty()) {
-                println("Anime not found")
-                call.respond(HttpStatusCode.NotFound, "Anime not found")
+                println(ANIME_NOT_FOUND_ERROR)
+                call.respond(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
                 return@put
             }
 
