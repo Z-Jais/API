@@ -12,6 +12,7 @@ import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.BodyParam
 import fr.ziedelth.utils.routes.Path
 import fr.ziedelth.utils.routes.Response
 import fr.ziedelth.utils.routes.method.Delete
@@ -79,40 +80,41 @@ class AnimeController : AttachmentController<Anime>("/animes") {
 
     @Path("/missing/page/{page}/limit/{limit}")
     @Post
-    private fun paginationMissing(body: String, page: Int, limit: Int): Response {
-        return Response.ok(animeRepository.getMissingAnimes(decode(body), page, limit))
+    @Deprecated("Replaced by JWT at /profiles/missing/...")
+    private fun paginationMissing(@BodyParam watchlist: String, page: Int, limit: Int): Response {
+        return Response.ok(animeRepository.getMissingAnimes(decode(watchlist), page, limit))
     }
 
     @Path
     @Post
     @Authorized
-    private fun save(body: Anime): Response {
-        val countryUuid = body.country!!.uuid
-        body.country =
+    private fun save(@BodyParam anime: Anime): Response {
+        val countryUuid = anime.country!!.uuid
+        anime.country =
             countryRepository.find(countryUuid) ?: return Response(HttpStatusCode.BadRequest, "Country not found")
 
-        val countryTag = body.country!!.tag!!
+        val countryTag = anime.country!!.tag!!
 
-        if (body.isNullOrNotValid()) {
+        if (anime.isNullOrNotValid()) {
             Logger.warning(MISSING_PARAMETERS_MESSAGE_ERROR)
-            Logger.warning(body.toString())
+            Logger.warning(anime.toString())
             return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
 
-        if (animeRepository.findOneByName(countryTag, body.name!!)?.country?.uuid == countryUuid) {
+        if (animeRepository.findOneByName(countryTag, anime.name!!)?.country?.uuid == countryUuid) {
             Logger.warning("$entityName already exists")
             return Response(HttpStatusCode.Conflict, "$entityName already exists")
         }
 
-        val hash = body.hash()
+        val hash = anime.hash()
 
         if (animeRepository.findByHash(countryTag, hash) != null) {
             Logger.warning("$entityName already exists")
             return Response(HttpStatusCode.Conflict, "$entityName already exists")
         }
 
-        body.hashes.add(hash)
-        val savedAnime = animeRepository.save(body)
+        anime.hashes.add(hash)
+        val savedAnime = animeRepository.save(anime)
         ImageCache.cache(savedAnime.uuid, savedAnime.image!!)
         animeService.invalidateAll()
         return Response.created(savedAnime)
@@ -121,24 +123,24 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     @Path
     @Put
     @Authorized
-    private fun update(body: Anime): Response {
+    private fun update(@BodyParam anime: Anime): Response {
         var savedAnime =
-            animeRepository.find(body.uuid) ?: return Response(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
+            animeRepository.find(anime.uuid) ?: return Response(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
 
-        if (!body.name.isNullOrBlank()) {
-            if (animeRepository.findOneByName(savedAnime.country!!.tag!!, body.name!!) != null) {
+        if (!anime.name.isNullOrBlank()) {
+            if (animeRepository.findOneByName(savedAnime.country!!.tag!!, anime.name!!) != null) {
                 return Response(HttpStatusCode.Conflict, "Another anime with the name exist!")
             }
 
-            savedAnime.name = body.name
+            savedAnime.name = anime.name
         }
 
-        if (!body.description.isNullOrBlank()) {
-            savedAnime.description = body.description
+        if (!anime.description.isNullOrBlank()) {
+            savedAnime.description = anime.description
         }
 
-        if (body.simulcasts.isNotEmpty()) {
-            val savedSimulcasts = body.simulcasts.mapNotNull { simulcastRepository.find(it.uuid) }
+        if (anime.simulcasts.isNotEmpty()) {
+            val savedSimulcasts = anime.simulcasts.mapNotNull { simulcastRepository.find(it.uuid) }
 
             savedAnime.simulcasts.clear()
             savedAnime.simulcasts.addAll(savedSimulcasts)
@@ -153,9 +155,9 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     @Path("/merge")
     @Put
     @Authorized
-    private fun merge(body: Array<UUID>): Response {
+    private fun merge(@BodyParam animeIds: Array<UUID>): Response {
         // Get anime
-        val animes = body.mapNotNull { animeRepository.find(it) }
+        val animes = animeIds.mapNotNull { animeRepository.find(it) }
 
         if (animes.isEmpty()) {
             Logger.warning(ANIME_NOT_FOUND_ERROR)

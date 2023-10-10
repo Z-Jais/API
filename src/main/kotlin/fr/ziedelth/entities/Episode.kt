@@ -8,7 +8,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.io.Serializable
 import java.util.*
 
-private const val COLLECTION_CACHE_REGION_NAME = "fr.ziedelth.entities.Episode"
 fun Episode?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
@@ -23,42 +22,42 @@ fun Episode?.isNullOrNotValid() = this == null || this.isNotValid()
     ]
 )
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Episode(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(
         name = "platform_uuid",
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (platform_uuid) REFERENCES platform(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var platform: Platform? = null,
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(
         name = "anime_uuid",
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var anime: Anime? = null,
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(
         name = "episode_type_uuid",
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (episode_type_uuid) REFERENCES episodetype(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var episodeType: EpisodeType? = null,
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(
         name = "lang_type_uuid",
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (lang_type_uuid) REFERENCES langtype(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var langType: LangType? = null,
     @Column(nullable = false, unique = true)
     val hash: String? = null,

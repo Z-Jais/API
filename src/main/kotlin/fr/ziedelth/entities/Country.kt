@@ -11,7 +11,7 @@ fun Country?.isNullOrNotValid() = this == null || this.isNotValid()
 @Entity
 @Table(name = "country")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Country(
     @Id
     @GeneratedValue

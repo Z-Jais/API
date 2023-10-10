@@ -14,11 +14,11 @@ open class AbstractRepository<T> {
     private val entityName: String = entityClass.simpleName
 
     fun find(uuid: UUID): T? {
-        return database.inTransaction { database.fullInitialize(it.find(entityClass, uuid)) }
+        return database.inReadOnlyTransaction { it.find(entityClass, uuid) }
     }
 
     fun exists(field: String, value: Any?): Boolean {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             val query = it.createQuery("SELECT uuid FROM $entityName WHERE $field = :$field", UUID::class.java)
             query.maxResults = 1
             query.setParameter(field, value)
@@ -26,8 +26,8 @@ open class AbstractRepository<T> {
         } != null
     }
 
-    fun findAll(uuids: List<UUID>): List<T> {
-        return database.inTransaction {
+    fun findAll(uuids: Collection<UUID>): List<T> {
+        return database.inReadOnlyTransaction {
             it.createQuery("FROM $entityName WHERE uuid IN :uuids", entityClass)
                 .setParameter("uuids", uuids)
                 .resultList
@@ -35,18 +35,14 @@ open class AbstractRepository<T> {
     }
 
     fun getAll(): MutableList<T> {
-        return database.inTransaction {
-            database.fullInitialize(
-                it.createQuery("FROM $entityName", entityClass).list()
-            )
-        }
+        return database.inReadOnlyTransaction { it.createQuery("FROM $entityName", entityClass).resultList }
     }
 
     fun getAllBy(field: String, value: Any?): MutableList<T> {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             val query = it.createQuery("FROM $entityName WHERE $field = :value", entityClass)
             query.setParameter("value", value)
-            query.list()
+            query.resultList
         }
     }
 
@@ -85,12 +81,12 @@ open class AbstractRepository<T> {
         queryRaw: String,
         vararg pair: Pair<String, Any>?
     ): List<A> {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             val query = it.createQuery(queryRaw, clazz)
             pair.forEach { param -> if (param != null) query.setParameter(param.first, param.second) }
             query.firstResult = (limit * page) - limit
             query.maxResults = limit
-            database.fullInitialize(query.list())
+            query.list()
         }
     }
 

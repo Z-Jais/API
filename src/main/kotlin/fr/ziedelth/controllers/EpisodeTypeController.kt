@@ -6,6 +6,7 @@ import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.EpisodeTypeRepository
 import fr.ziedelth.services.EpisodeTypeService
 import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.BodyParam
 import fr.ziedelth.utils.routes.Path
 import fr.ziedelth.utils.routes.Response
 import fr.ziedelth.utils.routes.method.Get
@@ -28,16 +29,16 @@ class EpisodeTypeController : AbstractController<EpisodeType>("/episodetypes") {
     @Path
     @Post
     @Authorized
-    private fun save(body: EpisodeType): Response {
-        if (body.isNullOrNotValid()) {
+    private fun save(@BodyParam episodeType: EpisodeType): Response {
+        if (episodeType.isNullOrNotValid()) {
             return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
 
-        if (episodeTypeRepository.exists("name", body.name)) {
+        if (episodeTypeRepository.exists("name", episodeType.name)) {
             return Response(HttpStatusCode.Conflict, "$entityName already exists")
         }
 
-        val savedEpisodeType = episodeTypeRepository.save(body)
+        val savedEpisodeType = episodeTypeRepository.save(episodeType)
         episodeTypeService.invalidateAll()
         return Response.created(savedEpisodeType)
     }

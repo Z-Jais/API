@@ -11,7 +11,7 @@ fun LangType?.isNullOrNotValid() = this == null || this.isNotValid()
 @Entity
 @Table(name = "langtype")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class LangType(
     @Id
     @GeneratedValue

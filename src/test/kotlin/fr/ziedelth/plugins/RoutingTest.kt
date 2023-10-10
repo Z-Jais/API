@@ -21,6 +21,7 @@ val animeRepository: AnimeRepository = injector.getInstance(AnimeRepository::cla
 val episodeTypeRepository: EpisodeTypeRepository = injector.getInstance(EpisodeTypeRepository::class.java)
 val langTypeRepository: LangTypeRepository = injector.getInstance(LangTypeRepository::class.java)
 val episodeRepository: EpisodeRepository = injector.getInstance(EpisodeRepository::class.java)
+val profileRepository: ProfileRepository = injector.getInstance(ProfileRepository::class.java)
 
 fun Application.configureRoutingTest() {
     routing {

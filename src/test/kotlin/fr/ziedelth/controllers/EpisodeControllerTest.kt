@@ -38,6 +38,11 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             expect(HttpStatusCode.OK) { responseNotCached.status }
             expect(12) { jsonNotCached.size }
 
+            requireNotNull(jsonNotCached[0].anime)
+            requireNotNull(jsonNotCached[0].platform)
+            requireNotNull(jsonNotCached[0].episodeType)
+            requireNotNull(jsonNotCached[0].langType)
+
             // CACHED
 
             val responseCached =
@@ -46,6 +51,11 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             expect(HttpStatusCode.OK) { responseCached.status }
             expect(12) { jsonCached.size }
+
+            requireNotNull(jsonCached[0].anime)
+            requireNotNull(jsonCached[0].platform)
+            requireNotNull(jsonCached[0].episodeType)
+            requireNotNull(jsonCached[0].langType)
         }
     }
 
@@ -232,7 +242,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val platform = platformRepository.getAll().first()
             val anime = animeRepository.getAll()
             val episodeType = episodeTypeRepository.getAll().last()
-            val langType = langTypeRepository.getAll().first()
+            val langType = langTypeRepository.getAll().find { it.name == "SUBTITLES" }
 
             val date = "2023-09-28T00:00:00Z"
 
@@ -320,7 +330,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val platform = platformRepository.getAll().first()
             val animes = animeRepository.getAll()
             val episodeType = episodeTypeRepository.getAll().last()
-            val langType = langTypeRepository.getAll().first()
+            val langType = langTypeRepository.getAll().find { it.name == "SUBTITLES" }
 
             val date = "2023-10-10T00:00:00Z"
 

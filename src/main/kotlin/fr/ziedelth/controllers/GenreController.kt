@@ -5,6 +5,7 @@ import fr.ziedelth.entities.Genre
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.GenreRepository
 import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.BodyParam
 import fr.ziedelth.utils.routes.Path
 import fr.ziedelth.utils.routes.Response
 import fr.ziedelth.utils.routes.method.Get
@@ -24,15 +25,15 @@ class GenreController : AbstractController<Genre>("/genres") {
     @Path
     @Post
     @Authorized
-    private fun save(body: Genre): Response {
-        if (body.isNullOrNotValid()) {
+    private fun save(@BodyParam genre: Genre): Response {
+        if (genre.isNullOrNotValid()) {
             return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
 
-        if (genreRepository.exists("name", body.name)) {
+        if (genreRepository.exists("name", genre.name)) {
             return Response(HttpStatusCode.Conflict, "$entityName already exists")
         }
 
-        return Response.created(genreRepository.save(body))
+        return Response.created(genreRepository.save(genre))
     }
 }
