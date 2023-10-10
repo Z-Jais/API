@@ -1,9 +1,15 @@
 package fr.ziedelth
 
+import fr.ziedelth.controllers.AbstractController
 import fr.ziedelth.entities.*
+import fr.ziedelth.listeners.ListenerManager
 import fr.ziedelth.plugins.*
+import fr.ziedelth.utils.Constant
+import fr.ziedelth.utils.Encoder
+import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.toISO8601
 import nu.pattern.OpenCV
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -113,6 +119,37 @@ internal abstract class AbstractAPITest {
         }
     }
 
+    fun getFilterDataEncoded(withEpisodes: Boolean = true): String {
+        val anime = animeRepository.findOneByName("fr", "Frieren")!!
+        val episodes = episodeRepository.getByPageWithAnime(anime.uuid, 1, 9)
+        val episodeTypes = episodeTypeRepository.getAll()
+        val langTypes = langTypeRepository.getAll()
+
+        return if (withEpisodes) {
+            Encoder.toGzip(
+                Constant.gson.toJson(
+                    AbstractController.FilterData(
+                        episodes = listOf(episodes.first().uuid),
+                        animes = listOf(anime.uuid),
+                        episodeTypes = episodeTypes.map { it.uuid },
+                        langTypes = langTypes.map { it.uuid },
+                    )
+                )
+            )
+        } else {
+            Encoder.toGzip(
+                Constant.gson.toJson(
+                    AbstractController.FilterData(
+                        episodes = listOf(),
+                        animes = listOf(anime.uuid),
+                        episodeTypes = episodeTypes.map { it.uuid },
+                        langTypes = langTypes.map { it.uuid },
+                    )
+                )
+            )
+        }
+    }
+
     @AfterEach
     fun tearDown() {
         databaseTest.clean()
@@ -123,7 +160,15 @@ internal abstract class AbstractAPITest {
         @BeforeAll
         fun setUp() {
             println("Loading OpenCV...")
-            OpenCV.loadShared()
+            OpenCV.loadLocally()
+
+            ListenerManager()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun tearDownAll() {
+            PluginManager.listeners.clear()
         }
     }
 }
