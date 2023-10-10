@@ -6,6 +6,7 @@ import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.LangTypeRepository
 import fr.ziedelth.services.LangTypeService
 import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.BodyParam
 import fr.ziedelth.utils.routes.Path
 import fr.ziedelth.utils.routes.Response
 import fr.ziedelth.utils.routes.method.Get
@@ -28,16 +29,16 @@ class LangTypeController : AbstractController<LangType>("/langtypes") {
     @Path
     @Post
     @Authorized
-    private fun save(body: LangType): Response {
-        if (body.isNullOrNotValid()) {
+    private fun save(@BodyParam langType: LangType): Response {
+        if (langType.isNullOrNotValid()) {
             return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
 
-        if (langTypeRepository.exists("name", body.name)) {
+        if (langTypeRepository.exists("name", langType.name)) {
             return Response(HttpStatusCode.Conflict, "$entityName already exists")
         }
 
-        val savedLangType = langTypeRepository.save(body)
+        val savedLangType = langTypeRepository.save(langType)
         langTypeService.invalidateAll()
         return Response.created(savedLangType)
     }

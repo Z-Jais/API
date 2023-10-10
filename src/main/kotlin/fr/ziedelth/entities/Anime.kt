@@ -8,7 +8,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.io.Serializable
 import java.util.*
 
-private const val COLLECTION_CACHE_REGION_NAME = "fr.ziedelth.entities.Anime"
 fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
@@ -20,18 +19,18 @@ fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
     ]
 )
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Anime(
     @Id
     @GeneratedValue
     val uuid: UUID = UUID.randomUUID(),
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
+    @ManyToOne(cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinColumn(
         name = "country_uuid",
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (country_uuid) REFERENCES country (uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var country: Country? = null,
     @Column(nullable = false)
     var name: String? = null,
@@ -41,15 +40,15 @@ class Anime(
     val image: String? = null,
     @Column(nullable = true, columnDefinition = "TEXT")
     var description: String? = null,
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
         name = "anime_hash",
         joinColumns = [JoinColumn(name = "anime_uuid")],
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime (uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val hashes: MutableSet<String> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
+    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(
         name = "anime_genre",
         joinColumns = [
@@ -63,11 +62,15 @@ class Anime(
                 name = "genre_uuid",
                 foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (genre_uuid) REFERENCES genre (uuid) ON DELETE CASCADE")
             )
+        ],
+        indexes = [
+            Index(name = "index_anime_genre_anime_uuid", columnList = "anime_uuid"),
+            Index(name = "index_anime_genre_genre_uuid", columnList = "genre_uuid"),
         ]
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val genres: MutableSet<Genre> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE, CascadeType.PERSIST])
+    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(
         name = "anime_simulcast",
         joinColumns = [
@@ -81,9 +84,13 @@ class Anime(
                 name = "simulcast_uuid",
                 foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (simulcast_uuid) REFERENCES simulcast (uuid) ON DELETE CASCADE")
             )
+        ],
+        indexes = [
+            Index(name = "index_anime_simulcast_anime_uuid", columnList = "anime_uuid"),
+            Index(name = "index_anime_simulcast_simulcast_uuid", columnList = "simulcast_uuid"),
         ]
     )
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = COLLECTION_CACHE_REGION_NAME)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val simulcasts: MutableSet<Simulcast> = mutableSetOf(),
 ) : Serializable {
     fun hash(): String = name!!.lowercase().filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }.trim()

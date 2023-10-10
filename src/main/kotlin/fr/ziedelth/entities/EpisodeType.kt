@@ -11,7 +11,7 @@ fun EpisodeType?.isNullOrNotValid() = this == null || this.isNotValid()
 @Entity
 @Table(name = "episodetype")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class EpisodeType(
     @Id
     @GeneratedValue

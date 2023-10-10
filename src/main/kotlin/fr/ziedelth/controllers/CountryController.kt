@@ -6,6 +6,7 @@ import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.services.CountryService
 import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.BodyParam
 import fr.ziedelth.utils.routes.Path
 import fr.ziedelth.utils.routes.Response
 import fr.ziedelth.utils.routes.method.Get
@@ -28,20 +29,20 @@ class CountryController : AbstractController<Country>("/countries") {
     @Path
     @Post
     @Authorized
-    private fun save(body: Country): Response {
-        if (body.isNullOrNotValid()) {
+    private fun save(@BodyParam country: Country): Response {
+        if (country.isNullOrNotValid()) {
             return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
 
-        if (countryRepository.exists("tag", body.tag)) {
+        if (countryRepository.exists("tag", country.tag)) {
             return Response(HttpStatusCode.Conflict, "$entityName already exists")
         }
 
-        if (countryRepository.exists("name", body.name)) {
+        if (countryRepository.exists("name", country.name)) {
             return Response(HttpStatusCode.Conflict, "$entityName already exists")
         }
 
-        val savedCountry = countryRepository.save(body)
+        val savedCountry = countryRepository.save(country)
         countryService.invalidateAll()
         return Response.created(savedCountry)
     }

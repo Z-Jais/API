@@ -4,6 +4,7 @@ import fr.ziedelth.dtos.AyaneDto
 import fr.ziedelth.events.AyaneReleaseEvent
 import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.BodyParam
 import fr.ziedelth.utils.routes.Path
 import fr.ziedelth.utils.routes.Response
 import fr.ziedelth.utils.routes.method.Post
@@ -13,15 +14,15 @@ class AyaneController : AbstractController<AyaneDto>("/ayane") {
     @Path
     @Post
     @Authorized
-    private fun save(body: AyaneDto): Response {
-        if (body.message.isBlank() || body.images.isEmpty()) {
+    private fun save(@BodyParam ayaneDto: AyaneDto): Response {
+        if (ayaneDto.message.isBlank() || ayaneDto.images.isEmpty()) {
             return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
 
         Thread {
-            PluginManager.callEvent(AyaneReleaseEvent(body))
+            PluginManager.callEvent(AyaneReleaseEvent(ayaneDto))
         }.start()
 
-        return Response.created(body)
+        return Response.created(ayaneDto)
     }
 }
