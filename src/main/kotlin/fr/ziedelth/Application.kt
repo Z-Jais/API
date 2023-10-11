@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
     }
 
     println("Loading OpenCV...")
-    OpenCV.loadShared()
+    OpenCV.loadLocally()
     println("OpenCV loaded")
     println("Connecting to database...")
     database = Database()
@@ -33,25 +33,7 @@ fun main(args: Array<String>) {
     try {
         PluginManager.loadPlugins()
         ListenerManager()
-
-        Thread {
-            val scanner = Scanner(System.`in`)
-
-            while (true) {
-                try {
-                    val line = scanner.nextLine()
-
-                    if (line == "reload") {
-                        PluginManager.reload()
-                        ListenerManager()
-                    } else if (line == "invalid-cache") {
-                        ImageCache.invalidCache(database)
-                    }
-                } catch (_: Exception) {
-                    Thread.sleep(1000)
-                }
-            }
-        }.start()
+        handleCommands()
     } catch (e: Exception) {
         e.printStackTrace()
     }
@@ -63,6 +45,27 @@ fun main(args: Array<String>) {
         host = "0.0.0.0",
         module = Application::myApplicationModule
     ).start(wait = true)
+}
+
+private fun handleCommands() {
+    Thread {
+        val scanner = Scanner(System.`in`)
+
+        while (true) {
+            try {
+                val line = scanner.nextLine()
+
+                if (line == "reload") {
+                    PluginManager.reload()
+                    ListenerManager()
+                } else if (line == "invalid-cache") {
+                    ImageCache.invalidCache(database)
+                }
+            } catch (_: Exception) {
+                Thread.sleep(1000)
+            }
+        }
+    }.start()
 }
 
 fun Application.myApplicationModule() {

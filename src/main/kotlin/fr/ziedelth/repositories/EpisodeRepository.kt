@@ -27,15 +27,6 @@ class EpisodeRepository : AbstractRepository<Episode>(),
         )
     }
 
-    override fun getByPageWithList(list: List<UUID>, page: Int, limit: Int): List<Episode> {
-        return super.getByPage(
-            page,
-            limit,
-            "FROM Episode WHERE anime.uuid IN :list $ORDER",
-            "list" to list
-        )
-    }
-
     fun getByPageWithListFilter(
         filterData: AbstractController.FilterData,
         page: Int,

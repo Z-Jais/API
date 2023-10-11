@@ -20,10 +20,9 @@
         <junit-jupiter.version>5.10.0</junit-jupiter.version>
 
         <sonar.coverage.exclusions>
-            **/fr/ziedelth/events/**,
-            **/fr/ziedelth/listeners/**,
+            **/fr/ziedelth/dtos/**,
+            **/fr/ziedelth/entities/**,
             **/fr/ziedelth/plugins/**,
-            **/fr/ziedelth/utils/**,
             **/fr/ziedelth/Application.kt
         </sonar.coverage.exclusions>
     </properties>
@@ -145,7 +144,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>32.1.2-jre</version>
+            <version>32.1.3-jre</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

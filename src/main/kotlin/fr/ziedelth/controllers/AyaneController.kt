@@ -15,7 +15,7 @@ class AyaneController : AbstractController<Ayane>("/ayane") {
     private fun Route.save() {
         post {
             println("POST $prefix")
-            if (isUnauthorized()) return@post
+            if (isUnauthorized().await()) return@post
 
             try {
                 val ayane = call.receive<Ayane>()
