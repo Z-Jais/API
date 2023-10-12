@@ -8,6 +8,7 @@ import fr.ziedelth.caches.PaginationCountryCacheKey
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.repositories.EpisodeRepository
 import fr.ziedelth.utils.Logger
+import fr.ziedelth.utils.SortType
 import java.util.*
 
 class EpisodeService : AbstractService() {
@@ -26,7 +27,7 @@ class EpisodeService : AbstractService() {
         .build(object : CacheLoader<PaginationAnimeCacheKey, List<Episode>>() {
             override fun load(key: PaginationAnimeCacheKey): List<Episode> {
                 Logger.info("Updating episode anime pagination cache")
-                return repository.getByPageWithAnime(key.anime, key.page, key.limit)
+                return repository.getByPageWithAnime(key.anime, key.sortType, key.page, key.limit)
             }
         })
 
@@ -37,8 +38,8 @@ class EpisodeService : AbstractService() {
     }
 
     fun getByPage(tag: String, page: Int, limit: Int): List<Episode> =
-        paginationCountryCache.getUnchecked(PaginationCountryCacheKey(page, limit, tag))
+        paginationCountryCache.getUnchecked(PaginationCountryCacheKey(tag, page, limit))
 
-    fun getByPageWithAnime(anime: UUID, page: Int, limit: Int): List<Episode> =
-        paginationAnimeCache.getUnchecked(PaginationAnimeCacheKey(page, limit, anime))
+    fun getByPageWithAnime(anime: UUID, sortType: SortType, page: Int, limit: Int): List<Episode> =
+        paginationAnimeCache.getUnchecked(PaginationAnimeCacheKey(anime, sortType, page, limit))
 }

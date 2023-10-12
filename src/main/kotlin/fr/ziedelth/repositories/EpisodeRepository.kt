@@ -2,6 +2,7 @@ package fr.ziedelth.repositories
 
 import fr.ziedelth.controllers.AbstractController
 import fr.ziedelth.entities.Episode
+import fr.ziedelth.utils.SortType
 import java.util.*
 
 private const val ORDER =
@@ -18,11 +19,16 @@ class EpisodeRepository : AbstractRepository<Episode>(),
         )
     }
 
-    override fun getByPageWithAnime(uuid: UUID, page: Int, limit: Int): List<Episode> {
+    fun getByPageWithAnime(uuid: UUID, sortType: SortType, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
             page,
             limit,
-            "FROM Episode WHERE anime.uuid = :uuid $ORDER",
+            "FROM Episode WHERE anime.uuid = :uuid ${
+                when (sortType) {
+                    SortType.SEASON_NUMBER -> "ORDER BY season DESC, number DESC, episodeType.name, langType.name"
+                    else -> ORDER
+                }
+            }",
             "uuid" to uuid
         )
     }

@@ -6,6 +6,7 @@ import fr.ziedelth.listeners.ListenerManager
 import fr.ziedelth.plugins.*
 import fr.ziedelth.utils.Constant
 import fr.ziedelth.utils.Encoder
+import fr.ziedelth.utils.SortType
 import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.toISO8601
 import nu.pattern.OpenCV
@@ -121,7 +122,7 @@ internal abstract class AbstractAPITest {
 
     fun getFilterDataEncoded(withEpisodes: Boolean = true): String {
         val anime = animeRepository.findOneByName("fr", "Frieren")!!
-        val episodes = episodeRepository.getByPageWithAnime(anime.uuid, 1, 9)
+        val episodes = episodeRepository.getByPageWithAnime(anime.uuid, SortType.UNKNOWN, 1, 9)
         val episodeTypes = episodeTypeRepository.getAll()
         val langTypes = langTypeRepository.getAll()
 
