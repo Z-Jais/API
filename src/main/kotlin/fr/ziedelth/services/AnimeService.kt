@@ -48,11 +48,11 @@ class AnimeService : AbstractService() {
     }
 
     fun getByPage(tag: String, simulcast: UUID, page: Int, limit: Int): List<Anime> =
-        paginationSimulcastCountryCache.getUnchecked(PaginationSimulcastCountryCacheKey(page, limit, simulcast, tag))
+        paginationSimulcastCountryCache.getUnchecked(PaginationSimulcastCountryCacheKey(tag, simulcast, page, limit))
 
     fun getDiary(tag: String, day: Int): List<Anime> =
-        dayCountryCache.getUnchecked(DayCountryCacheKey(day, tag))
+        dayCountryCache.getUnchecked(DayCountryCacheKey(tag, day))
 
     fun findByName(tag: String, search: String): List<Anime> =
-        searchCountryCache.getUnchecked(SearchCountryCacheKey(search.unaccent().lowercase(), tag))
+        searchCountryCache.getUnchecked(SearchCountryCacheKey(tag, search.unaccent().lowercase()))
 }

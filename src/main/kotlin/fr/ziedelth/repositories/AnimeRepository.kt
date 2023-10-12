@@ -135,8 +135,4 @@ class AnimeRepository : AbstractRepository<Anime>(),
     override fun getByPage(tag: String, page: Int, limit: Int): List<Anime> {
         TODO("Not yet implemented")
     }
-
-    override fun getByPageWithAnime(uuid: UUID, page: Int, limit: Int): List<Anime> {
-        TODO("Not yet implemented")
-    }
 }

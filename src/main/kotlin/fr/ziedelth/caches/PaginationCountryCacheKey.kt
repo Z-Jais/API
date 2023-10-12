@@ -1,7 +1,7 @@
 package fr.ziedelth.caches
 
 data class PaginationCountryCacheKey(
+    override val tag: String,
     val page: Int,
     val limit: Int,
-    override val tag: String,
 ) : CountryCacheKey(tag)

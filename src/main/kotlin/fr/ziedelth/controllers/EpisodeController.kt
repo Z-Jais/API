@@ -9,12 +9,9 @@ import fr.ziedelth.repositories.*
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.services.SimulcastService
-import fr.ziedelth.utils.CalendarConverter
-import fr.ziedelth.utils.ImageCache
-import fr.ziedelth.utils.Logger
+import fr.ziedelth.utils.*
 import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.routes.APIRoute
-import fr.ziedelth.utils.toISO8601
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -71,8 +68,9 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             try {
                 val animeUuid = call.parameters["uuid"]!!
                 val (page, limit) = getPageAndLimit()
+                val sortType = SortType.valueOf(call.request.queryParameters["sortType"] ?: SortType.SEASON_NUMBER.name)
                 Logger.info("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
-                call.respond(episodeService.getByPageWithAnime(UUID.fromString(animeUuid), page, limit))
+                call.respond(episodeService.getByPageWithAnime(UUID.fromString(animeUuid), sortType, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
             }
@@ -126,6 +124,12 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             episode.number = episodeRepository.getLastNumber(episode) + 1
         }
 
+        if (episode.langType?.name == "SUBTITLES") {
+            addSimulcast(episode)
+        }
+    }
+
+    private fun addSimulcast(episode: Episode) {
         val adjustedDates = listOf(-15, 0, 15).map { days ->
             CalendarConverter.toUTCCalendar(episode.releaseDate).also { it.add(Calendar.DAY_OF_YEAR, days) }
         }
