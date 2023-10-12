@@ -5,6 +5,7 @@ import fr.ziedelth.entities.Platform
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.PlatformRepository
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -19,7 +20,7 @@ class PlatformController : AttachmentController<Platform>("/platforms") {
     @APIRoute
     private fun Route.getAll() {
         get {
-            println("GET $prefix")
+            Logger.info("GET $prefix")
             call.respond(platformRepository.getAll())
         }
     }
@@ -27,7 +28,7 @@ class PlatformController : AttachmentController<Platform>("/platforms") {
     @APIRoute
     private fun Route.save() {
         post {
-            println("POST $prefix")
+            Logger.info("POST $prefix")
             if (isUnauthorized().await()) return@post
 
             try {

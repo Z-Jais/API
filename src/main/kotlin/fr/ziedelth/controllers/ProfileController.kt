@@ -2,6 +2,7 @@ package fr.ziedelth.controllers
 
 import com.google.inject.Inject
 import fr.ziedelth.repositories.EpisodeRepository
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -19,7 +20,7 @@ class ProfileController : AbstractController<Serializable>("/profile") {
         post("/total-duration") {
             try {
                 val watchlist = call.receive<String>()
-                println("GET $prefix/total-duration")
+                Logger.info("POST $prefix/total-duration")
                 val filterData = decode(watchlist)
                 call.respond(mapOf("total-duration" to episodeRepository.getTotalDurationSeen(filterData.episodes)))
             } catch (e: Exception) {

@@ -1,5 +1,6 @@
 package fr.ziedelth.utils.plugins
 
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.plugins.events.Event
 import fr.ziedelth.utils.plugins.events.EventHandler
 import fr.ziedelth.utils.plugins.events.Listener
@@ -16,7 +17,7 @@ object PluginManager {
         defaultPluginManager.startPlugins()
 
         defaultPluginManager.plugins.forEach {
-            println("Plugin ${it.descriptor.pluginId} v${it.descriptor.version} loaded")
+            Logger.info("Plugin ${it.descriptor.pluginId} v${it.descriptor.version} loaded")
         }
     }
 
@@ -34,8 +35,8 @@ object PluginManager {
         listeners.forEach { listener ->
             listener::class.java.methods.filter { it.isAnnotationPresent(EventHandler::class.java) && event::class.java == it.parameters[0]?.type }
                 .forEach { method ->
-                    println("Calling event ${event::class.java.simpleName} on ${listener::class.java.name}")
-                    println(method.parameters.map { it.type }.joinToString(" -> "))
+                    Logger.info("Calling event ${event::class.java.simpleName} on ${listener::class.java.name}")
+                    Logger.info(method.parameters.map { it.type }.joinToString(" -> "))
 
                     try {
                         method.invoke(listener, event)

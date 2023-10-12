@@ -3,6 +3,7 @@ package fr.ziedelth.listeners
 import fr.ziedelth.entities.EpisodeType
 import fr.ziedelth.entities.LangType
 import fr.ziedelth.events.EpisodesReleaseEvent
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.Notifications
 import fr.ziedelth.utils.plugins.events.EventHandler
 import fr.ziedelth.utils.plugins.events.Listener
@@ -45,7 +46,7 @@ class EpisodesRelease : Listener {
 
         val animeNames = animes.sortedBy { it.first!!.name!!.lowercase() }
         val joinToString = animeNames.joinToString(", ") { "${it.first!!.name} - ${it.second}" }
-        println("Sending notification for ${animes.size} animes: $joinToString")
+        Logger.info("Sending notification for ${animes.size} animes: $joinToString")
 
         Notifications.send(body = joinToString)
         animes.forEach {

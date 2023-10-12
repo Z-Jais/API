@@ -5,6 +5,7 @@ import fr.ziedelth.entities.EpisodeType
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.EpisodeTypeRepository
 import fr.ziedelth.services.EpisodeTypeService
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -22,7 +23,7 @@ class EpisodeTypeController : AbstractController<EpisodeType>("/episodetypes") {
     @APIRoute
     private fun Route.getAll() {
         get {
-            println("GET $prefix")
+            Logger.info("GET $prefix")
             call.respond(episodeTypeService.getAll())
         }
     }
@@ -30,7 +31,7 @@ class EpisodeTypeController : AbstractController<EpisodeType>("/episodetypes") {
     @APIRoute
     private fun Route.save() {
         post {
-            println("POST $prefix")
+            Logger.info("POST $prefix")
             if (isUnauthorized().await()) return@post
 
             try {

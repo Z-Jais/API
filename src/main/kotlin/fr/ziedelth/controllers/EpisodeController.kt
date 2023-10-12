@@ -11,6 +11,7 @@ import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.services.SimulcastService
 import fr.ziedelth.utils.CalendarConverter
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.routes.APIRoute
 import fr.ziedelth.utils.toISO8601
@@ -56,7 +57,7 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             try {
                 val country = call.parameters["country"]!!
                 val (page, limit) = getPageAndLimit()
-                println("GET $prefix/country/$country/page/$page/limit/$limit")
+                Logger.info("GET $prefix/country/$country/page/$page/limit/$limit")
                 call.respond(episodeService.getByPage(country, page, limit))
             } catch (e: Exception) {
                 printError(call, e)
@@ -70,7 +71,7 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             try {
                 val animeUuid = call.parameters["uuid"]!!
                 val (page, limit) = getPageAndLimit()
-                println("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
+                Logger.info("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
                 call.respond(episodeService.getByPageWithAnime(UUID.fromString(animeUuid), page, limit))
             } catch (e: Exception) {
                 printError(call, e)
@@ -86,7 +87,7 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
         try {
             val watchlist = pipelineContext.call.receive<String>()
             val (page, limit) = pipelineContext.getPageAndLimit()
-            println("POST $prefix/${routePrefix}/page/$page/limit/$limit")
+            Logger.info("POST $prefix/${routePrefix}/page/$page/limit/$limit")
             val filterData = decode(watchlist)
 
             pipelineContext.call.respond(episodeRepository.getByPageWithListFilter(filterData, page, limit))
@@ -161,7 +162,7 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
     @APIRoute
     private fun Route.saveMultiple() {
         post("/multiple") {
-            println("POST $prefix/multiple")
+            Logger.info("POST $prefix/multiple")
             if (isUnauthorized().await()) return@post
 
             try {

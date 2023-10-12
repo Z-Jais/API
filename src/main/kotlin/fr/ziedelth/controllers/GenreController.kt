@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.ziedelth.entities.Genre
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.GenreRepository
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -18,7 +19,7 @@ class GenreController : AbstractController<Genre>("/genres") {
     @APIRoute
     private fun Route.getAll() {
         get {
-            println("GET $prefix")
+            Logger.info("GET $prefix")
             call.respond(genreRepository.getAll())
         }
     }
@@ -26,7 +27,7 @@ class GenreController : AbstractController<Genre>("/genres") {
     @APIRoute
     private fun Route.save() {
         post {
-            println("POST $prefix")
+            Logger.info("POST $prefix")
             if (isUnauthorized().await()) return@post
 
             try {

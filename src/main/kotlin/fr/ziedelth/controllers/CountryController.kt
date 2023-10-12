@@ -5,6 +5,7 @@ import fr.ziedelth.entities.Country
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.services.CountryService
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -30,7 +31,7 @@ class CountryController : AbstractController<Country>("/countries") {
     @APIRoute
     private fun Route.save() {
         post {
-            println("POST $prefix")
+            Logger.info("POST $prefix")
             if (isUnauthorized().await()) return@post
 
             try {

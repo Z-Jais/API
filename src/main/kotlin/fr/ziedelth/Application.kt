@@ -5,6 +5,7 @@ import fr.ziedelth.plugins.configureHTTP
 import fr.ziedelth.plugins.configureRouting
 import fr.ziedelth.utils.Database
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.plugins.PluginManager
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -19,15 +20,15 @@ fun main(args: Array<String>) {
     val loadImage = !isDebug || (args.size > 1 && args[1] == "loadImage")
 
     if (isDebug) {
-        println("DEBUG MODE")
+        Logger.warning("DEBUG MODE")
     }
 
-    println("Loading OpenCV...")
+    Logger.info("Loading OpenCV...")
     OpenCV.loadLocally()
-    println("OpenCV loaded")
-    println("Connecting to database...")
+    Logger.info("OpenCV loaded")
+    Logger.info("Connecting to database...")
     database = Database()
-    println("Database connected")
+    Logger.info("Database connected")
     if (loadImage) ImageCache.invalidCache(database)
 
     try {
@@ -38,7 +39,7 @@ fun main(args: Array<String>) {
         e.printStackTrace()
     }
 
-    println("Starting server...")
+    Logger.info("Starting server...")
     embeddedServer(
         Netty,
         port = if (isDebug) 37100 else 8080,
@@ -69,9 +70,9 @@ private fun handleCommands() {
 }
 
 fun Application.myApplicationModule() {
-    println("Configure server...")
+    Logger.info("Configure server...")
     configureHTTP()
-    println("Configure routing...")
+    Logger.info("Configure routing...")
     configureRouting(database)
-    println("Server configured and ready")
+    Logger.info("Server configured and ready")
 }
