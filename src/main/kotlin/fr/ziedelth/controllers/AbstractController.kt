@@ -2,6 +2,7 @@ package fr.ziedelth.controllers
 
 import fr.ziedelth.utils.Constant
 import fr.ziedelth.utils.Decoder
+import fr.ziedelth.utils.Logger
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -11,6 +12,7 @@ import kotlinx.coroutines.async
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 import java.util.*
+import java.util.logging.Level
 
 const val UNKNOWN_MESSAGE_ERROR = "Unknown error"
 const val MISSING_PARAMETERS_MESSAGE_ERROR = "Missing parameters"
@@ -29,12 +31,12 @@ open class AbstractController<T : Serializable>(open val prefix: String) {
 
     fun decode(watchlist: String): FilterData {
         val filterData = Constant.gson.fromJson(Decoder.fromGzip(watchlist), FilterData::class.java)
-        println("$watchlist - Episodes: ${filterData.episodes.size} - Animes: ${filterData.animes.size}")
+        Logger.config("$watchlist - Episodes: ${filterData.episodes.size} - Animes: ${filterData.animes.size}")
         return filterData
     }
 
     suspend fun printError(call: ApplicationCall, e: Exception) {
-        e.printStackTrace()
+        Logger.log(Level.SEVERE, e.message, e)
         call.respond(HttpStatusCode.InternalServerError, e.message ?: UNKNOWN_MESSAGE_ERROR)
     }
 
@@ -53,7 +55,7 @@ open class AbstractController<T : Serializable>(open val prefix: String) {
             val authorization = call.request.headers[HttpHeaders.Authorization]
 
             if (Constant.secureKey != authorization) {
-                println("Unauthorized request")
+                Logger.warning("Unauthorized request")
                 call.respond(HttpStatusCode.Unauthorized, "Secure key not equals")
                 return@async true
             }

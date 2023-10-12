@@ -6,6 +6,7 @@ import com.google.inject.Inject
 import fr.ziedelth.caches.CountryCacheKey
 import fr.ziedelth.entities.Simulcast
 import fr.ziedelth.repositories.SimulcastRepository
+import fr.ziedelth.utils.Logger
 
 class SimulcastService : AbstractService() {
     @Inject
@@ -14,13 +15,13 @@ class SimulcastService : AbstractService() {
     private val loadingCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<CountryCacheKey, List<Simulcast>>() {
             override fun load(key: CountryCacheKey): List<Simulcast> {
-                println("Updating simulcast cache")
+                Logger.info("Updating simulcast cache")
                 return repository.getAll(key.tag)
             }
         })
 
     fun invalidateAll() {
-        println("Invalidate all simulcast cache")
+        Logger.warning("Invalidate all simulcast cache")
         loadingCache.invalidateAll()
     }
 

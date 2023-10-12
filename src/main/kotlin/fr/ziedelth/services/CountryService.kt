@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader
 import com.google.inject.Inject
 import fr.ziedelth.entities.Country
 import fr.ziedelth.repositories.CountryRepository
+import fr.ziedelth.utils.Logger
 
 class CountryService : AbstractService() {
     @Inject
@@ -13,13 +14,13 @@ class CountryService : AbstractService() {
     private val loadingCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<String, List<Country>>() {
             override fun load(key: String): List<Country> {
-                println("Updating country cache")
+                Logger.info("Updating country cache")
                 return repository.getAll()
             }
         })
 
     fun invalidateAll() {
-        println("Invalidate all country cache")
+        Logger.warning("Invalidate all country cache")
         loadingCache.invalidateAll()
     }
 

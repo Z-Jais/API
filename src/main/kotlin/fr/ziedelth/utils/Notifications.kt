@@ -14,7 +14,7 @@ object Notifications {
     private var initialized = false
 
     init {
-        println("Initializing Firebase")
+        Logger.info("Initializing Firebase")
         val file = File("data/firebase_key.json")
 
         if (file.exists()) {
@@ -25,7 +25,7 @@ object Notifications {
             initialized = true
         }
 
-        println("Firebase initialized")
+        Logger.info("Firebase initialized")
     }
 
     fun send(title: String? = null, body: String? = null, topic: String = "all") {

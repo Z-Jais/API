@@ -8,6 +8,7 @@ import fr.ziedelth.caches.PaginationSimulcastCountryCacheKey
 import fr.ziedelth.caches.SearchCountryCacheKey
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.repositories.AnimeRepository
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.unaccent
 import java.util.*
 
@@ -18,7 +19,7 @@ class AnimeService : AbstractService() {
     private val paginationSimulcastCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<PaginationSimulcastCountryCacheKey, List<Anime>>() {
             override fun load(key: PaginationSimulcastCountryCacheKey): List<Anime> {
-                println("Updating anime pagination cache")
+                Logger.info("Updating anime pagination cache")
                 return repository.getByPage(key.tag, key.simulcast, key.page, key.limit)
             }
         })
@@ -26,7 +27,7 @@ class AnimeService : AbstractService() {
     private val dayCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<DayCountryCacheKey, List<Anime>>() {
             override fun load(key: DayCountryCacheKey): List<Anime> {
-                println("Updating anime day pagination cache")
+                Logger.info("Updating anime day pagination cache")
                 return repository.getDiary(key.tag, key.day)
             }
         })
@@ -34,13 +35,13 @@ class AnimeService : AbstractService() {
     private val searchCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<SearchCountryCacheKey, List<Anime>>() {
             override fun load(key: SearchCountryCacheKey): List<Anime> {
-                println("Updating anime day search cache")
+                Logger.info("Updating anime day search cache")
                 return repository.findByName(key.tag, key.search)
             }
         })
 
     fun invalidateAll() {
-        println("Invalidate all anime cache")
+        Logger.warning("Invalidate all anime cache")
         paginationSimulcastCountryCache.invalidateAll()
         dayCountryCache.invalidateAll()
         searchCountryCache.invalidateAll()

@@ -17,7 +17,7 @@ open class Database {
     constructor(file: File) {
         try {
             if (!file.exists()) {
-                println("hibernate.cfg.xml not found")
+                Logger.warning("hibernate.cfg.xml not found")
                 exitProcess(1)
             }
 
@@ -30,17 +30,17 @@ open class Database {
                 val password: String? = System.getenv("DATABASE_PASSWORD")
 
                 if (url?.isNotBlank() == true) {
-                    println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_URL")
+                    Logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_URL")
                     configuration.setProperty("hibernate.connection.url", url)
                 }
 
                 if (username?.isNotBlank() == true) {
-                    println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_USERNAME")
+                    Logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_USERNAME")
                     configuration.setProperty("hibernate.connection.username", username)
                 }
 
                 if (password?.isNotBlank() == true) {
-                    println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
+                    Logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
                     configuration.setProperty("hibernate.connection.password", password)
                 }
 

@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader
 import com.google.inject.Inject
 import fr.ziedelth.entities.LangType
 import fr.ziedelth.repositories.LangTypeRepository
+import fr.ziedelth.utils.Logger
 
 class LangTypeService : AbstractService() {
     @Inject
@@ -13,13 +14,13 @@ class LangTypeService : AbstractService() {
     private val loadingCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<String, List<LangType>>() {
             override fun load(key: String): List<LangType> {
-                println("Updating lang type cache")
+                Logger.info("Updating lang type cache")
                 return repository.getAll()
             }
         })
 
     fun invalidateAll() {
-        println("Invalidate all lang type cache")
+        Logger.warning("Invalidate all lang type cache")
         loadingCache.invalidateAll()
     }
 

@@ -2,6 +2,7 @@ package fr.ziedelth.controllers
 
 import fr.ziedelth.dtos.Ayane
 import fr.ziedelth.events.AyaneReleaseEvent
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
@@ -14,7 +15,7 @@ class AyaneController : AbstractController<Ayane>("/ayane") {
     @APIRoute
     private fun Route.save() {
         post {
-            println("POST $prefix")
+            Logger.info("POST $prefix")
             if (isUnauthorized().await()) return@post
 
             try {

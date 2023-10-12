@@ -23,7 +23,7 @@ object ImageCache {
             return pair.first
         }
 
-        println("Encoding image to WebP")
+        Logger.info("Encoding image to WebP")
         val url = pair.first.url
         var bytes: ByteArray? = null
 
@@ -35,7 +35,7 @@ object ImageCache {
             if (bytes != null) {
                 cache[uuid] = Image(url, bytes, "jpg") to true
             } else {
-                println("Failed to load image $url : ${e.message}")
+                Logger.warning("Failed to load image $url : ${e.message}")
             }
         }
 
@@ -75,14 +75,14 @@ object ImageCache {
                 val platforms =
                     session.createQuery("SELECT uuid, image FROM Platform WHERE image LIKE 'http%'", Tuple::class.java)
                         .list()
-                println("Platforms : ${platforms.size}")
+                Logger.config("Platforms : ${platforms.size}")
                 // Get all animes from database
                 val animes = session.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java).list()
-                println("Animes : ${animes.size}")
+                Logger.config("Animes : ${animes.size}")
 
                 // Get all episodes from database
                 val episodes = session.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java).list()
-                println("Episodes : ${episodes.size}")
+                Logger.config("Episodes : ${episodes.size}")
 
                 val combinedImages = platforms + animes + episodes
 

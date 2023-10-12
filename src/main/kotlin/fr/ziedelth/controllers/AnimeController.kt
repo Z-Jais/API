@@ -10,6 +10,7 @@ import fr.ziedelth.repositories.SimulcastRepository
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.APIRoute
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -44,7 +45,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
         get("/country/{country}/search/hash/{hash}") {
             val country = call.parameters["country"]!!
             val hash = call.parameters["hash"]!!
-            println("GET $prefix/country/$country/search/hash/$hash")
+            Logger.info("GET $prefix/country/$country/search/hash/$hash")
             val anime = animeRepository.findByHash(country, hash)
             call.respond(if (anime != null) mapOf("uuid" to anime) else HttpStatusCode.NotFound)
         }
@@ -55,7 +56,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
         get("/country/{country}/search/name/{name}") {
             val country = call.parameters["country"]!!
             val name = call.parameters["name"]!!
-            println("GET $prefix/country/$country/search/name/$name")
+            Logger.info("GET $prefix/country/$country/search/name/$name")
 
             try {
                 call.respond(animeService.findByName(country, name))
@@ -72,7 +73,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
                 val country = call.parameters["country"]!!
                 val simulcast = call.parameters["simulcast"]!!
                 val (page, limit) = getPageAndLimit()
-                println("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
+                Logger.info("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
                 call.respond(animeService.getByPage(country, UUID.fromString(simulcast), page, limit))
             } catch (e: Exception) {
                 printError(call, e)
@@ -86,7 +87,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
             try {
                 val watchlist = call.receive<String>()
                 val (page, limit) = getPageAndLimit()
-                println("POST $prefix/missing/page/$page/limit/$limit")
+                Logger.info("POST $prefix/missing/page/$page/limit/$limit")
                 val filterData = decode(watchlist)
                 call.respond(animeRepository.getMissingAnimes(filterData, page, limit))
             } catch (e: Exception) {
@@ -98,14 +99,14 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     @APIRoute
     private fun Route.save() {
         post {
-            println("POST $prefix")
+            Logger.info("POST $prefix")
             if (isUnauthorized().await()) return@post
 
             try {
                 val anime = call.receive<Anime>()
 
                 anime.country = countryRepository.find(anime.country!!.uuid) ?: return@post run {
-                    println("Country not found")
+                    Logger.warning("Country not found")
 
                     call.respond(
                         HttpStatusCode.BadRequest,
@@ -114,8 +115,8 @@ class AnimeController : AttachmentController<Anime>("/animes") {
                 }
 
                 if (anime.isNullOrNotValid()) {
-                    println(MISSING_PARAMETERS_MESSAGE_ERROR)
-                    println(anime)
+                    Logger.warning(MISSING_PARAMETERS_MESSAGE_ERROR)
+                    Logger.warning(anime.toString())
                     call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
                     return@post
                 }
@@ -125,7 +126,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
                         anime.name!!
                     )?.country?.uuid == anime.country!!.uuid
                 ) {
-                    println("$entityName already exists")
+                    Logger.warning("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
@@ -133,7 +134,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
                 val hash = anime.hash()
 
                 if (animeRepository.findByHash(anime.country!!.tag!!, hash) != null) {
-                    println("$entityName already exists")
+                    Logger.warning("$entityName already exists")
                     call.respond(HttpStatusCode.Conflict, "$entityName already exists")
                     return@post
                 }
@@ -153,7 +154,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     @APIRoute
     private fun Route.update() {
         put {
-            println("PUT $prefix")
+            Logger.info("PUT $prefix")
             if (isUnauthorized().await()) return@put
 
             try {
@@ -200,7 +201,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
         delete("/{uuid}") {
             try {
                 val uuid = UUID.fromString(call.parameters["uuid"]!!)
-                println("DELETE $prefix/$uuid")
+                Logger.info("DELETE $prefix/$uuid")
                 if (isUnauthorized().await()) return@delete
                 val savedAnime = animeRepository.find(uuid)
 
@@ -226,12 +227,12 @@ class AnimeController : AttachmentController<Anime>("/animes") {
 
             // Get list of uuids
             val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
-            println("PUT $prefix/merge")
+            Logger.info("PUT $prefix/merge")
             // Get anime
             val animes = uuids.mapNotNull { animeRepository.find(it) }
 
             if (animes.isEmpty()) {
-                println(ANIME_NOT_FOUND_ERROR)
+                Logger.warning(ANIME_NOT_FOUND_ERROR)
                 call.respond(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
                 return@put
             }
@@ -240,7 +241,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
             val countries = animes.map { it.country }.distinctBy { it!!.uuid }
 
             if (countries.size > 1) {
-                println("Anime has different countries")
+                Logger.warning("Anime has different countries")
                 call.respond(HttpStatusCode.BadRequest, "Anime has different countries")
                 return@put
             }
@@ -293,7 +294,7 @@ class AnimeController : AttachmentController<Anime>("/animes") {
             var day = call.parameters["day"]!!.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
             if (day == 0) day = 7
             if (day > 7) day = 1
-            println("GET $prefix/diary/country/$country/day/$day")
+            Logger.info("GET $prefix/diary/country/$country/day/$day")
             call.respond(animeService.getDiary(country, day))
         }
     }
