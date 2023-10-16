@@ -298,4 +298,19 @@ class AnimeController : AttachmentController<Anime>("/animes") {
             call.respond(animeService.getDiary(country, day))
         }
     }
+
+    @APIRoute
+    private fun Route.getAllInvalid() {
+        get("/invalid/country/{tag}") {
+            try {
+                val tag = call.parameters["tag"]!!
+                Logger.info("GET $prefix/invalid/country/$tag")
+                if (isUnauthorized().await()) return@get
+                val animes = animeRepository.getInvalidAnimes(tag)
+                call.respond(animes)
+            } catch (e: Exception) {
+                printError(call, e)
+            }
+        }
+    }
 }

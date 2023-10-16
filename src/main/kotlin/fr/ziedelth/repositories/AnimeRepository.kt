@@ -10,8 +10,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class AnimeRepository : AbstractRepository<Anime>(),
-    IPageRepository<Anime> {
+class AnimeRepository : AbstractRepository<Anime>() {
     fun findByHash(tag: String, hash: String): UUID? {
         return database.inTransaction {
             val query = it.createQuery(
@@ -132,7 +131,14 @@ class AnimeRepository : AbstractRepository<Anime>(),
         )
     }
 
-    override fun getByPage(tag: String, page: Int, limit: Int): List<Anime> {
-        TODO("Not yet implemented")
+    fun getInvalidAnimes(tag: String): List<Anime> {
+        return database.inTransaction { session ->
+            val query = session.createQuery(
+                "SELECT anime FROM Anime anime WHERE anime.country.tag = :tag AND (anime.description LIKE '(%' OR anime.description IS NULL OR TRIM(anime.description) = '')",
+                Anime::class.java
+            )
+            query.setParameter("tag", tag)
+            database.fullInitialize(query.list())
+        }
     }
 }
