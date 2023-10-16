@@ -8,9 +8,8 @@ import java.util.*
 private const val ORDER =
     "ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name"
 
-class EpisodeRepository : AbstractRepository<Episode>(),
-    IPageRepository<Episode> {
-    override fun getByPage(tag: String, page: Int, limit: Int): List<Episode> {
+class EpisodeRepository : AbstractRepository<Episode>() {
+    fun getByPage(tag: String, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
             page,
             limit,
