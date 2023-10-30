@@ -15,7 +15,7 @@ class SimulcastService : AbstractService() {
     private val loadingCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<CountryCacheKey, List<Simulcast>>() {
             override fun load(key: CountryCacheKey): List<Simulcast> {
-                Logger.info("Updating simulcast cache")
+                Logger.config("Updating simulcast cache")
                 return repository.getAll(key.tag)
             }
         })

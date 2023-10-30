@@ -5,13 +5,12 @@ import fr.ziedelth.entities.LangType
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.LangTypeRepository
 import fr.ziedelth.services.LangTypeService
-import fr.ziedelth.utils.Logger
-import fr.ziedelth.utils.routes.APIRoute
+import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.Path
+import fr.ziedelth.utils.routes.Response
+import fr.ziedelth.utils.routes.method.Get
+import fr.ziedelth.utils.routes.method.Post
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 
 class LangTypeController : AbstractController<LangType>("/langtypes") {
     @Inject
@@ -20,38 +19,26 @@ class LangTypeController : AbstractController<LangType>("/langtypes") {
     @Inject
     private lateinit var langTypeService: LangTypeService
 
-    @APIRoute
-    private fun Route.getAll() {
-        get {
-            Logger.info("GET $prefix")
-            call.respond(langTypeService.getAll())
-        }
+    @Path
+    @Get
+    private fun getAll(): Response {
+        return Response.ok(langTypeService.getAll())
     }
 
-    @APIRoute
-    private fun Route.save() {
-        post {
-            Logger.info("POST $prefix")
-            if (isUnauthorized().await()) return@post
-
-            try {
-                val langType = call.receive<LangType>()
-
-                if (langType.isNullOrNotValid()) {
-                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
-                    return@post
-                }
-
-                if (langTypeRepository.exists("name", langType.name)) {
-                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                    return@post
-                }
-
-                call.respond(HttpStatusCode.Created, langTypeRepository.save(langType))
-                langTypeService.invalidateAll()
-            } catch (e: Exception) {
-                printError(call, e)
-            }
+    @Path
+    @Post
+    @Authorized
+    private fun save(body: LangType): Response {
+        if (body.isNullOrNotValid()) {
+            return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
+
+        if (langTypeRepository.exists("name", body.name)) {
+            return Response(HttpStatusCode.Conflict, "$entityName already exists")
+        }
+
+        val savedLangType = langTypeRepository.save(body)
+        langTypeService.invalidateAll()
+        return Response.created(savedLangType)
     }
 }

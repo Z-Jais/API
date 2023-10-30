@@ -14,7 +14,7 @@ class LangTypeService : AbstractService() {
     private val loadingCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<String, List<LangType>>() {
             override fun load(key: String): List<LangType> {
-                Logger.info("Updating lang type cache")
+                Logger.config("Updating lang type cache")
                 return repository.getAll()
             }
         })

@@ -61,11 +61,11 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             // ERROR
 
-            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/ae/limit/12").status }
-            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/1/limit/ae").status }
-            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/0/limit/12").status }
-            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/1/limit/0").status }
-            expect(HttpStatusCode.InternalServerError) { client.get("/episodes/country/${country.tag}/page/1/limit/31").status }
+            expect(HttpStatusCode.BadRequest) { client.get("/episodes/country/${country.tag}/page/ae/limit/12").status }
+            expect(HttpStatusCode.BadRequest) { client.get("/episodes/country/${country.tag}/page/1/limit/ae").status }
+            expect(HttpStatusCode.BadRequest) { client.get("/episodes/country/${country.tag}/page/0/limit/12").status }
+            expect(HttpStatusCode.BadRequest) { client.get("/episodes/country/${country.tag}/page/1/limit/0").status }
+            expect(HttpStatusCode.BadRequest) { client.get("/episodes/country/${country.tag}/page/1/limit/31").status }
         }
     }
 
@@ -103,7 +103,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
             val responseError =
                 client.get("/episodes/anime/${anime.uuid}/page/ae/limit/12")
 
-            expect(HttpStatusCode.InternalServerError) { responseError.status }
+            expect(HttpStatusCode.BadRequest) { responseError.status }
         }
     }
 
@@ -417,7 +417,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
                 configureRoutingTest()
             }
 
-            expect(HttpStatusCode.InternalServerError) {
+            expect(HttpStatusCode.BadRequest) {
                 client.post("/episodes/multiple") {
                     contentType(ContentType.Application.Json)
                     setBody(
@@ -439,7 +439,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val platform = platformRepository.getAll().first()
 
-            expect(HttpStatusCode.InternalServerError) {
+            expect(HttpStatusCode.BadRequest) {
                 client.post("/episodes/multiple") {
                     contentType(ContentType.Application.Json)
                     setBody(
@@ -461,7 +461,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val anime = animeRepository.getAll().first()
 
-            expect(HttpStatusCode.InternalServerError) {
+            expect(HttpStatusCode.BadRequest) {
                 client.post("/episodes/multiple") {
                     contentType(ContentType.Application.Json)
                     setBody(
@@ -483,7 +483,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val episodeType = episodeTypeRepository.getAll().first()
 
-            expect(HttpStatusCode.InternalServerError) {
+            expect(HttpStatusCode.BadRequest) {
                 client.post("/episodes/multiple") {
                     contentType(ContentType.Application.Json)
                     setBody(
@@ -505,7 +505,7 @@ internal class EpisodeControllerTest : AbstractAPITest() {
 
             val langType = langTypeRepository.getAll().first()
 
-            expect(HttpStatusCode.InternalServerError) {
+            expect(HttpStatusCode.BadRequest) {
                 client.post("/episodes/multiple") {
                     contentType(ContentType.Application.Json)
                     setBody(
