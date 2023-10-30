@@ -14,7 +14,7 @@ class CountryService : AbstractService() {
     private val loadingCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<String, List<Country>>() {
             override fun load(key: String): List<Country> {
-                Logger.info("Updating country cache")
+                Logger.config("Updating country cache")
                 return repository.getAll()
             }
         })

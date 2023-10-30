@@ -19,7 +19,7 @@ class AnimeService : AbstractService() {
     private val paginationSimulcastCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<PaginationSimulcastCountryCacheKey, List<Anime>>() {
             override fun load(key: PaginationSimulcastCountryCacheKey): List<Anime> {
-                Logger.info("Updating anime pagination cache")
+                Logger.config("Updating anime pagination cache")
                 return repository.getByPage(key.tag, key.simulcast, key.page, key.limit)
             }
         })
@@ -27,7 +27,7 @@ class AnimeService : AbstractService() {
     private val dayCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<DayCountryCacheKey, List<Anime>>() {
             override fun load(key: DayCountryCacheKey): List<Anime> {
-                Logger.info("Updating anime day pagination cache")
+                Logger.config("Updating anime day pagination cache")
                 return repository.getDiary(key.tag, key.day)
             }
         })
@@ -35,7 +35,7 @@ class AnimeService : AbstractService() {
     private val searchCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<SearchCountryCacheKey, List<Anime>>() {
             override fun load(key: SearchCountryCacheKey): List<Anime> {
-                Logger.info("Updating anime day search cache")
+                Logger.config("Updating anime day search cache")
                 return repository.findByName(key.tag, key.search)
             }
         })

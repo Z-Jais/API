@@ -2,31 +2,19 @@ package fr.ziedelth.controllers
 
 import com.google.inject.Inject
 import fr.ziedelth.repositories.EpisodeRepository
-import fr.ziedelth.utils.Logger
-import fr.ziedelth.utils.routes.APIRoute
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import fr.ziedelth.utils.routes.Path
+import fr.ziedelth.utils.routes.Response
+import fr.ziedelth.utils.routes.method.Post
 import java.io.Serializable
 
 class ProfileController : AbstractController<Serializable>("/profile") {
     @Inject
     private lateinit var episodeRepository: EpisodeRepository
 
-    @APIRoute
-    private fun Route.totalDuration() {
-        post("/total-duration") {
-            try {
-                val watchlist = call.receive<String>()
-                Logger.info("POST $prefix/total-duration")
-                val filterData = decode(watchlist)
-                call.respond(mapOf("total-duration" to episodeRepository.getTotalDurationSeen(filterData.episodes)))
-            } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, e)
-            }
-        }
+    @Path("/total-duration")
+    @Post
+    private fun getTotalDuration(body: String): Response {
+        val filterData = decode(body)
+        return Response.ok(mapOf("total-duration" to episodeRepository.getTotalDurationSeen(filterData.episodes)))
     }
 }

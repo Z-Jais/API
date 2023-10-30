@@ -9,15 +9,18 @@ import fr.ziedelth.repositories.*
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.services.SimulcastService
-import fr.ziedelth.utils.*
+import fr.ziedelth.utils.CalendarConverter
+import fr.ziedelth.utils.ImageCache
+import fr.ziedelth.utils.SortType
 import fr.ziedelth.utils.plugins.PluginManager
-import fr.ziedelth.utils.routes.APIRoute
+import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.Path
+import fr.ziedelth.utils.routes.Response
+import fr.ziedelth.utils.routes.method.Get
+import fr.ziedelth.utils.routes.method.Post
+import fr.ziedelth.utils.routes.method.Put
+import fr.ziedelth.utils.toISO8601
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.pipeline.*
 import java.util.*
 
 class EpisodeController : AttachmentController<Episode>("/episodes") {
@@ -48,65 +51,22 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
     @Inject
     private lateinit var episodeService: EpisodeService
 
-    @APIRoute
-    private fun Route.paginationByCountry() {
-        get("/country/{country}/page/{page}/limit/{limit}") {
-            try {
-                val country = call.parameters["country"]!!
-                val (page, limit) = getPageAndLimit()
-                Logger.info("GET $prefix/country/$country/page/$page/limit/$limit")
-                call.respond(episodeService.getByPage(country, page, limit))
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
+    @Path("/country/{country}/page/{page}/limit/{limit}")
+    @Get
+    private fun paginationByCountry(country: String, page: Int, limit: Int): Response {
+        return Response.ok(episodeService.getByPage(country, page, limit))
     }
 
-    @APIRoute
-    private fun Route.paginationAnime() {
-        get("/anime/{uuid}/page/{page}/limit/{limit}") {
-            try {
-                val animeUuid = call.parameters["uuid"]!!
-                val (page, limit) = getPageAndLimit()
-                val sortType = SortType.valueOf(call.request.queryParameters["sortType"] ?: SortType.SEASON_NUMBER.name)
-                Logger.info("GET $prefix/anime/$animeUuid/page/$page/limit/$limit")
-                call.respond(episodeService.getByPageWithAnime(UUID.fromString(animeUuid), sortType, page, limit))
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
+    @Path("/anime/{uuid}/page/{page}/limit/{limit}")
+    @Get
+    private fun paginationAnime(uuid: UUID, page: Int, limit: Int): Response {
+        return Response.ok(episodeService.getByPageWithAnime(uuid, SortType.SEASON_NUMBER, page, limit))
     }
 
-    private suspend fun filterWatchlistByPageAndLimit(
-        pipelineContext: PipelineContext<Unit, ApplicationCall>,
-        episodeController: EpisodeController,
-        routePrefix: String,
-    ) {
-        try {
-            val watchlist = pipelineContext.call.receive<String>()
-            val (page, limit) = pipelineContext.getPageAndLimit()
-            Logger.info("POST $prefix/${routePrefix}/page/$page/limit/$limit")
-            val filterData = decode(watchlist)
-
-            pipelineContext.call.respond(episodeRepository.getByPageWithListFilter(filterData, page, limit))
-        } catch (e: Exception) {
-            episodeController.printError(pipelineContext.call, e)
-        }
-    }
-
-    @APIRoute
-    private fun Route.paginationWatchlist() {
-        post("/watchlist/page/{page}/limit/{limit}") {
-            filterWatchlistByPageAndLimit(this, this@EpisodeController, "watchlist")
-        }
-    }
-
-    @APIRoute
-    @Deprecated(message = "Use /watchlist as replace")
-    private fun Route.paginationWatchlistFilter() {
-        post("/watchlist_filter/page/{page}/limit/{limit}") {
-            filterWatchlistByPageAndLimit(this, this@EpisodeController, "watchlist_filter")
-        }
+    @Path("/watchlist/page/{page}/limit/{limit}")
+    @Post
+    private fun paginationWatchlist(body: String, page: Int, limit: Int): Response {
+        return Response.ok(episodeRepository.getByPageWithListFilter(decode(body), page, limit))
     }
 
     private fun merge(episode: Episode) {
@@ -163,96 +123,64 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
         }
     }
 
-    @APIRoute
-    private fun Route.saveMultiple() {
-        post("/multiple") {
-            Logger.info("POST $prefix/multiple")
-            if (isUnauthorized().await()) return@post
+    @Path("/multiple")
+    @Post
+    @Authorized
+    private fun saveMultiple(body: Array<Episode>): Response {
+        val episodes = body.filter { !episodeRepository.exists("hash", it.hash!!) }
 
-            try {
-                val episodes = call.receive<List<Episode>>().filter { !episodeRepository.exists("hash", it.hash!!) }
-
-                if (episodes.isEmpty()) {
-                    call.respond(HttpStatusCode.NoContent, "All requested episodes already exists!")
-                    return@post
-                }
-
-                val savedEpisodes = mutableListOf<Episode>()
-
-                episodes.forEach {
-                    merge(it)
-                    val savedEpisode = episodeRepository.save(it)
-                    savedEpisodes.add(savedEpisode)
-                    ImageCache.cache(savedEpisode.uuid, savedEpisode.image!!)
-                }
-
-                episodeService.invalidateAll()
-                animeService.invalidateAll()
-                simulcastService.invalidateAll()
-                call.respond(HttpStatusCode.Created, savedEpisodes)
-
-                if (savedEpisodes.size <= 5) {
-                    Thread {
-                        PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
-                    }.start()
-                }
-            } catch (e: Exception) {
-                printError(call, e)
-            }
+        if (episodes.isEmpty()) {
+            return Response(HttpStatusCode.NoContent, "All requested episodes already exists!")
         }
+
+        val savedEpisodes = mutableListOf<Episode>()
+
+        episodes.forEach {
+            merge(it)
+            val savedEpisode = episodeRepository.save(it)
+            savedEpisodes.add(savedEpisode)
+            ImageCache.cache(savedEpisode.uuid, savedEpisode.image!!)
+        }
+
+        episodeService.invalidateAll()
+        animeService.invalidateAll()
+        simulcastService.invalidateAll()
+
+        if (savedEpisodes.size <= 5) {
+            Thread {
+                PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
+            }.start()
+        }
+
+        return Response.created(savedEpisodes)
     }
 
-    @APIRoute
-    private fun Route.update() {
-        put {
-            Logger.info("PUT $prefix")
-            if (isUnauthorized().await()) return@put
+    @Path
+    @Put
+    @Authorized
+    private fun update(body: Episode): Response {
+        var savedEpisode = episodeRepository.find(body.uuid) ?: return Response(HttpStatusCode.NotFound, "Episode not found")
 
-            try {
-                val episode = call.receive<Episode>()
-                var savedEpisode = episodeRepository.find(episode.uuid)
-
-                if (savedEpisode == null) {
-                    call.respond(HttpStatusCode.NotFound, "Episode not found")
-                    return@put
-                }
-
-                if (episode.episodeType?.uuid != null) {
-                    val foundEpisodeType = episodeTypeRepository.find(episode.episodeType!!.uuid)
-
-                    if (foundEpisodeType == null) {
-                        call.respond(HttpStatusCode.NotFound, "Episode type not found")
-                        return@put
-                    }
-
-                    savedEpisode.episodeType = foundEpisodeType
-                }
-
-                if (episode.langType?.uuid != null) {
-                    val foundLangType = langTypeRepository.find(episode.langType!!.uuid)
-
-                    if (foundLangType == null) {
-                        call.respond(HttpStatusCode.NotFound, "Lang type not found")
-                        return@put
-                    }
-
-                    savedEpisode.langType = foundLangType
-                }
-
-                if (episode.season != null) {
-                    savedEpisode.season = episode.season
-                }
-
-                if (episode.duration != -1L) {
-                    savedEpisode.duration = episode.duration
-                }
-
-                savedEpisode = episodeRepository.save(savedEpisode)
-                episodeService.invalidateAll()
-                call.respond(HttpStatusCode.OK, savedEpisode)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
+        if (body.episodeType?.uuid != null) {
+            val foundEpisodeType = episodeTypeRepository.find(body.episodeType!!.uuid) ?: return Response(HttpStatusCode.NotFound, "Episode type not found")
+            savedEpisode.episodeType = foundEpisodeType
         }
+
+        if (body.langType?.uuid != null) {
+            val foundLangType = langTypeRepository.find(body.langType!!.uuid) ?: return Response(HttpStatusCode.NotFound, "Lang type not found")
+            savedEpisode.langType = foundLangType
+        }
+
+        if (body.season != null) {
+            savedEpisode.season = body.season
+        }
+
+        if (body.duration != -1L) {
+            savedEpisode.duration = body.duration
+        }
+
+        savedEpisode = episodeRepository.save(savedEpisode)
+        episodeService.invalidateAll()
+        return Response.ok(savedEpisode)
     }
 }

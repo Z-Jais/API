@@ -86,7 +86,7 @@ object ImageCache {
 
                 val combinedImages = platforms + animes + episodes
 
-                combinedImages.parallelStream().forEach {
+                combinedImages.forEach {
                     val uuid = it[0] as UUID
                     val url = it[1] as String
                     cache(uuid, url)
