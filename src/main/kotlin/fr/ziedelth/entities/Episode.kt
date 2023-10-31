@@ -65,7 +65,7 @@ class Episode(
     @Column(nullable = false)
     val releaseDate: String = Calendar.getInstance().toISO8601(),
     @Column(nullable = false)
-    val season: Int? = null,
+    var season: Int? = null,
     @Column(nullable = false)
     var number: Int? = null,
     @Column(nullable = true)
@@ -75,7 +75,7 @@ class Episode(
     @Column(nullable = false, columnDefinition = "TEXT")
     val image: String? = null,
     @Column(nullable = false)
-    val duration: Long = -1
+    var duration: Long = -1
 ) : Serializable {
     fun isNotValid(): Boolean =
         platform.isNullOrNotValid() || anime.isNullOrNotValid() || episodeType.isNullOrNotValid() || langType.isNullOrNotValid() || hash.isNullOrBlank() || (

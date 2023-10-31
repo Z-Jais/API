@@ -201,4 +201,58 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
             }
         }
     }
+
+    @APIRoute
+    private fun Route.update() {
+        put {
+            Logger.info("PUT $prefix")
+            if (isUnauthorized().await()) return@put
+
+            try {
+                val episode = call.receive<Episode>()
+                var savedEpisode = episodeRepository.find(episode.uuid)
+
+                if (savedEpisode == null) {
+                    call.respond(HttpStatusCode.NotFound, "Episode not found")
+                    return@put
+                }
+
+                if (episode.episodeType?.uuid != null) {
+                    val foundEpisodeType = episodeTypeRepository.find(episode.episodeType!!.uuid)
+
+                    if (foundEpisodeType == null) {
+                        call.respond(HttpStatusCode.NotFound, "Episode type not found")
+                        return@put
+                    }
+
+                    savedEpisode.episodeType = foundEpisodeType
+                }
+
+                if (episode.langType?.uuid != null) {
+                    val foundLangType = langTypeRepository.find(episode.langType!!.uuid)
+
+                    if (foundLangType == null) {
+                        call.respond(HttpStatusCode.NotFound, "Lang type not found")
+                        return@put
+                    }
+
+                    savedEpisode.langType = foundLangType
+                }
+
+                if (episode.season != null) {
+                    savedEpisode.season = episode.season
+                }
+
+                if (episode.duration != -1L) {
+                    savedEpisode.duration = episode.duration
+                }
+
+                savedEpisode = episodeRepository.save(savedEpisode)
+                episodeService.invalidateAll()
+                call.respond(HttpStatusCode.OK, savedEpisode)
+            } catch (e: Exception) {
+                printError(call, e)
+            }
+        }
+    }
 }
