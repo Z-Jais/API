@@ -28,7 +28,7 @@ object Notifications {
         Logger.info("Firebase initialized")
     }
 
-    fun send(title: String? = null, body: String? = null, topic: String = "all") {
+    fun send(title: String, body: String, image: String, topic: String = "all") {
         with(System.getenv("SEND_NOTIFICATIONS")) {
             if (this.isNullOrBlank() || this == "false") return
         }
@@ -39,7 +39,9 @@ object Notifications {
                     AndroidConfig.builder().setNotification(
                         AndroidNotification.builder()
                             .setTitle(title)
-                            .setBody(body).build()
+                            .setBody(body)
+                            .setImage(image)
+                            .build()
                     ).build()
                 ).setTopic(topic).build()
             )
