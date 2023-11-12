@@ -1,60 +1,34 @@
 package fr.ziedelth.listeners
 
-import fr.ziedelth.entities.EpisodeType
-import fr.ziedelth.entities.LangType
+import fr.ziedelth.entities.Episode
 import fr.ziedelth.events.EpisodesReleaseEvent
-import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.Notifications
 import fr.ziedelth.utils.plugins.events.EventHandler
 import fr.ziedelth.utils.plugins.events.Listener
-import java.util.*
 
 class EpisodesRelease : Listener {
-    private var lastDaySend = 0
-    private var lastSend = mutableListOf<UUID>()
-
-    fun toString(triple: Triple<EpisodeType, Int, LangType>): String {
-        val etName = when (triple.first.name) {
+    private fun toString(episode: Episode): String {
+        val etName = when (episode.episodeType!!.name) {
             "EPISODE" -> "Épisode"
             "SPECIAL" -> "Spécial"
             "FILM" -> "Film"
             else -> "Épisode"
         }
 
-        val ltName = when (triple.third.name) {
+        val ltName = when (episode.langType!!.name) {
             "SUBTITLES" -> "VOSTFR"
             "VOICE" -> "VF"
             else -> "VOSTFR"
         }
 
-        return "$etName ${triple.second} $ltName"
+        return "Saison ${episode.season} • $etName ${episode.number} $ltName"
     }
 
     @EventHandler
     fun onEpisodesRelease(event: EpisodesReleaseEvent) {
-        val currentDay = Calendar.getInstance()[Calendar.DAY_OF_YEAR]
-
-        if (currentDay != lastDaySend) {
-            lastDaySend = currentDay
-            lastSend.clear()
-        }
-
-        val animes = event.episodes.map { it.anime to toString(Triple(it.episodeType!!, it.number!!, it.langType!!)) }
-            .distinctBy { it.first?.uuid }.filter { !lastSend.contains(it.first?.uuid) }
-        if (animes.isEmpty()) return
-        lastSend.addAll(animes.map { it.first!!.uuid })
-
-        val animeNames = animes.sortedBy { it.first!!.name!!.lowercase() }
-        val joinToString = animeNames.joinToString(", ") { "${it.first!!.name} - ${it.second}" }
-        Logger.info("Sending notification for ${animes.size} animes: $joinToString")
-
-        Notifications.send(body = joinToString)
-        animes.forEach {
-            Notifications.send(
-                title = it.first!!.name,
-                body = "${it.second} est disponible !",
-                topic = it.first!!.uuid.toString()
-            )
+        event.episodes.forEach {
+            Notifications.send(it.anime!!.name!!, toString(it), it.image!!)
+            Notifications.send(it.anime!!.name!!, toString(it), it.image, it.anime!!.uuid.toString())
         }
     }
 }
