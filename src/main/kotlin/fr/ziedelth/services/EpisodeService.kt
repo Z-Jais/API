@@ -18,7 +18,7 @@ class EpisodeService : AbstractService() {
     private val paginationCountryCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<PaginationCountryCacheKey, List<Episode>>() {
             override fun load(key: PaginationCountryCacheKey): List<Episode> {
-                Logger.info("Updating episode pagination cache")
+                Logger.config("Updating episode pagination cache")
                 return repository.getByPage(key.tag, key.page, key.limit)
             }
         })
@@ -26,7 +26,7 @@ class EpisodeService : AbstractService() {
     private val paginationAnimeCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<PaginationAnimeCacheKey, List<Episode>>() {
             override fun load(key: PaginationAnimeCacheKey): List<Episode> {
-                Logger.info("Updating episode anime pagination cache")
+                Logger.config("Updating episode anime pagination cache")
                 return repository.getByPageWithAnime(key.anime, key.sortType, key.page, key.limit)
             }
         })

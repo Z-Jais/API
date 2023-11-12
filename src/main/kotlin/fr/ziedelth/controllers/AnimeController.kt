@@ -11,12 +11,14 @@ import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.Logger
-import fr.ziedelth.utils.routes.APIRoute
+import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.Path
+import fr.ziedelth.utils.routes.Response
+import fr.ziedelth.utils.routes.method.Delete
+import fr.ziedelth.utils.routes.method.Get
+import fr.ziedelth.utils.routes.method.Post
+import fr.ziedelth.utils.routes.method.Put
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import java.util.*
 
 private const val ANIME_NOT_FOUND_ERROR = "Anime not found"
@@ -40,277 +42,182 @@ class AnimeController : AttachmentController<Anime>("/animes") {
     @Inject
     private lateinit var simulcastRepository: SimulcastRepository
 
-    @APIRoute
-    private fun Route.searchByCountryAndHash() {
-        get("/country/{country}/search/hash/{hash}") {
-            val country = call.parameters["country"]!!
-            val hash = call.parameters["hash"]!!
-            Logger.info("GET $prefix/country/$country/search/hash/$hash")
-            val anime = animeRepository.findByHash(country, hash)
-            call.respond(if (anime != null) mapOf("uuid" to anime) else HttpStatusCode.NotFound)
-        }
+    @Path("/country/{country}/search/hash/{hash}")
+    @Get
+    private fun searchByCountryAndHash(country: String, hash: String): Response {
+        val anime = animeRepository.findByHash(country, hash) ?: return Response(HttpStatusCode.NotFound)
+        return Response.ok(mapOf("uuid" to anime))
     }
 
-    @APIRoute
-    private fun Route.searchByCountryAndName() {
-        get("/country/{country}/search/name/{name}") {
-            val country = call.parameters["country"]!!
-            val name = call.parameters["name"]!!
-            Logger.info("GET $prefix/country/$country/search/name/$name")
-
-            try {
-                call.respond(animeService.findByName(country, name))
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+    @Path("/country/{country}/search/name/{name}")
+    @Get
+    private fun searchByCountryAndName(country: String, name: String): Response {
+        return Response.ok(animeService.findByName(country, name))
     }
 
-    @APIRoute
-    private fun Route.paginationByCountryAndSimulcast() {
-        get("/country/{country}/simulcast/{simulcast}/page/{page}/limit/{limit}") {
-            try {
-                val country = call.parameters["country"]!!
-                val simulcast = call.parameters["simulcast"]!!
-                val (page, limit) = getPageAndLimit()
-                Logger.info("GET $prefix/country/$country/simulcast/$simulcast/page/$page/limit/$limit")
-                call.respond(animeService.getByPage(country, UUID.fromString(simulcast), page, limit))
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
+    @Path("/country/{country}/simulcast/{simulcast}/page/{page}/limit/{limit}")
+    @Get
+    private fun paginationByCountryAndSimulcast(country: String, simulcast: UUID, page: Int, limit: Int): Response {
+        return Response.ok(animeService.getByPage(country, simulcast, page, limit))
     }
 
-    @APIRoute
-    private fun Route.paginationMissing() {
-        post("/missing/page/{page}/limit/{limit}") {
-            try {
-                val watchlist = call.receive<String>()
-                val (page, limit) = getPageAndLimit()
-                Logger.info("POST $prefix/missing/page/$page/limit/$limit")
-                val filterData = decode(watchlist)
-                call.respond(animeRepository.getMissingAnimes(filterData, page, limit))
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
+    @Path("/diary/country/{country}/day/{day}")
+    @Get
+    private fun diaryByCountryAndDay(country: String, day: Int): Response {
+        var selectedDay = day
+        if (selectedDay == 0) selectedDay = 7
+        if (selectedDay > 7) selectedDay = 1
+        return Response.ok(animeService.getDiary(country, selectedDay))
     }
 
-    @APIRoute
-    private fun Route.save() {
-        post {
-            Logger.info("POST $prefix")
-            if (isUnauthorized().await()) return@post
-
-            try {
-                val anime = call.receive<Anime>()
-
-                anime.country = countryRepository.find(anime.country!!.uuid) ?: return@post run {
-                    Logger.warning("Country not found")
-
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Country not found"
-                    )
-                }
-
-                if (anime.isNullOrNotValid()) {
-                    Logger.warning(MISSING_PARAMETERS_MESSAGE_ERROR)
-                    Logger.warning(anime.toString())
-                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
-                    return@post
-                }
-
-                if (animeRepository.findOneByName(
-                        anime.country!!.tag!!,
-                        anime.name!!
-                    )?.country?.uuid == anime.country!!.uuid
-                ) {
-                    Logger.warning("$entityName already exists")
-                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                    return@post
-                }
-
-                val hash = anime.hash()
-
-                if (animeRepository.findByHash(anime.country!!.tag!!, hash) != null) {
-                    Logger.warning("$entityName already exists")
-                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                    return@post
-                }
-
-                anime.hashes.add(hash)
-                val savedAnime = animeRepository.save(anime)
-                ImageCache.cache(savedAnime.uuid, savedAnime.image!!)
-
-                animeService.invalidateAll()
-                call.respond(HttpStatusCode.Created, savedAnime)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
+    @Path("/invalid/country/{country}")
+    @Get
+    @Authorized
+    private fun getAllInvalid(country: String): Response {
+        return Response.ok(animeRepository.getInvalidAnimes(country))
     }
 
-    @APIRoute
-    private fun Route.update() {
-        put {
-            Logger.info("PUT $prefix")
-            if (isUnauthorized().await()) return@put
-
-            try {
-                val anime = call.receive<Anime>()
-                var savedAnime = animeRepository.find(anime.uuid)
-
-                if (savedAnime == null) {
-                    call.respond(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
-                    return@put
-                }
-
-                if (!anime.name.isNullOrBlank()) {
-                    if (animeRepository.findOneByName(savedAnime.country!!.tag!!, anime.name!!) != null) {
-                        call.respond(HttpStatusCode.Conflict, "Another anime with the name exist!")
-                        return@put
-                    }
-
-                    savedAnime.name = anime.name
-                }
-
-                if (!anime.description.isNullOrBlank()) {
-                    savedAnime.description = anime.description
-                }
-
-                if (anime.simulcasts.isNotEmpty()) {
-                    val savedSimulcasts = anime.simulcasts.mapNotNull { simulcastRepository.find(it.uuid) }
-
-                    savedAnime.simulcasts.clear()
-                    savedAnime.simulcasts.addAll(savedSimulcasts)
-                }
-
-                savedAnime = animeRepository.save(savedAnime)
-                animeService.invalidateAll()
-                episodeService.invalidateAll()
-                call.respond(HttpStatusCode.OK, savedAnime)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
+    @Path("/missing/page/{page}/limit/{limit}")
+    @Post
+    private fun paginationMissing(body: String, page: Int, limit: Int): Response {
+        return Response.ok(animeRepository.getMissingAnimes(decode(body), page, limit))
     }
 
-    @APIRoute
-    private fun Route.deleteAnime() {
-        delete("/{uuid}") {
-            try {
-                val uuid = UUID.fromString(call.parameters["uuid"]!!)
-                Logger.info("DELETE $prefix/$uuid")
-                if (isUnauthorized().await()) return@delete
-                val savedAnime = animeRepository.find(uuid)
+    @Path
+    @Post
+    @Authorized
+    private fun save(body: Anime): Response {
+        val countryUuid = body.country!!.uuid
+        body.country =
+            countryRepository.find(countryUuid) ?: return Response(HttpStatusCode.BadRequest, "Country not found")
 
-                if (savedAnime == null) {
-                    call.respond(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
-                    return@delete
-                }
+        val countryTag = body.country!!.tag!!
 
-                animeRepository.delete(savedAnime)
-                animeService.invalidateAll()
-                episodeService.invalidateAll()
-                call.respond(HttpStatusCode.NoContent)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
+        if (body.isNullOrNotValid()) {
+            Logger.warning(MISSING_PARAMETERS_MESSAGE_ERROR)
+            Logger.warning(body.toString())
+            return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
+
+        if (animeRepository.findOneByName(countryTag, body.name!!)?.country?.uuid == countryUuid) {
+            Logger.warning("$entityName already exists")
+            return Response(HttpStatusCode.Conflict, "$entityName already exists")
+        }
+
+        val hash = body.hash()
+
+        if (animeRepository.findByHash(countryTag, hash) != null) {
+            Logger.warning("$entityName already exists")
+            return Response(HttpStatusCode.Conflict, "$entityName already exists")
+        }
+
+        body.hashes.add(hash)
+        val savedAnime = animeRepository.save(body)
+        ImageCache.cache(savedAnime.uuid, savedAnime.image!!)
+        animeService.invalidateAll()
+        return Response.created(savedAnime)
     }
 
-    @APIRoute
-    private fun Route.merge() {
-        put("/merge") {
-            if (isUnauthorized().await()) return@put
+    @Path
+    @Put
+    @Authorized
+    private fun update(body: Anime): Response {
+        var savedAnime =
+            animeRepository.find(body.uuid) ?: return Response(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
 
-            // Get list of uuids
-            val uuids = call.receive<List<String>>().map { UUID.fromString(it) }
-            Logger.info("PUT $prefix/merge")
-            // Get anime
-            val animes = uuids.mapNotNull { animeRepository.find(it) }
-
-            if (animes.isEmpty()) {
-                Logger.warning(ANIME_NOT_FOUND_ERROR)
-                call.respond(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
-                return@put
+        if (!body.name.isNullOrBlank()) {
+            if (animeRepository.findOneByName(savedAnime.country!!.tag!!, body.name!!) != null) {
+                return Response(HttpStatusCode.Conflict, "Another anime with the name exist!")
             }
 
-            // Get all countries
-            val countries = animes.map { it.country }.distinctBy { it!!.uuid }
-
-            if (countries.size > 1) {
-                Logger.warning("Anime has different countries")
-                call.respond(HttpStatusCode.BadRequest, "Anime has different countries")
-                return@put
-            }
-
-            // Get all hashes
-            val hashes = animes.map { it.hashes }.flatten().distinct().toMutableSet()
-            // Get all genres
-            val genres = animes.map { it.genres }.flatten().distinctBy { it.uuid }.toMutableSet()
-            // Get all simulcasts
-            val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
-            // Get all episodes
-            val episodes =
-                animes.map { episodeRepository.getAllBy("anime.uuid", it.uuid) }.flatten()
-                    .distinctBy { it.uuid }
-                    .toMutableSet()
-
-            val firstAnime = animes.first()
-
-            val savedAnime = animeRepository.find(
-                animeRepository.save(
-                    Anime(
-                        country = countries.first(),
-                        name = "${animes.first().name} (${animes.size})",
-                        releaseDate = firstAnime.releaseDate,
-                        image = firstAnime.image,
-                        description = firstAnime.description,
-                        hashes = hashes,
-                        genres = genres,
-                        simulcasts = simulcasts
-                    )
-                ).uuid
-            )!!
-
-            ImageCache.cache(savedAnime.uuid, savedAnime.image!!)
-            episodeRepository.saveAll(episodes.map { it.copy(anime = savedAnime) })
-
-            // Delete animes
-            animeRepository.deleteAll(animes)
-
-            animeService.invalidateAll()
-            episodeService.invalidateAll()
-            call.respond(HttpStatusCode.OK, savedAnime)
+            savedAnime.name = body.name
         }
+
+        if (!body.description.isNullOrBlank()) {
+            savedAnime.description = body.description
+        }
+
+        if (body.simulcasts.isNotEmpty()) {
+            val savedSimulcasts = body.simulcasts.mapNotNull { simulcastRepository.find(it.uuid) }
+
+            savedAnime.simulcasts.clear()
+            savedAnime.simulcasts.addAll(savedSimulcasts)
+        }
+
+        savedAnime = animeRepository.save(savedAnime)
+        animeService.invalidateAll()
+        episodeService.invalidateAll()
+        return Response.ok(savedAnime)
     }
 
-    @APIRoute
-    private fun Route.diaryByCountryAndDay() {
-        get("/diary/country/{country}/day/{day}") {
-            val country = call.parameters["country"]!!
-            var day = call.parameters["day"]!!.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
-            if (day == 0) day = 7
-            if (day > 7) day = 1
-            Logger.info("GET $prefix/diary/country/$country/day/$day")
-            call.respond(animeService.getDiary(country, day))
+    @Path("/merge")
+    @Put
+    @Authorized
+    private fun merge(body: Array<UUID>): Response {
+        // Get anime
+        val animes = body.mapNotNull { animeRepository.find(it) }
+
+        if (animes.isEmpty()) {
+            Logger.warning(ANIME_NOT_FOUND_ERROR)
+            return Response(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
         }
+
+        // Get all countries
+        val countries = animes.map { it.country }.distinctBy { it!!.uuid }
+
+        if (countries.size > 1) {
+            Logger.warning("Anime has different countries")
+            return Response(HttpStatusCode.BadRequest, "Anime has different countries")
+        }
+
+        // Get all hashes
+        val hashes = animes.map { it.hashes }.flatten().distinct().toMutableSet()
+        // Get all genres
+        val genres = animes.map { it.genres }.flatten().distinctBy { it.uuid }.toMutableSet()
+        // Get all simulcasts
+        val simulcasts = animes.map { it.simulcasts }.flatten().distinctBy { it.uuid }.toMutableSet()
+        // Get all episodes
+        val episodes =
+            animes.map { episodeRepository.getAllBy("anime.uuid", it.uuid) }.flatten()
+                .distinctBy { it.uuid }
+                .toMutableSet()
+
+        val firstAnime = animes.first()
+
+        val savedAnime = animeRepository.find(
+            animeRepository.save(
+                Anime(
+                    country = countries.first(),
+                    name = "${animes.first().name} (${animes.size})",
+                    releaseDate = firstAnime.releaseDate,
+                    image = firstAnime.image,
+                    description = firstAnime.description,
+                    hashes = hashes,
+                    genres = genres,
+                    simulcasts = simulcasts
+                )
+            ).uuid
+        )!!
+
+        ImageCache.cache(savedAnime.uuid, savedAnime.image!!)
+        episodeRepository.saveAll(episodes.map { it.copy(anime = savedAnime) })
+
+        // Delete animes
+        animeRepository.deleteAll(animes)
+
+        animeService.invalidateAll()
+        episodeService.invalidateAll()
+        return Response.ok(savedAnime)
     }
 
-    @APIRoute
-    private fun Route.getAllInvalid() {
-        get("/invalid/country/{tag}") {
-            try {
-                val tag = call.parameters["tag"]!!
-                Logger.info("GET $prefix/invalid/country/$tag")
-                if (isUnauthorized().await()) return@get
-                val animes = animeRepository.getInvalidAnimes(tag)
-                call.respond(animes)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
-        }
+    @Path("/{uuid}")
+    @Delete
+    @Authorized
+    private fun deleteAnime(uuid: UUID): Response {
+        val savedAnime = animeRepository.find(uuid) ?: return Response(HttpStatusCode.NotFound, ANIME_NOT_FOUND_ERROR)
+        animeRepository.delete(savedAnime)
+        animeService.invalidateAll()
+        episodeService.invalidateAll()
+        return Response(HttpStatusCode.NoContent)
     }
 }

@@ -14,7 +14,7 @@ class EpisodeTypeService : AbstractService() {
     private val loadingCache = CacheBuilder.newBuilder()
         .build(object : CacheLoader<String, List<EpisodeType>>() {
             override fun load(key: String): List<EpisodeType> {
-                Logger.info("Updating episode type cache")
+                Logger.config("Updating episode type cache")
                 return repository.getAll()
             }
         })

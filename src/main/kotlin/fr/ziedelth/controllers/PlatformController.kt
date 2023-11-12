@@ -5,50 +5,37 @@ import fr.ziedelth.entities.Platform
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.PlatformRepository
 import fr.ziedelth.utils.ImageCache
-import fr.ziedelth.utils.Logger
-import fr.ziedelth.utils.routes.APIRoute
+import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.Path
+import fr.ziedelth.utils.routes.Response
+import fr.ziedelth.utils.routes.method.Get
+import fr.ziedelth.utils.routes.method.Post
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 
 class PlatformController : AttachmentController<Platform>("/platforms") {
     @Inject
     private lateinit var platformRepository: PlatformRepository
 
-    @APIRoute
-    private fun Route.getAll() {
-        get {
-            Logger.info("GET $prefix")
-            call.respond(platformRepository.getAll())
-        }
+    @Path
+    @Get
+    private fun getAll(): Response {
+        return Response.ok(platformRepository.getAll())
     }
 
-    @APIRoute
-    private fun Route.save() {
-        post {
-            Logger.info("POST $prefix")
-            if (isUnauthorized().await()) return@post
-
-            try {
-                val platform = call.receive<Platform>()
-
-                if (platform.isNullOrNotValid()) {
-                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
-                    return@post
-                }
-
-                if (platformRepository.exists("name", platform.name)) {
-                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                    return@post
-                }
-
-                call.respond(HttpStatusCode.Created, platformRepository.save(platform))
-                ImageCache.cache(platform.uuid, platform.image!!)
-            } catch (e: Exception) {
-                printError(call, e)
-            }
+    @Path
+    @Post
+    @Authorized
+    private fun save(body: Platform): Response {
+        if (body.isNullOrNotValid()) {
+            return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
+
+        if (platformRepository.exists("name", body.name)) {
+            return Response(HttpStatusCode.Conflict, "$entityName already exists")
+        }
+
+        val savedPlatform = platformRepository.save(body)
+        ImageCache.cache(savedPlatform.uuid, savedPlatform.image!!)
+        return Response.created(savedPlatform)
     }
 }

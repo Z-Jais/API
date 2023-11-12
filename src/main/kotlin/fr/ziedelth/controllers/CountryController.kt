@@ -5,13 +5,12 @@ import fr.ziedelth.entities.Country
 import fr.ziedelth.entities.isNullOrNotValid
 import fr.ziedelth.repositories.CountryRepository
 import fr.ziedelth.services.CountryService
-import fr.ziedelth.utils.Logger
-import fr.ziedelth.utils.routes.APIRoute
+import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.Path
+import fr.ziedelth.utils.routes.Response
+import fr.ziedelth.utils.routes.method.Get
+import fr.ziedelth.utils.routes.method.Post
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 
 class CountryController : AbstractController<Country>("/countries") {
     @Inject
@@ -20,43 +19,30 @@ class CountryController : AbstractController<Country>("/countries") {
     @Inject
     private lateinit var countryService: CountryService
 
-    @APIRoute
-    private fun Route.getAll() {
-        get {
-            println("GET $prefix")
-            call.respond(countryService.getAll())
-        }
+    @Path
+    @Get
+    private fun getAll(): Response {
+        return Response.ok(countryService.getAll())
     }
 
-    @APIRoute
-    private fun Route.save() {
-        post {
-            Logger.info("POST $prefix")
-            if (isUnauthorized().await()) return@post
-
-            try {
-                val country = call.receive<Country>()
-
-                if (country.isNullOrNotValid()) {
-                    call.respond(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
-                    return@post
-                }
-
-                if (countryRepository.exists("tag", country.tag)) {
-                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                    return@post
-                }
-
-                if (countryRepository.exists("name", country.name)) {
-                    call.respond(HttpStatusCode.Conflict, "$entityName already exists")
-                    return@post
-                }
-
-                call.respond(HttpStatusCode.Created, countryRepository.save(country))
-                countryService.invalidateAll()
-            } catch (e: Exception) {
-                printError(call, e)
-            }
+    @Path
+    @Post
+    @Authorized
+    private fun save(body: Country): Response {
+        if (body.isNullOrNotValid()) {
+            return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
+
+        if (countryRepository.exists("tag", body.tag)) {
+            return Response(HttpStatusCode.Conflict, "$entityName already exists")
+        }
+
+        if (countryRepository.exists("name", body.name)) {
+            return Response(HttpStatusCode.Conflict, "$entityName already exists")
+        }
+
+        val savedCountry = countryRepository.save(body)
+        countryService.invalidateAll()
+        return Response.created(savedCountry)
     }
 }

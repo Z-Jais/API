@@ -105,7 +105,7 @@ internal class AnimeControllerTest : AbstractAPITest() {
             val responseError =
                 client.get("/animes/country/${country.tag}/simulcast/${simulcast.uuid}/page/ae/limit/12")
 
-            expect(HttpStatusCode.InternalServerError) { responseError.status }
+            expect(HttpStatusCode.BadRequest) { responseError.status }
         }
     }
 

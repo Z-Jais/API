@@ -1,7 +1,7 @@
 package fr.ziedelth.repositories
 
 import fr.ziedelth.controllers.AbstractController
-import fr.ziedelth.dtos.MissingAnime
+import fr.ziedelth.dtos.MissingAnimeDto
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.utils.unaccent
@@ -87,18 +87,18 @@ class AnimeRepository : AbstractRepository<Anime>() {
         filterData: AbstractController.FilterData,
         page: Int,
         limit: Int
-    ): List<MissingAnime> {
+    ): List<MissingAnimeDto> {
         val whereString = """WHERE e.anime = a AND
                         ${if (filterData.episodes.isEmpty()) "" else "e.uuid NOT IN :episodeUuids AND"}
                         e.episodeType.uuid IN :episodeTypeUuids AND
                         e.langType.uuid IN :langTypeUuids"""
 
         return super.getByPage(
-            MissingAnime::class.java,
+            MissingAnimeDto::class.java,
             page,
             limit,
             """
-                SELECT new fr.ziedelth.dtos.MissingAnime(
+                SELECT new fr.ziedelth.dtos.MissingAnimeDto(
                     a, 
                     (
                         SELECT count(e) 
