@@ -13,15 +13,15 @@ class AyaneController : AbstractController<AyaneDto>("/ayane") {
     @Path
     @Post
     @Authorized
-    private fun save(ayaneDto: AyaneDto): Response {
-        if (ayaneDto.message.isBlank() || ayaneDto.images.isEmpty()) {
+    private fun save(body: AyaneDto): Response {
+        if (body.message.isBlank() || body.images.isEmpty()) {
             return Response(HttpStatusCode.BadRequest, MISSING_PARAMETERS_MESSAGE_ERROR)
         }
 
         Thread {
-            PluginManager.callEvent(AyaneReleaseEvent(ayaneDto))
+            PluginManager.callEvent(AyaneReleaseEvent(body))
         }.start()
 
-        return Response.created(ayaneDto)
+        return Response.created(body)
     }
 }
