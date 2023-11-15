@@ -1,5 +1,8 @@
 package fr.ziedelth.listeners
 
+import com.google.firebase.messaging.AndroidConfig
+import com.google.firebase.messaging.AndroidNotification
+import com.google.firebase.messaging.Message
 import fr.ziedelth.entities.Episode
 import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.utils.Notifications
@@ -26,9 +29,22 @@ class EpisodesRelease : Listener {
 
     @EventHandler
     fun onEpisodesRelease(event: EpisodesReleaseEvent) {
-        event.episodes.forEach {
-            Notifications.send(it.anime!!.name!!, toString(it), it.image!!)
-            Notifications.send(it.anime!!.name!!, toString(it), it.image, it.anime!!.uuid.toString())
-        }
+        Notifications.send(event.episodes.flatMap {
+            listOf(
+                createEpisodeNotification(it).setTopic("all").build(),
+                createEpisodeNotification(it).setTopic(it.anime!!.uuid.toString()).build(),
+            )
+        })
     }
+
+    private fun createEpisodeNotification(it: Episode): Message.Builder =
+        Message.builder().setAndroidConfig(
+            AndroidConfig.builder().setNotification(
+                AndroidNotification.builder()
+                    .setTitle(it.anime!!.name!!)
+                    .setBody(toString(it))
+                    .setImage(it.image!!)
+                    .build()
+            ).build()
+        )
 }
