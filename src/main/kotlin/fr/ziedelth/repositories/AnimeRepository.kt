@@ -12,7 +12,7 @@ import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
     fun findByHash(tag: String, hash: String): UUID? {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             val query = it.createQuery(
                 "SELECT a.uuid FROM Anime a JOIN a.hashes h WHERE a.country.tag = :tag AND h = :hash",
                 UUID::class.java
@@ -25,7 +25,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun findOneByName(tag: String, name: String): Anime? {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             val query = it.createQuery(
                 "FROM Anime WHERE country.tag = :tag AND LOWER(name) = :name",
                 Anime::class.java
@@ -33,20 +33,20 @@ class AnimeRepository : AbstractRepository<Anime>() {
             query.maxResults = 1
             query.setParameter("tag", tag)
             query.setParameter("name", name.lowercase())
-            database.fullInitialize(query.uniqueResult())
+            query.uniqueResult()
         }
     }
 
     // CREATE EXTENSION unaccent
     fun findByName(tag: String, name: String): List<Anime> {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             val query = it.createQuery(
                 "SELECT DISTINCT anime FROM Episode e WHERE e.anime.country.tag = :tag AND LOWER(FUNCTION('unaccent', 'unaccent', e.anime.name)) LIKE CONCAT('%', :name, '%') ORDER BY e.anime.name",
                 Anime::class.java
             )
             query.setParameter("tag", tag)
             query.setParameter("name", name.unaccent().lowercase())
-            database.fullInitialize(query.list())
+            query.list()
         }
     }
 
@@ -61,7 +61,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun getDiary(tag: String, day: Int): List<Anime> {
-        return database.inTransaction { session ->
+        return database.inReadOnlyTransaction { session ->
             val query = session.createQuery(
                 "SELECT episode FROM Episode episode WHERE episode.anime.country.tag = :tag ORDER BY episode.releaseDate DESC LIMIT 100",
                 Episode::class.java
@@ -69,17 +69,15 @@ class AnimeRepository : AbstractRepository<Anime>() {
             query.setParameter("tag", tag)
             val list = query.list()
 
-            database.fullInitialize(
-                list.filter {
-                    OffsetDateTime.parse(
-                        it.releaseDate,
-                        DateTimeFormatter.ISO_OFFSET_DATE_TIME
-                    ).dayOfWeek == DayOfWeek.of(day)
-                }
-                    .sortedBy { OffsetDateTime.parse(it.releaseDate, DateTimeFormatter.ISO_OFFSET_DATE_TIME) }
-                    .mapNotNull { it.anime }
-                    .distinctBy { it.uuid }
-            )
+            list.filter {
+                OffsetDateTime.parse(
+                    it.releaseDate,
+                    DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                ).dayOfWeek == DayOfWeek.of(day)
+            }
+                .sortedBy { OffsetDateTime.parse(it.releaseDate, DateTimeFormatter.ISO_OFFSET_DATE_TIME) }
+                .mapNotNull { it.anime }
+                .distinctBy { it.uuid }
         }
     }
 
@@ -132,13 +130,13 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun getInvalidAnimes(tag: String): List<Anime> {
-        return database.inTransaction { session ->
+        return database.inReadOnlyTransaction { session ->
             val query = session.createQuery(
                 "SELECT anime FROM Anime anime WHERE anime.country.tag = :tag AND (anime.description LIKE '(%' OR anime.description IS NULL OR TRIM(anime.description) = '')",
                 Anime::class.java
             )
             query.setParameter("tag", tag)
-            database.fullInitialize(query.list())
+            query.list()
         }
     }
 }

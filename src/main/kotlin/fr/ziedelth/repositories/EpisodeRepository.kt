@@ -24,7 +24,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
             limit,
             "FROM Episode WHERE anime.uuid = :uuid ${
                 when (sortType) {
-                    SortType.SEASON_NUMBER -> "ORDER BY season DESC, number DESC, episodeType.name, langType.name"
+                    SortType.SEASON_NUMBER -> "ORDER BY season DESC, episodeType.name, number DESC, langType.name"
                     else -> ORDER
                 }
             }",
@@ -59,7 +59,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     }
 
     fun getLastNumber(episode: Episode): Int {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             val query = it.createQuery(
                 "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType.uuid = :episodeType AND langType.uuid = :langType ORDER BY number DESC",
                 Int::class.java
@@ -75,7 +75,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     }
 
     fun getTotalDurationSeen(episodes: List<UUID>): Long {
-        return database.inTransaction {
+        return database.inReadOnlyTransaction {
             it.createQuery("SELECT SUM(duration) FROM Episode WHERE uuid IN :uuids AND duration > 0", Long::class.java)
                 .setParameter("uuids", episodes)
                 .uniqueResult() ?: 0L

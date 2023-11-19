@@ -14,6 +14,7 @@ import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.SortType
 import fr.ziedelth.utils.plugins.PluginManager
 import fr.ziedelth.utils.routes.Authorized
+import fr.ziedelth.utils.routes.BodyParam
 import fr.ziedelth.utils.routes.Path
 import fr.ziedelth.utils.routes.Response
 import fr.ziedelth.utils.routes.method.Get
@@ -65,8 +66,8 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
 
     @Path("/watchlist/page/{page}/limit/{limit}")
     @Post
-    private fun paginationWatchlist(body: String, page: Int, limit: Int): Response {
-        return Response.ok(episodeRepository.getByPageWithListFilter(decode(body), page, limit))
+    private fun paginationWatchlist(@BodyParam watchlist: String, page: Int, limit: Int): Response {
+        return Response.ok(episodeRepository.getByPageWithListFilter(decode(watchlist), page, limit))
     }
 
     private fun merge(episode: Episode) {
@@ -126,8 +127,8 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
     @Path("/multiple")
     @Post
     @Authorized
-    private fun saveMultiple(body: Array<Episode>): Response {
-        val episodes = body.filter { !episodeRepository.exists("hash", it.hash!!) }
+    private fun saveMultiple(@BodyParam episodesToSave: Array<Episode>): Response {
+        val episodes = episodesToSave.filter { !episodeRepository.exists("hash", it.hash!!) }
 
         if (episodes.isEmpty()) {
             return Response(HttpStatusCode.NoContent, "All requested episodes already exists!")
@@ -158,25 +159,32 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
     @Path
     @Put
     @Authorized
-    private fun update(body: Episode): Response {
-        var savedEpisode = episodeRepository.find(body.uuid) ?: return Response(HttpStatusCode.NotFound, "Episode not found")
+    private fun update(@BodyParam episode: Episode): Response {
+        var savedEpisode =
+            episodeRepository.find(episode.uuid) ?: return Response(HttpStatusCode.NotFound, "Episode not found")
 
-        if (body.episodeType?.uuid != null) {
-            val foundEpisodeType = episodeTypeRepository.find(body.episodeType!!.uuid) ?: return Response(HttpStatusCode.NotFound, "Episode type not found")
+        if (episode.episodeType?.uuid != null) {
+            val foundEpisodeType = episodeTypeRepository.find(episode.episodeType!!.uuid) ?: return Response(
+                HttpStatusCode.NotFound,
+                "Episode type not found"
+            )
             savedEpisode.episodeType = foundEpisodeType
         }
 
-        if (body.langType?.uuid != null) {
-            val foundLangType = langTypeRepository.find(body.langType!!.uuid) ?: return Response(HttpStatusCode.NotFound, "Lang type not found")
+        if (episode.langType?.uuid != null) {
+            val foundLangType = langTypeRepository.find(episode.langType!!.uuid) ?: return Response(
+                HttpStatusCode.NotFound,
+                "Lang type not found"
+            )
             savedEpisode.langType = foundLangType
         }
 
-        if (body.season != null) {
-            savedEpisode.season = body.season
+        if (episode.season != null) {
+            savedEpisode.season = episode.season
         }
 
-        if (body.duration != -1L) {
-            savedEpisode.duration = body.duration
+        if (episode.duration != -1L) {
+            savedEpisode.duration = episode.duration
         }
 
         savedEpisode = episodeRepository.save(savedEpisode)

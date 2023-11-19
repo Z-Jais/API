@@ -7,8 +7,9 @@ open class Response(
     val data: Any? = null,
 ) {
     companion object {
-        fun ok(data: Any?): Response = Response(HttpStatusCode.OK, data)
+        fun ok(data: Any? = null): Response = Response(HttpStatusCode.OK, data)
         fun created(data: Any?): Response = Response(HttpStatusCode.Created, data)
+        fun noContent(): Response = Response(HttpStatusCode.NoContent)
     }
 }
 

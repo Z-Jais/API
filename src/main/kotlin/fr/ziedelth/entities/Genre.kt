@@ -11,7 +11,7 @@ fun Genre?.isNullOrNotValid() = this == null || this.isNotValid()
 @Entity
 @Table(name = "genre")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Genre(
     @Id
     @GeneratedValue
