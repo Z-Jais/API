@@ -10,6 +10,7 @@ import fr.ziedelth.repositories.EpisodeRepository
 import fr.ziedelth.repositories.ProfileRepository
 import fr.ziedelth.services.EpisodeTypeService
 import fr.ziedelth.services.LangTypeService
+import fr.ziedelth.services.ProfileService
 import fr.ziedelth.utils.Constant
 import fr.ziedelth.utils.routes.*
 import fr.ziedelth.utils.routes.method.Delete
@@ -26,6 +27,9 @@ class ProfileController : AbstractController<Serializable>("/profile") {
 
     @Inject
     private lateinit var profileRepository: ProfileRepository
+
+    @Inject
+    private lateinit var profileService: ProfileService
 
     @Inject
     private lateinit var episodeTypeService: EpisodeTypeService
@@ -98,6 +102,7 @@ class ProfileController : AbstractController<Serializable>("/profile") {
     @Authenticated
     private fun addToWatchlist(@JWTUser jwtUser: UUID, @QueryParam anime: String?, @QueryParam episode: String?): Response {
         profileRepository.addToWatchlist(profileRepository.find(jwtUser)!!, anime, episode) ?: return Response(HttpStatusCode.BadRequest)
+        profileService.invalidateProfile(jwtUser)
         return Response.ok()
     }
 
@@ -114,6 +119,7 @@ class ProfileController : AbstractController<Serializable>("/profile") {
     @Authenticated
     private fun deleteToWatchlist(@JWTUser jwtUser: UUID, @QueryParam anime: String?, @QueryParam episode: String?): Response {
         profileRepository.removeToWatchlist(profileRepository.find(jwtUser)!!, anime, episode) ?: return Response(HttpStatusCode.BadRequest)
+        profileService.invalidateProfile(jwtUser)
         return Response.ok()
     }
 
@@ -149,21 +155,7 @@ class ProfileController : AbstractController<Serializable>("/profile") {
         limit: Int
     ): Response {
         val (episodeTypesUuid, langTypesUuid) = getEpisodeAndLangTypesUuid(episodeTypes, langTypes)
-        return Response.ok(profileRepository.getMissingAnimes(jwtUser, episodeTypesUuid, langTypesUuid, page, limit))
-    }
-
-    @Path("/watchlist/episodes/missing/page/{page}/limit/{limit}")
-    @Get
-    @Authenticated
-    private fun paginationWatchlistEpisodesMissing(
-        @JWTUser jwtUser: UUID,
-        @QueryParam episodeTypes: String?,
-        @QueryParam langTypes: String?,
-        page: Int,
-        limit: Int
-    ): Response {
-        val (episodeTypesUuid, langTypesUuid) = getEpisodeAndLangTypesUuid(episodeTypes, langTypes)
-        return Response.ok(profileRepository.getMissingEpisodes(jwtUser, episodeTypesUuid, langTypesUuid, page, limit))
+        return Response.ok(profileService.getMissingAnimes(jwtUser, episodeTypesUuid, langTypesUuid, page, limit))
     }
 
     /**
@@ -178,7 +170,7 @@ class ProfileController : AbstractController<Serializable>("/profile") {
     @Get
     @Authenticated
     private fun getWatchlistAnimesByPageAndLimit(@JWTUser jwtUser: UUID, page: Int, limit: Int): Response {
-        return Response.ok(profileRepository.getWatchlistAnimes(jwtUser, page, limit))
+        return Response.ok(profileService.getWatchlistAnimes(jwtUser, page, limit))
     }
 
     /**
@@ -193,7 +185,7 @@ class ProfileController : AbstractController<Serializable>("/profile") {
     @Get
     @Authenticated
     private fun getWatchlistEpisodesByPageAndLimit(@JWTUser jwtUser: UUID, page: Int, limit: Int): Response {
-        return Response.ok(profileRepository.getWatchlistEpisodes(jwtUser, page, limit))
+        return Response.ok(profileService.getWatchlistEpisodes(jwtUser, page, limit))
     }
 
     @Path
@@ -201,6 +193,7 @@ class ProfileController : AbstractController<Serializable>("/profile") {
     @Authenticated
     private fun deleteProfile(@JWTUser jwtUser: UUID): Response {
         profileRepository.delete(profileRepository.find(jwtUser)!!)
+        profileService.invalidateProfile(jwtUser)
         return Response.ok()
     }
 }

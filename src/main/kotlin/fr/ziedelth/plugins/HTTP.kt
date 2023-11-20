@@ -14,7 +14,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 
-fun Application.configureHTTP() {
+fun Application.configureHTTP(isDebug: Boolean = false) {
     install(Compression) {
         gzip {
             priority = 1.0
@@ -59,15 +59,17 @@ fun Application.configureHTTP() {
         }
     }
 
-    install(SwaggerUI) {
-        swagger {
-            swaggerUrl = "swagger"
-            forwardRoot = true
-        }
-        info {
-            title = "API"
-            version = "latest"
-            description = "API for testing and demonstration purposes."
+    if (isDebug) {
+        install(SwaggerUI) {
+            swagger {
+                swaggerUrl = "swagger"
+                forwardRoot = true
+            }
+            info {
+                title = "API"
+                version = "latest"
+                description = "API for testing and demonstration purposes."
+            }
         }
     }
 }
