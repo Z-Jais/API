@@ -21,10 +21,10 @@ class Profile(
     val creationDate: String = Calendar.getInstance().toISO8601(),
     @Column(nullable = false)
     var lastUpdate: String = Calendar.getInstance().toISO8601(),
-    @OneToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "profile")
+    @OneToMany(fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "profile")
     @OrderBy("add_date")
     val animes: MutableSet<ProfileAnime> = mutableSetOf(),
-    @OneToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "profile")
+    @OneToMany(fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "profile")
     @OrderBy("add_date")
     val episodes: MutableSet<ProfileEpisode> = mutableSetOf(),
 ) : Serializable

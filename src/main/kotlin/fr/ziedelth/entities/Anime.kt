@@ -35,14 +35,14 @@ class Anime(
     val image: String? = null,
     @Column(nullable = true, columnDefinition = "TEXT")
     var description: String? = null,
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
     @CollectionTable(
         name = "anime_hash",
         joinColumns = [JoinColumn(name = "anime_uuid")],
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime (uuid) ON DELETE CASCADE")
     )
     val hashes: MutableSet<String> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
+    @ManyToMany(fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(
         name = "anime_genre",
         joinColumns = [
@@ -63,7 +63,7 @@ class Anime(
         ]
     )
     val genres: MutableSet<Genre> = mutableSetOf(),
-    @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
+    @ManyToMany(fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(
         name = "anime_simulcast",
         joinColumns = [

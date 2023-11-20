@@ -24,7 +24,7 @@ class ProfileRepository : AbstractRepository<Profile>() {
         return database.inReadOnlyTransaction {
             val query = it.createQuery("FROM Profile WHERE tokenUuid = :value", Profile::class.java)
             query.setParameter("value", value)
-            query.uniqueResult()
+            database.fullInitialize(query.uniqueResult())
         }
     }
 
@@ -77,7 +77,7 @@ class ProfileRepository : AbstractRepository<Profile>() {
         if (anime != null && addAnimeToProfile(UUID.fromString(anime), profile)) return null
         if (episode != null && addEpisodeToProfile(UUID.fromString(episode), profile)) return null
         profile.lastUpdate = Calendar.getInstance().toISO8601()
-        return save(profile)
+        return merge(profile)
     }
 
     private fun removeAnimeToProfile(anime: UUID, loggedInProfile: Profile): Boolean {
@@ -108,7 +108,7 @@ class ProfileRepository : AbstractRepository<Profile>() {
         if (anime != null && removeAnimeToProfile(UUID.fromString(anime), profile)) return null
         if (episode != null && removeEpisodeToProfile(UUID.fromString(episode), profile)) return null
         profile.lastUpdate = Calendar.getInstance().toISO8601()
-        return save(profile)
+        return merge(profile)
     }
 
     /**

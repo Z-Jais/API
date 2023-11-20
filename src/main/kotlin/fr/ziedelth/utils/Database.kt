@@ -1,5 +1,7 @@
 package fr.ziedelth.utils
 
+import jakarta.persistence.Entity
+import org.hibernate.Hibernate
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder
@@ -63,6 +65,35 @@ open class Database {
         val session = sessionFactory.openSession()
         session.isDefaultReadOnly = true
         return session
+    }
+
+    fun <T> fullInitialize(entity: T, hashes: MutableSet<Int> = mutableSetOf()): T {
+        if (entity == null || hashes.contains(entity.hashCode())) {
+            return entity
+        }
+
+        if (entity is Collection<*>) {
+            entity.forEach { fullInitialize(it, hashes) }
+            return entity
+        }
+
+        entity.let { ent ->
+            ent::class.java.declaredFields.forEach {
+                if (it.type == Set::class.java) {
+                    it.isAccessible = true
+                    val value = it[ent] ?: return@forEach
+                    Hibernate.initialize(value)
+                    hashes.add(value.hashCode())
+                    fullInitialize(value, hashes)
+                } else if (it.type.isAnnotationPresent(Entity::class.java)) {
+                    it.isAccessible = true
+                    val value = it[ent] ?: return@forEach
+                    fullInitialize(value, hashes)
+                }
+            }
+        }
+
+        return entity
     }
 
     fun <T> inTransaction(block: (Session) -> T): T {
