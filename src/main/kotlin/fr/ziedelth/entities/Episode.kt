@@ -3,8 +3,6 @@ package fr.ziedelth.entities
 import fr.ziedelth.utils.DATE_FORMAT_REGEX
 import fr.ziedelth.utils.toISO8601
 import jakarta.persistence.*
-import org.hibernate.annotations.Cache
-import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.io.Serializable
 import java.util.*
 
@@ -21,8 +19,6 @@ fun Episode?.isNullOrNotValid() = this == null || this.isNotValid()
         Index(name = "index_episode_release_date", columnList = "releasedate")
     ]
 )
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Episode(
     @Id
     @GeneratedValue
@@ -33,7 +29,6 @@ class Episode(
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (platform_uuid) REFERENCES platform(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var platform: Platform? = null,
     @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(
@@ -41,7 +36,6 @@ class Episode(
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var anime: Anime? = null,
     @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(
@@ -49,7 +43,6 @@ class Episode(
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (episode_type_uuid) REFERENCES episodetype(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var episodeType: EpisodeType? = null,
     @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(
@@ -57,7 +50,6 @@ class Episode(
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (lang_type_uuid) REFERENCES langtype(uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var langType: LangType? = null,
     @Column(nullable = false, unique = true)
     val hash: String? = null,

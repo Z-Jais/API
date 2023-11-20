@@ -1,8 +1,6 @@
 package fr.ziedelth.entities
 
 import jakarta.persistence.*
-import org.hibernate.annotations.Cache
-import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.io.Serializable
 import java.util.*
 
@@ -10,8 +8,6 @@ fun Genre?.isNullOrNotValid() = this == null || this.isNotValid()
 
 @Entity
 @Table(name = "genre")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Genre(
     @Id
     @GeneratedValue

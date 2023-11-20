@@ -3,8 +3,6 @@ package fr.ziedelth.entities
 import fr.ziedelth.utils.DATE_FORMAT_REGEX
 import fr.ziedelth.utils.toISO8601
 import jakarta.persistence.*
-import org.hibernate.annotations.Cache
-import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.io.Serializable
 import java.util.*
 
@@ -18,8 +16,6 @@ fun Anime?.isNullOrNotValid() = this == null || this.isNotValid()
         Index(name = "index_anime_release_date", columnList = "releasedate")
     ]
 )
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Anime(
     @Id
     @GeneratedValue
@@ -30,7 +26,6 @@ class Anime(
         nullable = false,
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (country_uuid) REFERENCES country (uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var country: Country? = null,
     @Column(nullable = false)
     var name: String? = null,
@@ -46,7 +41,6 @@ class Anime(
         joinColumns = [JoinColumn(name = "anime_uuid")],
         foreignKey = ForeignKey(foreignKeyDefinition = "FOREIGN KEY (anime_uuid) REFERENCES anime (uuid) ON DELETE CASCADE")
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val hashes: MutableSet<String> = mutableSetOf(),
     @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(
@@ -68,7 +62,6 @@ class Anime(
             Index(name = "index_anime_genre_genre_uuid", columnList = "genre_uuid"),
         ]
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val genres: MutableSet<Genre> = mutableSetOf(),
     @ManyToMany(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(
@@ -90,7 +83,6 @@ class Anime(
             Index(name = "index_anime_simulcast_simulcast_uuid", columnList = "simulcast_uuid"),
         ]
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val simulcasts: MutableSet<Simulcast> = mutableSetOf(),
 ) : Serializable {
     fun hash(): String = name!!.lowercase().filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }.trim()

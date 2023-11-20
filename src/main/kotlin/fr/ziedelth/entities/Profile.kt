@@ -2,8 +2,6 @@ package fr.ziedelth.entities
 
 import fr.ziedelth.utils.toISO8601
 import jakarta.persistence.*
-import org.hibernate.annotations.Cache
-import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.io.Serializable
 import java.util.*
 
@@ -13,8 +11,6 @@ import java.util.*
         Index(name = "index_profile_token_uuid", columnList = "token_uuid", unique = true),
     ]
 )
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class Profile(
     @Id
     @GeneratedValue
@@ -27,10 +23,8 @@ class Profile(
     var lastUpdate: String = Calendar.getInstance().toISO8601(),
     @OneToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "profile")
     @OrderBy("add_date")
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val animes: MutableSet<ProfileAnime> = mutableSetOf(),
     @OneToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "profile")
     @OrderBy("add_date")
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     val episodes: MutableSet<ProfileEpisode> = mutableSetOf(),
 ) : Serializable
