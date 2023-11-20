@@ -8,6 +8,7 @@ import fr.ziedelth.events.EpisodesReleaseEvent
 import fr.ziedelth.repositories.*
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
+import fr.ziedelth.services.ProfileService
 import fr.ziedelth.services.SimulcastService
 import fr.ziedelth.utils.CalendarConverter
 import fr.ziedelth.utils.ImageCache
@@ -51,6 +52,12 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
 
     @Inject
     private lateinit var episodeService: EpisodeService
+
+    @Inject
+    private lateinit var profileRepository: ProfileRepository
+
+    @Inject
+    private lateinit var profileService: ProfileService
 
     @Path("/country/{country}/page/{page}/limit/{limit}")
     @Get
@@ -147,6 +154,10 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
         animeService.invalidateAll()
         simulcastService.invalidateAll()
 
+        val animes = savedEpisodes.mapNotNull { it.anime?.uuid }.distinct()
+        val profiles = animes.flatMap { profileRepository.findProfilesWithAnime(it) }.distinct()
+        profiles.forEach { profileService.invalidateProfile(it) }
+
         if (savedEpisodes.size <= 5) {
             Thread {
                 PluginManager.callEvent(EpisodesReleaseEvent(savedEpisodes))
@@ -189,6 +200,10 @@ class EpisodeController : AttachmentController<Episode>("/episodes") {
 
         savedEpisode = episodeRepository.save(savedEpisode)
         episodeService.invalidateAll()
+
+        val profiles = profileRepository.findProfilesWithAnime(savedEpisode.anime!!.uuid)
+        profiles.forEach { profileService.invalidateProfile(it) }
+
         return Response.ok(savedEpisode)
     }
 }

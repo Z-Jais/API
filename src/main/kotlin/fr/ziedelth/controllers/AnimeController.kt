@@ -3,12 +3,10 @@ package fr.ziedelth.controllers
 import com.google.inject.Inject
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.isNullOrNotValid
-import fr.ziedelth.repositories.AnimeRepository
-import fr.ziedelth.repositories.CountryRepository
-import fr.ziedelth.repositories.EpisodeRepository
-import fr.ziedelth.repositories.SimulcastRepository
+import fr.ziedelth.repositories.*
 import fr.ziedelth.services.AnimeService
 import fr.ziedelth.services.EpisodeService
+import fr.ziedelth.services.ProfileService
 import fr.ziedelth.utils.ImageCache
 import fr.ziedelth.utils.Logger
 import fr.ziedelth.utils.routes.Authorized
@@ -42,6 +40,12 @@ class AnimeController : AttachmentController<Anime>("/animes") {
 
     @Inject
     private lateinit var simulcastRepository: SimulcastRepository
+
+    @Inject
+    private lateinit var profileRepository: ProfileRepository
+
+    @Inject
+    private lateinit var profileService: ProfileService
 
     @Path("/country/{country}/search/hash/{hash}")
     @Get
@@ -149,6 +153,10 @@ class AnimeController : AttachmentController<Anime>("/animes") {
         savedAnime = animeRepository.save(savedAnime)
         animeService.invalidateAll()
         episodeService.invalidateAll()
+
+        val profiles = profileRepository.findProfilesWithAnime(anime.uuid)
+        profiles.forEach { profileService.invalidateProfile(it) }
+
         return Response.ok(savedAnime)
     }
 

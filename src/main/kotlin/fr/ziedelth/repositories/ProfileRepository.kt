@@ -28,6 +28,19 @@ class ProfileRepository : AbstractRepository<Profile>() {
         }
     }
 
+    fun findProfilesWithAnime(animeUuid: UUID): List<UUID> {
+        return database.inReadOnlyTransaction {
+            it.createQuery(
+                """
+                SELECT DISTINCT pa.profile.uuid
+                FROM ProfileAnime pa
+                WHERE pa.anime.uuid = :animeUuid
+                """.trimIndent(),
+                UUID::class.java
+            ).setParameter("animeUuid", animeUuid).resultList
+        }
+    }
+
     /**
      * Saves the provided filter data and returns the saved profile.
      *
