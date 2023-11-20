@@ -4,15 +4,11 @@ import fr.ziedelth.utils.CalendarConverter
 import fr.ziedelth.utils.Constant
 import fr.ziedelth.utils.toISO8601
 import jakarta.persistence.*
-import org.hibernate.annotations.Cache
-import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.io.Serializable
 import java.util.*
 
 @Entity
 @Table(name = "simulcast", uniqueConstraints = [UniqueConstraint(columnNames = arrayOf("season", "\"year\""))])
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class Simulcast(
     @Id
     @GeneratedValue
