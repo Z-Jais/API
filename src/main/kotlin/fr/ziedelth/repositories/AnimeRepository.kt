@@ -20,7 +20,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             query.maxResults = 1
             query.setParameter("tag", tag)
             query.setParameter("hash", hash)
-            query.uniqueResult()
+            database.fullInitialize(query.uniqueResult())
         }
     }
 
@@ -33,7 +33,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             query.maxResults = 1
             query.setParameter("tag", tag)
             query.setParameter("name", name.lowercase())
-            query.uniqueResult()
+            database.fullInitialize(query.uniqueResult())
         }
     }
 
@@ -46,7 +46,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             )
             query.setParameter("tag", tag)
             query.setParameter("name", name.unaccent().lowercase())
-            query.list()
+            database.fullInitialize(query.resultList)
         }
     }
 
@@ -136,7 +136,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 Anime::class.java
             )
             query.setParameter("tag", tag)
-            query.list()
+            database.fullInitialize(query.resultList)
         }
     }
 }

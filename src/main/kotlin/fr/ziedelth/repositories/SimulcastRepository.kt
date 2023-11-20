@@ -8,7 +8,7 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
         val list = database.inTransaction {
             val query = it.createQuery("SELECT simulcasts FROM Anime WHERE country.tag = :tag", Simulcast::class.java)
             query.setParameter("tag", tag)
-            query.list()
+            database.fullInitialize(query.resultList)
         }
 
         return list.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
@@ -19,7 +19,7 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
             val query = it.createQuery("FROM Simulcast WHERE season = :season AND year = :year", Simulcast::class.java)
             query.setParameter("season", season)
             query.setParameter("year", year)
-            query.uniqueResult()
+            database.fullInitialize(query.uniqueResult())
         }
     }
 }
