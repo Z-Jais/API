@@ -14,7 +14,7 @@ open class AbstractRepository<T> {
     private val entityName: String = entityClass.simpleName
 
     fun find(uuid: UUID): T? {
-        return database.inReadOnlyTransaction { it.find(entityClass, uuid) }
+        return database.inReadOnlyTransaction { database.fullInitialize(it.find(entityClass, uuid)) }
     }
 
     fun exists(field: String, value: Any?): Boolean {
@@ -28,21 +28,23 @@ open class AbstractRepository<T> {
 
     fun findAll(uuids: Collection<UUID>): List<T> {
         return database.inReadOnlyTransaction {
-            it.createQuery("FROM $entityName WHERE uuid IN :uuids", entityClass)
+            database.fullInitialize(
+                it.createQuery("FROM $entityName WHERE uuid IN :uuids", entityClass)
                 .setParameter("uuids", uuids)
-                .resultList
+                    .resultList
+            )
         }
     }
 
     fun getAll(): MutableList<T> {
-        return database.inReadOnlyTransaction { it.createQuery("FROM $entityName", entityClass).resultList }
+        return database.inReadOnlyTransaction { database.fullInitialize(it.createQuery("FROM $entityName", entityClass).resultList) }
     }
 
     fun getAllBy(field: String, value: Any?): MutableList<T> {
         return database.inReadOnlyTransaction {
             val query = it.createQuery("FROM $entityName WHERE $field = :value", entityClass)
             query.setParameter("value", value)
-            query.resultList
+            database.fullInitialize(query.resultList)
         }
     }
 
@@ -74,6 +76,10 @@ open class AbstractRepository<T> {
         }
     }
 
+    fun merge(entity: T): T {
+        return database.inTransaction { it.merge(entity) }
+    }
+
     fun <A> getByPage(
         clazz: Class<A>,
         page: Int,
@@ -86,7 +92,7 @@ open class AbstractRepository<T> {
             pair.forEach { param -> if (param != null) query.setParameter(param.first, param.second) }
             query.firstResult = (limit * page) - limit
             query.maxResults = limit
-            query.list()
+            database.fullInitialize(query.resultList)
         }
     }
 

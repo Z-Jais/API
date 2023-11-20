@@ -67,7 +67,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 Episode::class.java
             )
             query.setParameter("tag", tag)
-            val list = query.list()
+            val list = database.fullInitialize(query.resultList)
 
             list.filter {
                 OffsetDateTime.parse(
