@@ -14,9 +14,10 @@ import nu.pattern.OpenCV
 import java.util.*
 
 private lateinit var database: Database
+private var isDebug = false
 
 fun main(args: Array<String>) {
-    val isDebug = args.isNotEmpty() && args[0] == "debug"
+    isDebug = args.isNotEmpty() && args[0] == "debug"
     val loadImage = !isDebug || (args.size > 1 && args[1] == "loadImage")
 
     if (isDebug) {
@@ -71,7 +72,7 @@ private fun handleCommands() {
 
 fun Application.myApplicationModule() {
     Logger.info("Configure server...")
-    configureHTTP()
+    configureHTTP(isDebug)
     Logger.info("Configure routing...")
     configureRouting(database)
     Logger.info("Server configured and ready")

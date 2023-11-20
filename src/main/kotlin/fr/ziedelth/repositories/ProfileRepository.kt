@@ -163,48 +163,6 @@ class ProfileRepository : AbstractRepository<Profile>() {
         )
     }
 
-    fun getMissingEpisodes(
-        uuid: UUID,
-        episodeTypes: List<UUID>,
-        langTypes: List<UUID>,
-        page: Int,
-        limit: Int
-    ): List<Episode> {
-        val (animes, episodes) = database.inReadOnlyTransaction {
-            val animes = it.createQuery(
-                "SELECT a.anime.uuid FROM Profile p JOIN p.animes a WHERE p.uuid = :uuid",
-                UUID::class.java
-            ).setParameter("uuid", uuid).resultList
-
-            val episodes = it.createQuery(
-                "SELECT e.episode.uuid FROM Profile p JOIN p.episodes e WHERE p.uuid = :uuid",
-                UUID::class.java
-            ).setParameter("uuid", uuid).resultList
-
-            animes to episodes
-        }
-
-        val exclusionCondition = if (episodes.isEmpty()) "" else "e.uuid NOT IN :episodes AND"
-
-        return super.getByPage(
-            Episode::class.java,
-            page,
-            limit,
-            """
-            FROM Episode e
-            WHERE e.anime.uuid IN :animes
-            AND $exclusionCondition
-            e.episodeType.uuid IN :episodeTypes
-            AND e.langType.uuid IN :langTypes
-            ORDER BY releaseDate DESC, anime.name, season DESC, number DESC, episodeType.name, langType.name
-        """.trimIndent(),
-            "animes" to animes,
-            if (episodes.isEmpty()) null else "episodes" to episodes,
-            "episodeTypes" to episodeTypes,
-            "langTypes" to langTypes
-        )
-    }
-
     /**
      * Retrieves a list of Anime objects from the watchlist of a profile identified by the given UUID.
      *
@@ -238,9 +196,9 @@ class ProfileRepository : AbstractRepository<Profile>() {
      * @param limit The maximum number of episodes to retrieve per page.
      * @return A list of Anime objects representing the episodes in the watchlist.
      */
-    fun getWatchlistEpisodes(uuid: UUID, page: Int, limit: Int): List<Anime> {
+    fun getWatchlistEpisodes(uuid: UUID, page: Int, limit: Int): List<Episode> {
         return super.getByPage(
-            Anime::class.java,
+            Episode::class.java,
             page,
             limit,
             """
