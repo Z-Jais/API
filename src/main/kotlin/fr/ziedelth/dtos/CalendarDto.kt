@@ -2,7 +2,7 @@ package fr.ziedelth.dtos
 
 import java.io.Serializable
 
-data class AyaneDto(
+data class CalendarDto(
     val message: String,
     val images: List<String>
 ) : Serializable

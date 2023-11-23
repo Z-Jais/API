@@ -3,6 +3,7 @@ package fr.ziedelth.services
 import com.google.inject.Inject
 import com.opencsv.CSVReader
 import com.opencsv.CSVReaderBuilder
+import fr.ziedelth.dtos.RecommendedAnimeDto
 import fr.ziedelth.entities.Anime
 import fr.ziedelth.entities.Genre
 import fr.ziedelth.repositories.AnimeRepository
@@ -12,8 +13,8 @@ import java.util.*
 class RecommendationService {
     @Inject
     private lateinit var animeRepository: AnimeRepository
-    
-    fun getRecommendations(animes: List<Anime>): Set<Pair<Anime, Double>> {
+
+    fun getRecommendations(animes: List<Anime>): List<RecommendedAnimeDto> {
         val csvFile = File("data/anime-genres-themes.csv")
         val csvReader = CSVReaderBuilder(csvFile.reader()).withSkipLines(1).build()
         val allGenres = mutableSetOf<String>()
@@ -41,8 +42,8 @@ class RecommendationService {
             anime to matrixSum
         }.sortedByDescending { it.second }.toMutableSet()
         sortedRecommendations.removeIf { it.second == 0.0 }
-        
-        return sortedRecommendations
+
+        return sortedRecommendations.map { RecommendedAnimeDto(it.first, it.second) }
     }
 
     private fun parseAnimeData(

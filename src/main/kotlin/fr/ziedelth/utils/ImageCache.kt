@@ -29,6 +29,8 @@ object ImageCache {
 
         try {
             bytes = saveImage(url).readBytes()
+            if (bytes.isEmpty()) throw Exception("Failed to load image")
+
             val webp = encodeToWebP(bytes)
             cache[uuid] = Image(url, webp, "webp") to true
         } catch (e: Exception) {
@@ -50,7 +52,7 @@ object ImageCache {
         if (Imgcodecs.imencode(".webp", matImage, output, parameters)) {
             return output.toArray()
         } else {
-            error("Failed to encode the image as webp")
+            throw Exception("Failed to encode image to WebP")
         }
     }
 
