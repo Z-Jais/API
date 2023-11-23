@@ -5,7 +5,7 @@ import com.google.inject.Guice
 import com.google.inject.Injector
 import fr.ziedelth.controllers.AbstractController
 import fr.ziedelth.controllers.AttachmentController
-import fr.ziedelth.dtos.AyaneDto
+import fr.ziedelth.dtos.CalendarDto
 import fr.ziedelth.dtos.ProfileDto
 import fr.ziedelth.entities.*
 import fr.ziedelth.entities.Platform
@@ -271,7 +271,7 @@ private suspend fun callMethodWithParameters(
                 when (kParameter.type.javaType) {
                     Anime::class.java -> call.receive<Anime>()
                     Array<UUID>::class.java -> call.receive<Array<UUID>>()
-                    AyaneDto::class.java -> call.receive<AyaneDto>()
+                    CalendarDto::class.java -> call.receive<CalendarDto>()
                     Country::class.java -> call.receive<Country>()
                     Array<Episode>::class.java -> call.receive<Array<Episode>>()
                     EpisodeType::class.java -> call.receive<EpisodeType>()
