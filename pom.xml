@@ -13,7 +13,7 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.version>1.9.21</kotlin.version>
         <kotlin.compiler.languageVersion>2.0</kotlin.compiler.languageVersion>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
         <logback_version>1.4.13</logback_version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>

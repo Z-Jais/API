@@ -30,7 +30,7 @@ open class AbstractRepository<T> {
         return database.inReadOnlyTransaction {
             database.fullInitialize(
                 it.createQuery("FROM $entityName WHERE uuid IN :uuids", entityClass)
-                .setParameter("uuids", uuids)
+                    .setParameter("uuids", uuids)
                     .resultList
             )
         }

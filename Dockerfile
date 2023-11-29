@@ -11,4 +11,4 @@ RUN apk update && apk add gcompat opencv-dev && rm -rf /var/cache/apk/*
 RUN apk add --update ttf-dejavu && rm -rf /var/cache/apk/*
 EXPOSE 8080
 WORKDIR /app
-ENTRYPOINT ["java", "-jar", "api.jar"]
+ENTRYPOINT ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M", "-jar", "api.jar"]
