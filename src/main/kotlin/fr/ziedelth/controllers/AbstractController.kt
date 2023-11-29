@@ -7,7 +7,6 @@ import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
-const val UNKNOWN_MESSAGE_ERROR = "Unknown error"
 const val MISSING_PARAMETERS_MESSAGE_ERROR = "Missing parameters"
 
 open class AbstractController<T : Serializable>(open val prefix: String) {

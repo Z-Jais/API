@@ -11,15 +11,15 @@
     <properties>
         <ktor_version>2.3.6</ktor_version>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.version>1.9.20</kotlin.version>
+        <kotlin.version>1.9.21</kotlin.version>
         <kotlin.compiler.languageVersion>2.0</kotlin.compiler.languageVersion>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-        <logback_version>1.4.11</logback_version>
+        <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
+        <logback_version>1.4.13</logback_version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <main.class>fr.ziedelth.ApplicationKt</main.class>
         <junit-jupiter.version>5.10.1</junit-jupiter.version>
-        <hibernate.version>6.3.1.Final</hibernate.version>
+        <hibernate.version>6.4.0.Final</hibernate.version>
 
         <sonar.coverage.exclusions>
             **/fr/ziedelth/dtos/**,

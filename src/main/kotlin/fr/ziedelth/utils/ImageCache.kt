@@ -5,12 +5,30 @@ import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
 import java.io.InputStream
-import java.net.URL
+import java.net.URI
 import java.nio.file.Files
 import java.util.*
 
 object ImageCache {
-    data class Image(val url: String, val bytes: ByteArray = byteArrayOf(), val type: String = "jpg")
+    data class Image(val url: String, val bytes: ByteArray = byteArrayOf(), val type: String = "jpg") {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Image) return false
+
+            if (url != other.url) return false
+            if (!bytes.contentEquals(other.bytes)) return false
+            if (type != other.type) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = url.hashCode()
+            result = 31 * result + bytes.contentHashCode()
+            result = 31 * result + type.hashCode()
+            return result
+        }
+    }
 
     private val cache = mutableMapOf<UUID, Pair<Image, Boolean>>()
 
@@ -56,8 +74,8 @@ object ImageCache {
         }
     }
 
-    private fun saveImage(string: String?): InputStream {
-        val inputStream = URL(string).openStream()
+    private fun saveImage(string: String): InputStream {
+        val inputStream = URI(string).toURL().openStream()
         val tmpFile = Files.createTempFile(UUID.randomUUID().toString(), ".jpg").toFile()
         val outputStream = tmpFile.outputStream()
         outputStream.use { inputStream.copyTo(it) }
