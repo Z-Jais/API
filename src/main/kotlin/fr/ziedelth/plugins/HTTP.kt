@@ -27,6 +27,7 @@ fun Application.configureHTTP(isDebug: Boolean = false) {
 
     install(CORS) {
         HttpMethod.DefaultMethods.forEach { allowMethod(it) }
+        allowCredentials = true
         allowHeader(HttpHeaders.Authorization)
         anyHost()
     }
