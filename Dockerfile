@@ -3,7 +3,7 @@ COPY . /app
 WORKDIR /app
 RUN mvn clean package -DskipTests
 
-FROM amazoncorretto:21-alpine
+FROM amazoncorretto:22-alpine
 COPY --from=build /app/target/api-1.0.0-jar-with-dependencies.jar /app/api.jar
 COPY --from=build /app/data/ /app/data/
 
